@@ -53,7 +53,10 @@ Recuerda colocar tu `client-id` en el archivo `.env`:
 ```env
 VITE_PAYPAL_CLIENT_ID=TU_CLIENT_ID_SANDBOX
 
-![image](https://github.com/user-attachments/assets/06aee321-d829-4895-ad99-90d259c2131c)
+Instalacion local
+npm install
+npm run dev
+
 
 🧪 Cuenta de prueba PayPal (sandbox)
 Email: sb-xxxxx@personal.example.com
