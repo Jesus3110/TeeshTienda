@@ -1,12 +1,63 @@
-# React + Vite
+# 🛍️ Tienda Online - React + Firebase
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Plataforma de comercio electrónico moderna con autenticación por roles, carrito de compras, gestión de productos, pagos con PayPal y panel administrativo.
 
-Currently, two official plugins are available:
+## 🚀 Tecnologías utilizadas
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🔥 Firebase (Auth, Realtime Database, Storage)
+- ⚛️ React
+- 📦 Vite
+- 🛒 LocalStorage (Carrito)
+- 💳 PayPal (modo sandbox)
+- 🎨 CSS puro
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 👤 Roles de usuario
+
+| Rol        | Permisos                                                         |
+|------------|------------------------------------------------------------------|
+| Cliente    | Registro/Login, ver productos, añadir al carrito, comprar       |
+| Administrador | Panel admin, gestión de productos, usuarios, pedidos, categorías |
+
+---
+
+## 🧩 Funcionalidades principales
+
+### 🧑 Clientes
+- Registro con imagen (opcional)
+- Login y navbar dinámico
+- Carrito con persistencia
+- Modificación de cantidades
+- Checkout con:
+  - Dirección guardada o nueva
+  - Pago en efectivo o PayPal
+- Historial de pedidos (pendiente)
+
+### 🛠️ Admin
+- Dashboard con gráficas de pedidos e ingresos
+- Gestión de:
+  - Productos (CRUD, filtrado, alertas de stock)
+  - Categorías (activas, conteo, % ventas)
+  - Usuarios administradores
+  - Pedidos (en proceso, enviados, etc.)
+- Todo en modales elegantes
+
+---
+
+## 💵 Integración de PayPal
+
+Modo sandbox con botón personalizado.  
+Recuerda colocar tu `client-id` en el archivo `.env`:
+
+```env
+VITE_PAYPAL_CLIENT_ID=TU_CLIENT_ID_SANDBOX
+
+![image](https://github.com/user-attachments/assets/06aee321-d829-4895-ad99-90d259c2131c)
+
+🧪 Cuenta de prueba PayPal (sandbox)
+Email: sb-xxxxx@personal.example.com
+
+Pass: 12345678
+
+Crea una en https://developer.paypal.com/
