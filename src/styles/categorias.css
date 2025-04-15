@@ -1,0 +1,89 @@
+.categorias-admin {
+    padding: 2rem;
+    background: #f7f7f7;
+    min-height: 100vh;
+  }
+  
+  .categorias-admin h2 {
+    margin-bottom: 1.5rem;
+  }
+  
+  .filtros {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  .filtros input[type="text"] {
+    padding: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .filtros label {
+    font-size: 0.9rem;
+  }
+  
+  .form-nueva-categoria {
+    margin: 1rem 0;
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .form-nueva-categoria input {
+    padding: 0.4rem;
+    flex: 1;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .form-nueva-categoria button {
+    padding: 0.4rem 1rem;
+    background: #6b5bff;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .form-nueva-categoria button:hover {
+    background: #5947e8;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 0 4px rgba(0,0,0,0.1);
+  }
+  
+  th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  th {
+    background-color: #f0f0f0;
+  }
+  
+  td button {
+    margin-right: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  td button:first-of-type {
+    background: #ffaa00;
+    color: white;
+  }
+  
+  td button:nth-of-type(2) {
+    background: #e63946;
+    color: white;
+  }
+  

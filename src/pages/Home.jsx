@@ -1,34 +1,54 @@
-import React, { useEffect, useState } from "react";
-import { agregarProducto, escucharProductos } from "../services/productosService";
+import React, { useEffect, useState, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { escucharProductos } from "../services/productosService";
+import { AuthContext } from "../context/AuthContext"; // Asegúrate que esté bien importado
+import "../styles/home.css";
 
 function Home() {
   const [productos, setProductos] = useState([]);
+  const { usuario, rol } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
     escucharProductos((prods) => setProductos(prods));
   }, []);
 
-  const agregarEjemplo = () => {
-    agregarProducto({
-      nombre: "Tenis deportivos",
-      precio: 999,
-      descripcion: "Cómodos para correr",
-      imagen: "https://via.placeholder.com/150",
-      categoria: "Calzado"
-    });
+  const añadirAlCarrito = (producto) => {
+    if (!usuario || rol !== "cliente") {
+      navigate("/login");
+      return;
+    }
+
+    // Aquí puedes usar context, localStorage o tu propia lógica para guardar
+    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+    carrito.push({ ...producto, cantidad: 1 });
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+    alert(`✅ "${producto.nombre}" añadido al carrito.`);
   };
 
   return (
-    <div>
-      <h1>Bienvenido a la Tienda Online</h1>
+    <div className="home-container">
+      <h1 className="titulo-home">Bienvenido a la Tienda Online</h1>
 
-      <div>
+      <div className="grid-productos">
         {productos.map((prod) => (
-          <div key={prod.id} style={{ border: "1px solid #ccc", margin: "1rem", padding: "1rem" }}>
+          <div className="card-producto" key={prod.idFirebase}>
+            <img src={prod.imagen} alt={prod.nombre} className="img-producto" />
             <h3>{prod.nombre}</h3>
-            <p>{prod.descripcion}</p>
-            <p>${prod.precio}</p>
-            <img src={prod.imagen} alt={prod.nombre} width={150} />
+            <p className="descripcion">{prod.descripcion}</p>
+            <p className="precio">${prod.precio}</p>
+
+            <div className="botones">
+              <Link to={`/producto/${prod.idFirebase}`}>
+                <button className="btn-detalles">Ver detalles</button>
+              </Link>
+              <button
+                className="btn-carrito"
+                onClick={() => añadirAlCarrito(prod)}
+              >
+                Añadir al carrito
+              </button>
+            </div>
           </div>
         ))}
       </div>

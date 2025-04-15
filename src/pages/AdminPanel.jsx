@@ -1,25 +1,17 @@
-// src/pages/AdminPanel.jsx
-import React from "react";
+import React, { useState } from "react";
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase/firebaseConfig";
+import { useNavigate, Link } from "react-router-dom";
+import Toast from "../components/Toast";
 import "../styles/dashboard.css";
 
 const AdminPanel = () => {
+  const [toastVisible, setToastVisible] = useState(false);
+  const navigate = useNavigate();
+
   return (
     <div className="dashboard">
-      <aside className="sidebar">
-        <h2 className="logo">Admin</h2>
-        <nav>
-          <ul>
-            <li><a href="#perfil">Perfil</a></li>
-            <li><a href="#datos">Datos</a></li>
-            <li><a href="#productos">Productos</a></li>
-            <li><a href="#usuarios">Usuarios</a></li>
-            <li><a href="#pedidos">Pedidos</a></li>
-            <li><a href="#ingresos">Ingresos</a></li>
-            <li><button onClick={() => alert("Cerrar sesión")}>Cerrar sesión</button></li>
-          </ul>
-        </nav>
-      </aside>
-
+ 
       <main className="main-content">
         <h1>Panel de Administración</h1>
         <div className="cards">
@@ -49,6 +41,10 @@ const AdminPanel = () => {
           </div>
         </div>
       </main>
+
+      {toastVisible && (
+        <Toast message="¡Sesión cerrada!" onClose={() => setToastVisible(false)} />
+      )}
     </div>
   );
 };

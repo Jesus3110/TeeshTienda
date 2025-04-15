@@ -1,0 +1,83 @@
+.home-container {
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  .titulo-home {
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    color: #333;
+  }
+  
+  .grid-productos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 2rem;
+  }
+  
+  .card-producto {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 1.2rem;
+    transition: transform 0.2s ease;
+  }
+  
+  .card-producto:hover {
+    transform: translateY(-5px);
+  }
+  
+  .img-producto {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 0.8rem;
+  }
+  
+  .descripcion {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 0.5rem 0;
+  }
+  
+  .precio {
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .botones {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  
+  .btn-detalles,
+  .btn-carrito {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-detalles {
+    background-color: #eee;
+    color: #333;
+  }
+  
+  .btn-carrito {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .btn-carrito:hover {
+    background-color: #0056b3;
+  }
+  
+  .btn-detalles:hover {
+    background-color: #ddd;
+  }
+  
