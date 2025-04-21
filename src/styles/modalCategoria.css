@@ -1,0 +1,117 @@
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal-categoria {
+    background-color: #FAF8F5;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 2rem;
+    position: relative;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  .modal-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #555;
+  }
+  
+  .modal-categoria-titulo {
+    color: #191919;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.8rem;
+  }
+  
+  .grid-productos-categoria {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .card-producto-categoria {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+  }
+  
+  .card-producto-categoria:hover {
+    transform: translateY(-5px);
+  }
+  
+  .img-producto-categoria {
+    width: 100%;
+    height: 200px;
+    object-fit: contain;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .producto-info {
+    padding: 1rem;
+    text-align: center;
+  }
+  
+  .producto-info h3 {
+    color: #191919;
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+  }
+  
+  .producto-precio {
+    color: #062828;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .btn-agregar-carrito {
+    background-color: #062828;
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-agregar-carrito:hover {
+    background-color: #041e1e;
+  }
+  
+  .sin-productos {
+    text-align: center;
+    grid-column: 1 / -1;
+    color: #555;
+    font-style: italic;
+  }
+  
+  @media (max-width: 768px) {
+    .grid-productos-categoria {
+      grid-template-columns: 1fr;
+    }
+    
+    .modal-categoria {
+      width: 95%;
+      padding: 1rem;
+    }
+  }

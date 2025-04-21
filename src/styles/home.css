@@ -1,83 +1,269 @@
+/* Estilos base que ya tenías */
 .home-container {
-    padding: 2rem;
-    text-align: center;
+  padding: 0;
+  background-color: #FAF8F5;
+  min-height: 100vh;
+}
+
+.banner-carousel {
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 0 1rem;
+}
+
+.banner-img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Beneficios */
+.beneficios-container {
+  display: flex;
+  justify-content: space-around;
+  background-color: white;
+  padding: 1.5rem;
+  margin: 2rem auto;
+  max-width: 1200px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.beneficio {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  padding: 0 1rem;
+}
+
+.beneficio-icono {
+  font-size: 2rem;
+}
+
+.beneficio-texto h4 {
+  color: #062828;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.beneficio-texto p {
+  color: #555555;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Categorías */
+.seccion-categorias {
+  background-color: white;
+  padding: 2rem 1.5rem;
+  margin: 2rem auto;
+  max-width: 1200px;
+  border-radius: 8px;
+}
+
+.titulo-seccion {
+  text-align: center;
+  color: #191919;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+}
+
+.grid-categorias {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.categoria-btn {
+  background-color: #FAF8F5;
+  color: #191919;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.categoria-btn:hover {
+  background-color: #062828;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Productos Destacados */
+.seccion-productos {
+  background-color: white;
+  padding: 2rem 1.5rem;
+  margin: 2rem auto;
+  max-width: 1200px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.titulo-seccion {
+  color: #062828;
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.grid-productos-destacados {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.card-producto-destacado {
+  position: relative;
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.card-producto-destacado:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+/* Badge de descuento */
+.descuento-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: #E63946;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.producto-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.producto-nombre {
+  color: #191919;
+  font-size: 1.2rem;
+  margin: 0;
+  font-weight: 600;
+  flex-grow: 1;
+}
+
+.producto-rating {
+  color: #FFD700;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+}
+
+.img-producto-destacado {
+  width: 100%;
+  height: 200px;
+  object-fit: contain;
+  margin: 1rem 0;
+  cursor: pointer;
+  border-radius: 4px;
+  background-color: #f8f8f8;
+  padding: 1rem;
+}
+
+.producto-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.producto-precio-container {
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.precio-original {
+  text-decoration: line-through;
+  color: #999;
+  margin-right: 0.8rem;
+  font-size: 1rem;
+}
+
+.precio-descuento {
+  color: #E63946;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.precio-normal {
+  color: #062828;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.btn-ver-detalles {
+  background-color: #062828;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: 100%;
+  margin-top: auto;
+}
+
+.btn-ver-detalles:hover {
+  background-color: #062828;
+}
+
+
+/* Controles del carrusel */
+.slick-prev:before, 
+.slick-next:before {
+  color: #062828 !important;
+  font-size: 24px;
+}
+
+.slick-dots li button:before {
+  color: #062828 !important;
+  font-size: 10px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .beneficios-container {
+    flex-direction: column;
+    gap: 1.5rem;
   }
   
-  .titulo-home {
-    margin-bottom: 2rem;
-    font-size: 2rem;
-    color: #333;
+  .grid-productos-destacados {
+    grid-template-columns: 1fr;
   }
   
-  .grid-productos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 2rem;
+  .grid-categorias {
+    grid-template-columns: repeat(2, 1fr);
   }
   
-  .card-producto {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    padding: 1.2rem;
-    transition: transform 0.2s ease;
+  .card-producto-destacado {
+    padding: 1rem;
   }
   
-  .card-producto:hover {
-    transform: translateY(-5px);
-  }
-  
-  .img-producto {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    border-radius: 6px;
-    margin-bottom: 0.8rem;
-  }
-  
-  .descripcion {
+  .btn-ver-detalles {
+    padding: 0.6rem 1rem;
     font-size: 0.9rem;
-    color: #555;
-    margin: 0.5rem 0;
   }
-  
-  .precio {
-    font-weight: bold;
-    margin-bottom: 1rem;
-  }
-  
-  .botones {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-  
-  .btn-detalles,
-  .btn-carrito {
-    flex: 1;
-    padding: 0.5rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s;
-  }
-  
-  .btn-detalles {
-    background-color: #eee;
-    color: #333;
-  }
-  
-  .btn-carrito {
-    background-color: #007bff;
-    color: white;
-  }
-  
-  .btn-carrito:hover {
-    background-color: #0056b3;
-  }
-  
-  .btn-detalles:hover {
-    background-color: #ddd;
-  }
-  
+}
+

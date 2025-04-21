@@ -13,26 +13,87 @@ const ModalEditarProducto = ({ producto, onClose }) => {
   const [errorVisible, setErrorVisible] = useState(false);
   const [errorMensaje, setErrorMensaje] = useState("");
   const [categorias, setCategorias] = useState([]);
+  const [descuentosDisponibles, setDescuentosDisponibles] = useState([]);
+  const [aplicarDescuento, setAplicarDescuento] = useState(!!producto.descuentoAplicado);
+  const [descuentoSeleccionado, setDescuentoSeleccionado] = useState(null);
+  const [precioConDescuento, setPrecioConDescuento] = useState(0);
   const [sinCambiosVisible, setSinCambiosVisible] = useState(false);
 
   useEffect(() => {
     setFormData({ ...producto });
     const db = getDatabase();
-     const refCategorias = ref(db, "categorias");
-    
-      onValue(refCategorias, (snapshot) => {
-        const data = snapshot.val() || {};
-        const lista = Object.values(data)
-          .filter((cat) => cat.activa) // solo activas
-          .map((cat) => cat.nombre);
-        setCategorias(lista);
-      });
+    const refCategorias = ref(db, "categorias");
+    const refDescuentos = ref(db, "descuentos");
+
+    // Obtener categorías
+    onValue(refCategorias, (snapshot) => {
+      const data = snapshot.val() || {};
+      const lista = Object.values(data)
+        .filter((cat) => cat.activa)
+        .map((cat) => cat.nombre);
+      setCategorias(lista);
+    });
+
+    // Obtener descuentos vigentes
+    const unsubscribeDescuentos = onValue(refDescuentos, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const ahora = Date.now();
+        const descuentosArray = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key]
+        })).filter(desc => desc.validoHasta > ahora);
+        
+        setDescuentosDisponibles(descuentosArray);
+        
+        // Si el producto ya tiene un descuento aplicado
+        if (producto.descuentoAplicado) {
+          const descuentoActual = descuentosArray.find(d => d.id === producto.descuentoAplicado);
+          setDescuentoSeleccionado(descuentoActual);
+          if (descuentoActual && producto.precioOriginal) {
+            setPrecioConDescuento(
+              producto.precioOriginal - (producto.precioOriginal * (descuentoActual.porcentaje / 100))
+            );
+          }
+        }
+      }
+    });
+
+    return () => unsubscribeDescuentos();
   }, [producto]);
+
+  const calcularPrecioConDescuento = (precio, porcentaje) => {
+    return precio - (precio * (porcentaje / 100));
+  };
+
+  const handleDescuentoChange = (e) => {
+    const descuentoId = e.target.value;
+    if (descuentoId === "") {
+      setDescuentoSeleccionado(null);
+      setPrecioConDescuento(0);
+    } else {
+      const descuento = descuentosDisponibles.find(d => d.id === descuentoId);
+      setDescuentoSeleccionado(descuento);
+      if (descuento && formData.precioOriginal) {
+        setPrecioConDescuento(calcularPrecioConDescuento(formData.precioOriginal, descuento.porcentaje));
+      }
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "imagen" && files.length > 0) {
       setNuevaImagen(files[0]);
+    } else if (name === "precio") {
+      const precio = parseFloat(value);
+      setFormData(prev => ({
+        ...prev,
+        precio,
+        precioOriginal: aplicarDescuento ? prev.precioOriginal : precio
+      }));
+      if (aplicarDescuento && descuentoSeleccionado) {
+        setPrecioConDescuento(calcularPrecioConDescuento(precio, descuentoSeleccionado.porcentaje));
+      }
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -56,7 +117,9 @@ const ModalEditarProducto = ({ producto, onClose }) => {
     // Verifica si hay cambios
     const comparacion = {
       ...formData,
-      imagen: nuevaImagen ? "" : formData.imagen // evita confusión por Blob vs string
+      imagen: nuevaImagen ? "" : formData.imagen,
+      precio: aplicarDescuento && descuentoSeleccionado ? precioConDescuento : formData.precio,
+      descuentoAplicado: aplicarDescuento ? descuentoSeleccionado?.id : null
     };
   
     const original = {
@@ -80,12 +143,18 @@ const ModalEditarProducto = ({ producto, onClose }) => {
         urlImagen = await getDownloadURL(imagenRef);
       }
   
+      const precioFinal = aplicarDescuento && descuentoSeleccionado ? 
+        precioConDescuento : parseFloat(formData.precio);
+  
       const db = getDatabase();
       const productoRef = ref(db, `productos/${producto.idFirebase}`);
   
       await update(productoRef, {
         ...formData,
         imagen: urlImagen,
+        precio: precioFinal,
+        precioOriginal: formData.precioOriginal || parseFloat(formData.precio),
+        descuentoAplicado: aplicarDescuento ? descuentoSeleccionado?.id : null,
         updatedAt: Date.now()
       });
   
@@ -98,7 +167,6 @@ const ModalEditarProducto = ({ producto, onClose }) => {
       setSubiendo(false);
     }
   };
-  
 
   return (
     <>
@@ -121,61 +189,148 @@ const ModalEditarProducto = ({ producto, onClose }) => {
           <div className="modal-form">
             <h2>Editar Producto</h2>
             <form onSubmit={handleSubmit}>
-              <input name="nombre" value={formData.nombre} onChange={handleChange}
-                     placeholder="Nombre" style={{ borderColor: errores.nombre ? 'red' : undefined }} />
-              {errores.nombre && <small style={{ color: "red" }}>{errores.nombre}</small>}
+              <div className="form-group">
+                <label>Nombre:</label>
+                <input 
+                  name="nombre" 
+                  value={formData.nombre} 
+                  onChange={handleChange}
+                  placeholder="Nombre del producto"
+                  style={{ borderColor: errores.nombre ? 'red' : undefined }} 
+                />
+                {errores.nombre && <small style={{ color: "red" }}>{errores.nombre}</small>}
+              </div>
 
-              <textarea name="descripcion" value={formData.descripcion} onChange={handleChange}
-                        placeholder="Descripción" style={{ borderColor: errores.descripcion ? 'red' : undefined }} />
-              {errores.descripcion && <small style={{ color: "red" }}>{errores.descripcion}</small>}
+              <div className="form-group">
+                <label>Descripción:</label>
+                <textarea 
+                  name="descripcion" 
+                  value={formData.descripcion} 
+                  onChange={handleChange}
+                  placeholder="Descripción del producto"
+                  style={{ borderColor: errores.descripcion ? 'red' : undefined }} 
+                />
+                {errores.descripcion && <small style={{ color: "red" }}>{errores.descripcion}</small>}
+              </div>
 
-              <input name="precio" type="number" value={formData.precio} onChange={handleChange}
-                     placeholder="Precio" style={{ borderColor: errores.precio ? 'red' : undefined }} />
-              {errores.precio && <small style={{ color: "red" }}>{errores.precio}</small>}
+              <div className="form-group">
+                <label>Precio:</label>
+                <input 
+                  name="precio" 
+                  type="number" 
+                  value={aplicarDescuento ? formData.precioOriginal : formData.precio} 
+                  onChange={handleChange}
+                  placeholder="Precio del producto"
+                  style={{ borderColor: errores.precio ? 'red' : undefined }} 
+                />
+                {errores.precio && <small style={{ color: "red" }}>{errores.precio}</small>}
+              </div>
 
-              <input name="stock" type="number" value={formData.stock} onChange={handleChange}
-                     placeholder="Stock" style={{ borderColor: errores.stock ? 'red' : undefined }} />
-              {errores.stock && <small style={{ color: "red" }}>{errores.stock}</small>}
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={aplicarDescuento}
+                    onChange={() => {
+                      setAplicarDescuento(!aplicarDescuento);
+                      if (!aplicarDescuento && !formData.precioOriginal) {
+                        setFormData(prev => ({
+                          ...prev,
+                          precioOriginal: parseFloat(prev.precio)
+                        }));
+                      }
+                    }}
+                  />
+                  ¿Aplicar descuento?
+                </label>
+              </div>
 
-              <select
-  name="categoria"
-  value={formData.categoria}
-  onChange={handleChange}
-  style={{ borderColor: errores.categoria ? "red" : undefined }}
->
-  <option value="">-- Selecciona una categoría --</option>
-  {categorias.map((cat) => (
-    <option key={cat} value={cat}>{cat}</option>
-  ))}
-</select>
+              {aplicarDescuento && (
+                <div className="form-group">
+                  <label>Seleccionar descuento:</label>
+                  <select
+                    name="descuento"
+                    onChange={handleDescuentoChange}
+                    value={descuentoSeleccionado?.id || ''}
+                    style={{ width: '100%' }}
+                  >
+                    <option value="">-- Seleccione un descuento --</option>
+                    {descuentosDisponibles.map((descuento) => (
+                      <option key={descuento.id} value={descuento.id}>
+                        {descuento.porcentaje}% - Válido hasta {new Date(descuento.validoHasta).toLocaleDateString()}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  {descuentoSeleccionado && formData.precioOriginal && (
+                    <div className="descuento-info">
+                      <p><strong>Precio original:</strong> ${formData.precioOriginal.toFixed(2)}</p>
+                      <p><strong>Descuento:</strong> {descuentoSeleccionado.porcentaje}%</p>
+                      <p><strong>Precio final:</strong> ${precioConDescuento.toFixed(2)}</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
-              {errores.categoria && <small style={{ color: "red" }}>{errores.categoria}</small>}
+              <div className="form-group">
+                <label>Stock:</label>
+                <input 
+                  name="stock" 
+                  type="number" 
+                  value={formData.stock} 
+                  onChange={handleChange}
+                  placeholder="Cantidad en stock"
+                  style={{ borderColor: errores.stock ? 'red' : undefined }} 
+                />
+                {errores.stock && <small style={{ color: "red" }}>{errores.stock}</small>}
+              </div>
 
-              {formData.imagen && (
-  <div style={{ marginBottom: "10px" }}>
-    <p>Imagen actual:</p>
-    <img src={formData.imagen} alt="Vista previa" width="100" />
-  </div>
-)}
+              <div className="form-group">
+                <label>Categoría:</label>
+                <select
+                  name="categoria"
+                  value={formData.categoria}
+                  onChange={handleChange}
+                  style={{ borderColor: errores.categoria ? "red" : undefined }}
+                >
+                  <option value="">-- Selecciona una categoría --</option>
+                  {categorias.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                {errores.categoria && <small style={{ color: "red" }}>{errores.categoria}</small>}
+              </div>
 
-<input name="imagen" type="file" accept="image/*" onChange={handleChange} />
+              <div className="form-group">
+                <label>Imagen:</label>
+                {formData.imagen && (
+                  <div style={{ marginBottom: "10px" }}>
+                    <p>Imagen actual:</p>
+                    <img src={formData.imagen} alt="Vista previa" width="100" />
+                  </div>
+                )}
+                <input name="imagen" type="file" accept="image/*" onChange={handleChange} />
+              </div>
 
-
-              <button type="submit" disabled={subiendo}>
-                {subiendo ? "Guardando..." : "Guardar cambios"}
-              </button>
-              <button type="button" onClick={onClose}>Cancelar</button>
+              <div className="form-actions">
+                <button type="submit" disabled={subiendo} className="btn-primary">
+                  {subiendo ? "Guardando..." : "Guardar Cambios"}
+                </button>
+                <button type="button" onClick={onClose} className="btn-secondary">
+                  Cancelar
+                </button>
+              </div>
             </form>
           </div>
-          {sinCambiosVisible && (
-  <div className="modal-backdrop">
-    <div className="modal-form">
-      <h3 style={{ color: "#555" }}>⚠️ No se detectaron cambios en el producto</h3>
-      <button onClick={() => setSinCambiosVisible(false)}>Aceptar</button>
-    </div>
-  </div>
-)}
 
+          {sinCambiosVisible && (
+            <div className="modal-backdrop">
+              <div className="modal-form">
+                <h3 style={{ color: "#555" }}>⚠️ No se detectaron cambios en el producto</h3>
+                <button onClick={() => setSinCambiosVisible(false)}>Aceptar</button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

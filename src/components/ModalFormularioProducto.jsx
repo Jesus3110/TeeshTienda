@@ -1,34 +1,19 @@
-import React, { useState, useEffect } from "react"; // ¡incluye useEffect!
+import React, { useState, useEffect } from "react";
 import { getDatabase, ref, set, get, onValue } from "firebase/database";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
 import "../styles/modal.css";
 
-
-
-
 const ModalFormularioProducto = ({ onClose }) => {
   const [categorias, setCategorias] = useState([]);
+  const [descuentosDisponibles, setDescuentosDisponibles] = useState([]);
   const [exitoVisible, setExitoVisible] = useState(false);
   const [errorVisible, setErrorVisible] = useState(false);
-const [errorMensaje, setErrorMensaje] = useState("");
-const [errores, setErrores] = useState({});
-
-
-
-useEffect(() => {
-  const db = getDatabase();
-  const refCategorias = ref(db, "categorias");
-
-  onValue(refCategorias, (snapshot) => {
-    const data = snapshot.val() || {};
-    const lista = Object.values(data)
-      .filter((cat) => cat.activa) // solo activas
-      .map((cat) => cat.nombre);
-    setCategorias(lista);
-  });
-}, []);
-
+  const [errorMensaje, setErrorMensaje] = useState("");
+  const [errores, setErrores] = useState({});
+  const [aplicarDescuento, setAplicarDescuento] = useState(false);
+  const [descuentoSeleccionado, setDescuentoSeleccionado] = useState(null);
+  const [precioConDescuento, setPrecioConDescuento] = useState(0);
 
   const [producto, setProducto] = useState({
     nombre: "",
@@ -37,16 +22,78 @@ useEffect(() => {
     stock: "",
     categoria: "Ropa",
     imagen: null,
+    precioOriginal: 0,
+    descuentoAplicado: null,
   });
 
   const [subiendo, setSubiendo] = useState(false);
+
+  useEffect(() => {
+    const db = getDatabase();
+    const refCategorias = ref(db, "categorias");
+    const refDescuentos = ref(db, "descuentos");
+
+    // Obtener categorías
+    onValue(refCategorias, (snapshot) => {
+      const data = snapshot.val() || {};
+      const lista = Object.values(data)
+        .filter((cat) => cat.activa)
+        .map((cat) => cat.nombre);
+      setCategorias(lista);
+    });
+
+    // Obtener descuentos vigentes
+    const unsubscribeDescuentos = onValue(refDescuentos, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const ahora = Date.now();
+        const descuentosArray = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key]
+        })).filter(desc => desc.validoHasta > ahora);
+        
+        setDescuentosDisponibles(descuentosArray);
+      }
+    });
+
+    return () => unsubscribeDescuentos();
+  }, []);
+
+  const calcularPrecioConDescuento = (precio, porcentaje) => {
+    return precio - (precio * (porcentaje / 100));
+  };
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "imagen") {
       setProducto((prev) => ({ ...prev, imagen: files[0] }));
+    } else if (name === "precio") {
+      const precio = parseFloat(value);
+      setProducto((prev) => ({ 
+        ...prev, 
+        precio, 
+        precioOriginal: precio 
+      }));
+      if (descuentoSeleccionado) {
+        setPrecioConDescuento(calcularPrecioConDescuento(precio, descuentoSeleccionado.porcentaje));
+      }
     } else {
       setProducto((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleDescuentoChange = (e) => {
+    const descuentoId = e.target.value;
+    if (descuentoId === "") {
+      setDescuentoSeleccionado(null);
+      setPrecioConDescuento(0);
+    } else {
+      const descuento = descuentosDisponibles.find(d => d.id === descuentoId);
+      setDescuentoSeleccionado(descuento);
+      if (descuento && producto.precio) {
+        const precioNum = parseFloat(producto.precio);
+        setPrecioConDescuento(calcularPrecioConDescuento(precioNum, descuento.porcentaje));
+      }
     }
   };
 
@@ -64,6 +111,7 @@ useEffect(() => {
     if (Object.keys(nuevosErrores).length > 0) {
       return;
     }
+
     setSubiendo(true);
     try {
       const db = getDatabase();
@@ -81,11 +129,15 @@ useEffect(() => {
         urlImagen = await getDownloadURL(imagenRef);
       }
 
+      const precioFinal = aplicarDescuento && descuentoSeleccionado ? 
+        precioConDescuento : parseFloat(producto.precio);
+
       const nuevoProducto = {
         id: nuevoID,
         nombre: producto.nombre,
         descripcion: producto.descripcion,
-        precio: parseFloat(producto.precio),
+        precio: precioFinal,
+        precioOriginal: parseFloat(producto.precio),
         stock: parseInt(producto.stock),
         categoria: producto.categoria,
         imagen: urlImagen,
@@ -94,6 +146,7 @@ useEffect(() => {
         createdAt: Date.now(),
         updatedAt: Date.now(),
         tags: [],
+        descuentoAplicado: aplicarDescuento ? descuentoSeleccionado?.id : null,
       };
 
       const newRef = ref(db, `productos/${uuidv4()}`);
@@ -101,7 +154,7 @@ useEffect(() => {
       setExitoVisible(true);
     } catch (error) {
       setErrorMensaje(error.message || "Error al subir producto");
-setErrorVisible(true);
+      setErrorVisible(true);
     } finally {
       setSubiendo(false);
     }
@@ -128,74 +181,130 @@ setErrorVisible(true);
           <div className="modal-form">
             <h2>Agregar Producto</h2>
             <form onSubmit={handleSubmit}>
-  <input
-    name="nombre"
-    placeholder="Nombre"
-    onChange={handleChange}
-    style={{ borderColor: errores.nombre ? 'red' : undefined }}
-  />
-  {errores.nombre && <small style={{ color: "red" }}>{errores.nombre}</small>}
+              <div className="form-group">
+                <label>Nombre:</label>
+                <input
+                  name="nombre"
+                  placeholder="Nombre del producto"
+                  onChange={handleChange}
+                  style={{ borderColor: errores.nombre ? 'red' : undefined }}
+                />
+                {errores.nombre && <small style={{ color: "red" }}>{errores.nombre}</small>}
+              </div>
 
-  <textarea
-    name="descripcion"
-    placeholder="Descripción"
-    onChange={handleChange}
-    style={{ borderColor: errores.descripcion ? 'red' : undefined }}
-  />
-  {errores.descripcion && <small style={{ color: "red" }}>{errores.descripcion}</small>}
+              <div className="form-group">
+                <label>Descripción:</label>
+                <textarea
+                  name="descripcion"
+                  placeholder="Descripción del producto"
+                  onChange={handleChange}
+                  style={{ borderColor: errores.descripcion ? 'red' : undefined }}
+                />
+                {errores.descripcion && <small style={{ color: "red" }}>{errores.descripcion}</small>}
+              </div>
 
-  <input
-    name="precio"
-    type="number"
-    placeholder="Precio"
-    onChange={handleChange}
-    style={{ borderColor: errores.precio ? 'red' : undefined }}
-  />
-  {errores.precio && <small style={{ color: "red" }}>{errores.precio}</small>}
+              <div className="form-group">
+                <label>Precio:</label>
+                <input
+                  name="precio"
+                  type="number"
+                  placeholder="Precio del producto"
+                  onChange={handleChange}
+                  style={{ borderColor: errores.precio ? 'red' : undefined }}
+                />
+                {errores.precio && <small style={{ color: "red" }}>{errores.precio}</small>}
+              </div>
 
-  <input
-    name="stock"
-    type="number"
-    placeholder="Stock"
-    onChange={handleChange}
-    style={{ borderColor: errores.stock ? 'red' : undefined }}
-  />
-  {errores.stock && <small style={{ color: "red" }}>{errores.stock}</small>}
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={aplicarDescuento}
+                    onChange={() => setAplicarDescuento(!aplicarDescuento)}
+                  />
+                  ¿Aplicar descuento?
+                </label>
+              </div>
 
-  <select
-  name="categoria"
-  value={producto.categoria}
-  onChange={handleChange}
-  style={{ borderColor: errores.categoria ? "red" : undefined }}
->
-  <option value="">-- Selecciona una categoría --</option>
-  {categorias.map((cat) => (
-    <option key={cat} value={cat}>{cat}</option>
-  ))}
-</select>
+              {aplicarDescuento && (
+                <div className="form-group">
+                  <label>Seleccionar descuento:</label>
+                  <select
+                    name="descuento"
+                    onChange={handleDescuentoChange}
+                    value={descuentoSeleccionado?.id || ''}
+                    style={{ width: '100%' }}
+                  >
+                    <option value="">-- Seleccione un descuento --</option>
+                    {descuentosDisponibles.map((descuento) => (
+                      <option key={descuento.id} value={descuento.id}>
+                        {descuento.porcentaje}% - Válido hasta {new Date(descuento.validoHasta).toLocaleDateString()}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  {descuentoSeleccionado && producto.precio && (
+                    <div className="descuento-info">
+                      <p><strong>Precio original:</strong> ${parseFloat(producto.precio).toFixed(2)}</p>
+                      <p><strong>Descuento:</strong> {descuentoSeleccionado.porcentaje}%</p>
+                      <p><strong>Precio final:</strong> ${precioConDescuento.toFixed(2)}</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
+              <div className="form-group">
+                <label>Stock:</label>
+                <input
+                  name="stock"
+                  type="number"
+                  placeholder="Cantidad en stock"
+                  onChange={handleChange}
+                  style={{ borderColor: errores.stock ? 'red' : undefined }}
+                />
+                {errores.stock && <small style={{ color: "red" }}>{errores.stock}</small>}
+              </div>
 
-  {errores.categoria && <small style={{ color: "red" }}>{errores.categoria}</small>}
+              <div className="form-group">
+                <label>Categoría:</label>
+                <select
+                  name="categoria"
+                  value={producto.categoria}
+                  onChange={handleChange}
+                  style={{ borderColor: errores.categoria ? "red" : undefined }}
+                >
+                  <option value="">-- Selecciona una categoría --</option>
+                  {categorias.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                {errores.categoria && <small style={{ color: "red" }}>{errores.categoria}</small>}
+              </div>
 
-  <input
-    name="imagen"
-    type="file"
-    accept="image/*"
-    onChange={handleChange}
-  />
+              <div className="form-group">
+                <label>Imagen:</label>
+                <input
+                  name="imagen"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleChange}
+                />
+              </div>
 
-  <button type="submit" disabled={subiendo}>
-    {subiendo ? "Subiendo..." : "Agregar"}
-  </button>
-  <button type="button" onClick={onClose}>Cancelar</button>
-</form>
-
+              <div className="form-actions">
+                <button type="submit" disabled={subiendo} className="btn-primary">
+                  {subiendo ? "Subiendo..." : "Agregar Producto"}
+                </button>
+                <button type="button" onClick={onClose} className="btn-secondary">
+                  Cancelar
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
     </>
   );
-  
 };
 
 export default ModalFormularioProducto;

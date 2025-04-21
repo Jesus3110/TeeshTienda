@@ -36,7 +36,7 @@ function Carrito() {
 
   const total = carrito.reduce((acc, prod) => acc + prod.precio * prod.cantidad, 0);
 
-  const confirmarCompra = async () => {
+  const confirmarCompra = async () => { 
     if (!usuario) {
       alert("Debes iniciar sesión para continuar con la compra.");
       navigate("/login");

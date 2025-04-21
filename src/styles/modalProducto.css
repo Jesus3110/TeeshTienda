@@ -1,0 +1,369 @@
+/* Estilos base del modal - Manteniendo tus colores */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-producto {
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: #666;
+  z-index: 10;
+}
+
+.modal-producto-content {
+  padding: 2rem;
+}
+
+/* Sección principal */
+.modal-main-section {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.modal-producto-imagen {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.img-producto-modal {
+  width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* Badge de descuento - Manteniendo tu color rojo (#E63946) */
+.descuento-badge-modal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: #E63946;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Información del producto */
+.modal-producto-info {
+  flex: 1;
+  min-width: 300px;
+}
+
+.producto-header-modal {
+  margin-bottom: 1.5rem;
+}
+
+.producto-nombre-modal {
+  color: #062828; /* Tu color principal */
+  font-size: 1.8rem;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+}
+
+.producto-precio-container-modal {
+  margin: 1.5rem 0;
+}
+
+.precio-original-modal {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 1.2rem;
+}
+
+.precio-descuento-modal {
+  color: #E63946; /* Tu color de descuento */
+  font-weight: bold;
+  font-size: 1.8rem;
+}
+
+.precio-normal-modal {
+  color: #062828; /* Tu color principal */
+  font-weight: bold;
+  font-size: 1.8rem;
+}
+
+.producto-descripcion-modal p {
+  color: #333;
+  line-height: 1.6;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.shipping-info {
+  margin: 1.5rem 0;
+}
+
+.shipping-badge {
+  background-color: #f0f0f0;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #062828; /* Tu color principal */
+}
+
+/* Selector de cantidad */
+.quantity-selector {
+  margin: 1.5rem 0;
+}
+
+.quantity-selector span {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #666;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.quantity-btn {
+  background-color: #f0f0f0;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quantity-value {
+  font-size: 1.2rem;
+  min-width: 30px;
+  text-align: center;
+}
+
+/* Botones de acción */
+.producto-actions-modal {
+  margin: 2rem 0;
+}
+
+.btn-agregar-carrito-modal {
+  background-color: #062828; /* Tu color principal */
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: 100%;
+}
+
+.btn-agregar-carrito-modal:hover {
+  background-color: #191919;
+}
+
+/* Opción de recojo en tienda */
+.store-pickup-option {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.store-pickup-option p {
+  margin-bottom: 0.5rem;
+  color: #666;
+}
+
+.find-store-btn {
+  background: none;
+  border: none;
+  color: #062828; /* Tu color principal */
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* Especificaciones del producto */
+.product-specs {
+  margin: 2rem 0;
+}
+
+.specs-title {
+  color: #062828; /* Tu color principal */
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.spec-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.spec-label {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.spec-value {
+  color: #333;
+  font-weight: 500;
+}
+
+/* Productos relacionados */
+.productos-relacionados-modal {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #eee;
+}
+
+.related-title {
+  color: #062828; /* Tu color principal */
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.grid-productos-relacionados {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.producto-relacionado-card {
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.producto-relacionado-card:hover {
+  transform: translateY(-5px);
+}
+
+.producto-relacionado-imagen {
+  position: relative;
+  background-color: #f8f8f8;
+  padding: 1rem;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.img-producto-relacionado {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.descuento-badge-relacionado {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #E63946; /* Tu color de descuento */
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.producto-relacionado-info {
+  padding: 0.5rem 0;
+}
+
+.producto-relacionado-nombre {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.3rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.producto-relacionado-rating {
+  color: #FFD700;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.producto-relacionado-precio {
+  display: flex;
+  flex-direction: column;
+}
+
+.precio-original-relacionado {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.precio-descuento-relacionado {
+  color: #E63946; /* Tu color de descuento */
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-main-section {
+    flex-direction: column;
+  }
+  
+  .modal-producto-imagen,
+  .modal-producto-info {
+    min-width: 100%;
+  }
+  
+  .specs-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-productos-relacionados {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-producto {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .grid-productos-relacionados {
+    grid-template-columns: 1fr;
+  }
+}

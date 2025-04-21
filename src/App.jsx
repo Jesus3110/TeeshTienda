@@ -13,6 +13,8 @@ import Pedidos from "./pages/Pedidos";
 import Categorias from "./pages/Categorias";
 import Usuarios from "./pages/Usuarios";
 import Checkout from "./pages/Checkout"; 
+import Banners from "./pages/Banners"; 
+import Descuentos from "./pages/Descuentos"; 
 
 
 
@@ -48,6 +50,8 @@ function App() {
           <Route path="pedidos" element={<Pedidos />} />
           <Route path="categorias" element={<Categorias />} />
           <Route path="usuarios" element={<Usuarios />} />
+          <Route path="banners" element={<Banners />} />
+          <Route path="descuentos" element={<Descuentos />} />
           {/* Agrega aquí más subrutas */}
         </Route>
       </Routes>

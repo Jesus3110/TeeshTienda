@@ -1,38 +1,216 @@
+/* navbar.css */
 .navbar-cliente {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    background-color: #282c34;
-    color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #FAF8F5; /* Beige claro */
+  color: #191919; /* Negro */
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.logo-y-menu {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.logo-navbar span {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #D62828; /* Rojo vibrante */
+}
+
+.menu-principal {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.menu-principal a {
+  color: #191919;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.menu-principal a:hover {
+  color: #D62828;
+}
+
+.menu-usuario {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.menu-usuario a {
+  color: #191919;
+  font-size: 1.2rem;
+}
+
+.hamburguesa {
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #191919;
+}
+
+/* Menú desplegable */
+.menu-cliente {
+  list-style: none;
+  padding: 1rem;
+  background-color: #FAF8F5;
+  position: absolute;
+  top: 60px;
+  right: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  border: 1px solid #E5E5E5;
+}
+
+.menu-cliente li {
+  margin: 0.8rem 0;
+}
+
+.menu-cliente a, .menu-cliente button {
+  color: #191919;
+  text-decoration: none;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  display: block;
+  padding: 0.5rem 1rem;
+}
+
+.menu-cliente a:hover, .menu-cliente button:hover {
+  color: #D62828;
+  background-color: rgba(214, 40, 40, 0.1);
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .menu-principal {
+    display: none;
   }
   
   .hamburguesa {
-    font-size: 24px;
-    cursor: pointer;
+    display: block;
   }
-  
-  .menu-cliente {
-    list-style: none;
-    padding: 10px;
-    background-color: #1e1e1e;
-    position: absolute;
-    top: 60px;
-    right: 10px;
-    border-radius: 6px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    z-index: 10;
-  }
-  
-  .menu-cliente li {
-    margin: 10px 0;
-  }
-  
-  .menu-cliente a, .menu-cliente button {
-    color: white;
-    text-decoration: none;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-  
+}
+
+/* Estilos existentes... */
+
+/* Nuevos estilos para categorías */
+.menu-principal {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.categoria-btn, .ver-mas-btn {
+  background: none;
+  border: none;
+  color: #191919;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s;
+}
+
+.categoria-btn:hover, .ver-mas-btn:hover {
+  color: #062828;
+  transform: translateY(-2px);
+}
+
+.ver-mas-btn {
+  font-weight: bold;
+  color: #062828;
+}
+
+/* Modal de categorías */
+.modal-categorias-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-categorias {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.cerrar-modal {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.categorias-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.categoria-modal-btn {
+  background-color: #FAF8F5;
+  border: none;
+  padding: 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.categoria-modal-btn:hover {
+  background-color: #062828;
+  color: white;
+}
+
+/* Estilos para el botón "Ver más" */
+.ver-mas-btn {
+  background-color: #FAF8F5;
+  color: #062828;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.ver-mas-btn:hover {
+  background-color: #e8e6e1;
+}
+
+/* Asegurar que el menú principal tenga espacio */
+.menu-principal {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Resto de tus estilos existentes... */

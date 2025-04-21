@@ -16,6 +16,8 @@ const AdminLayout = () => {
             <li><a href="/admin/categorias">Categorias</a></li>
             <li><a href="/admin/usuarios">Usuarios</a></li>
             <li><a href="/admin/pedidos">Pedidos</a></li>
+            <li><a href="/admin/banners">Banners</a></li>
+            <li><a href="/admin/descuentos">Descuentos</a></li>
             <li><a href="/admin/ingresos">Ingresos</a></li>
             <li><a href="/">Cerrar sesion</a></li>
           </ul>

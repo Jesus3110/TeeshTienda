@@ -1,0 +1,248 @@
+/* Estilos generales */
+.auth-container {
+    background-color: #FAF8F5;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+  }
+  
+  .auth-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 500px;
+  }
+  
+  .auth-title {
+    color: #191919;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+  }
+  
+  /* Mensajes de error */
+  .auth-error {
+    background-color: #FFEBEE;
+    color: #D62828;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  /* Grupos de formulario */
+  .auth-form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .auth-label {
+    display: block;
+    color: #555555;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .auth-input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #E5E5E5;
+    font-size: 1rem;
+    color: #191919;
+  }
+  
+  /* Sección de dirección */
+  .address-section {
+    background-color: #FAF8F5;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .address-title {
+    color: #191919;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .address-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .address-field {
+    width: 100%;
+  }
+  
+  .address-label {
+    display: block;
+    color: #555555;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .address-input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #E5E5E5;
+    font-size: 0.9rem;
+  }
+  
+  /* Input de archivo */
+  .auth-file-input {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid #E5E5E5;
+  }
+  
+  /* Botón principal */
+  .auth-submit-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: #D62828;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    transition: background-color 0.3s;
+  }
+  
+  .auth-submit-btn:hover {
+    background-color: #A4161A;
+  }
+  
+  /* Divisor */
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .auth-divider-line {
+    flex: 1;
+    height: 1px;
+    background-color: #E5E5E5;
+  }
+  
+  .auth-divider-text {
+    padding: 0 1rem;
+    color: #555555;
+    font-size: 0.9rem;
+  }
+  
+  /* Botones sociales */
+  .social-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.8rem;
+    background-color: white;
+    border: 1px solid #E5E5E5;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.3s;
+  }
+  
+  .social-btn:hover {
+    background-color: #FAF8F5;
+  }
+  
+  .social-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  /* Texto de cambio */
+  .auth-switch-text {
+    text-align: center;
+    color: #555555;
+    margin-top: 1.5rem;
+  }
+  
+  .auth-switch-btn {
+    background: none;
+    border: none;
+    color: #D62828;
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: underline;
+  }
+  
+  /* Modal de éxito */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal-form {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 400px;
+    width: 100%;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .auth-card {
+      padding: 1.5rem;
+    }
+    
+    .social-buttons {
+      grid-template-columns: 1fr;
+    }
+    
+    .address-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Mantén tus estilos existentes y añade estos */
+
+.social-buttons {
+    margin-bottom: 1.5rem;
+  }
+  
+  .google-btn {
+    background-color: #4285F4;
+    color: white;
+    border: none;
+  }
+  
+  .google-btn:hover {
+    background-color: #357ABD;
+  }
+  
+  /* Ajusta el espaciado para el botón de Google arriba */
+  .auth-form-group:first-of-type {
+    margin-top: 1.5rem;
+  }
