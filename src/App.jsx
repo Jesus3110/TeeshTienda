@@ -15,6 +15,7 @@ import Usuarios from "./pages/Usuarios";
 import Checkout from "./pages/Checkout"; 
 import Banners from "./pages/Banners"; 
 import Descuentos from "./pages/Descuentos"; 
+import Historial from "./pages/HistorialPedidos"; 
 
 
 
@@ -34,7 +35,8 @@ function App() {
         <Route path="/carrito" element={<Carrito />} />
         <Route path="/login" element={<Login />} />
         <Route path="/checkout" element={<Checkout />} />
-        
+        <Route path="/pedidos" element={<Pedidos />} />
+        <Route path="/historial" element={<Historial />} />
 
         {/* Rutas admin anidadas con layout */}
         <Route
@@ -52,6 +54,7 @@ function App() {
           <Route path="usuarios" element={<Usuarios />} />
           <Route path="banners" element={<Banners />} />
           <Route path="descuentos" element={<Descuentos />} />
+          <Route path="historial" element={<Historial />} />
           {/* Agrega aquí más subrutas */}
         </Route>
       </Routes>

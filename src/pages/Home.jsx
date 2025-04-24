@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { escucharProductos } from "../services/productosService";
 import { AuthContext } from "../context/AuthContext";
 import { obtenerBannersActivos } from "../services/bannersService";
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, onValue, set } from "firebase/database";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -113,11 +113,26 @@ function Home() {
       navigate("/login");
       return;
     }
-    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-    carrito.push({ ...producto, cantidad: 1 });
-    localStorage.setItem("carrito", JSON.stringify(carrito));
-    alert(`✅ "${producto.nombre}" añadido al carrito.`);
+  
+    const db = getDatabase();
+    const carritoRef = ref(db, `carritos/${usuario.uid}`);
+  
+    onValue(carritoRef, (snapshot) => {
+      const carritoActual = snapshot.val() || [];
+  
+      const index = carritoActual.findIndex(p => p.idFirebase === producto.idFirebase);
+  
+      if (index !== -1) {
+        carritoActual[index].cantidad += 1;
+      } else {
+        carritoActual.push({ ...producto, cantidad: 1 });
+      }
+  
+      set(carritoRef, carritoActual);
+      alert(`✅ "${producto.nombre}" añadido al carrito.`);
+    }, { onlyOnce: true }); // evita loop infinito
   };
+  
 
   const verDetalles = (producto) => {
     setProductoSeleccionado(producto);
@@ -280,6 +295,7 @@ function Home() {
           )}
           onClose={() => setMostrarModalCategoria(false)}
           onAddToCart={añadirAlCarrito}
+          descuentos={descuentos} 
         />
       )}
 

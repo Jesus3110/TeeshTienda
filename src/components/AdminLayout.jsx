@@ -19,6 +19,7 @@ const AdminLayout = () => {
             <li><a href="/admin/banners">Banners</a></li>
             <li><a href="/admin/descuentos">Descuentos</a></li>
             <li><a href="/admin/ingresos">Ingresos</a></li>
+            <li><a href="/admin/historial">Historial</a></li>
             <li><a href="/">Cerrar sesion</a></li>
           </ul>
         </nav>

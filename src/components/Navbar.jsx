@@ -14,12 +14,12 @@ function Navbar() {
   const [mostrarModalTodasCategorias, setMostrarModalTodasCategorias] = useState(false);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
   const [productos, setProductos] = useState([]);
+  const [descuentos, setDescuentos] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const db = getDatabase();
     
-    // Obtener categorías
     const refCat = ref(db, "categorias");
     onValue(refCat, (snapshot) => {
       const data = snapshot.val() || {};
@@ -33,7 +33,6 @@ function Navbar() {
       setCategorias(lista);
     });
 
-    // Obtener productos
     const refProd = ref(db, "productos");
     onValue(refProd, (snapshot) => {
       const data = snapshot.val() || {};
@@ -43,10 +42,35 @@ function Navbar() {
       }));
       setProductos(lista);
     });
+
+    const refDescuentos = ref(db, "descuentos");
+    onValue(refDescuentos, (snapshot) => {
+      const data = snapshot.val() || {};
+      const listaDescuentos = Object.entries(data).map(([id, value]) => ({
+        id,
+        ...value,
+        validoHasta: value.validoHasta ? new Date(value.validoHasta) : null
+      }));
+      setDescuentos(listaDescuentos);
+    });
   }, []);
 
-  const cerrarSesion = () => {
-    signOut(auth);
+  const obtenerDescuentoProducto = (producto) => {
+    if (!producto || !producto.descuentoAplicado || !descuentos.length) return null;
+    const descuentoEncontrado = descuentos.find(d => d.id === producto.descuentoAplicado);
+    if (descuentoEncontrado && descuentoEncontrado.validoHasta) {
+      return new Date(descuentoEncontrado.validoHasta) > new Date() ? descuentoEncontrado : null;
+    }
+    return descuentoEncontrado;
+  };
+
+  const cerrarSesion = async () => {
+    try {
+      await signOut(auth);
+      navigate("/");
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
   };
 
   const handleCategoriaClick = (categoria) => {
@@ -58,20 +82,17 @@ function Navbar() {
       navigate("/login");
       return;
     }
-    
     let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
     carrito.push({ ...producto, cantidad: 1 });
     localStorage.setItem("carrito", JSON.stringify(carrito));
     alert(`✅ "${producto.nombre}" añadido al carrito.`);
   };
 
-  // Mostrar solo las primeras 7 categorías
   const categoriasPrincipales = categorias.slice(0, 7);
   const categoriasRestantes = categorias.slice(7);
 
   return (
     <nav className="navbar-cliente">
-      {/* Logo y menú principal */}
       <div className="logo-y-menu">
         <div className="logo-navbar">
           <Link to="/" className="logo-link">
@@ -101,7 +122,6 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Menú de usuario */}
       <div className="menu-usuario">
         {rol === "cliente" && <Link to="/carrito">🛒</Link>}
         <div className="hamburguesa" onClick={() => setMenuAbierto(!menuAbierto)}>
@@ -109,7 +129,6 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Menú desplegable */}
       {menuAbierto && (
         <ul className={`menu-cliente ${menuAbierto ? "activo" : ""}`}>
           {rol === "cliente" ? (
@@ -117,6 +136,7 @@ function Navbar() {
               <li><Link to="/perfil">👤 Perfil</Link></li>
               <li><Link to="/carrito">🛒 Carrito</Link></li>
               <li><Link to="/pedidos">📦 Pedidos</Link></li>
+              <li><Link to="/historial">📦 Historial</Link></li>
               <li><button onClick={cerrarSesion}>🚪 Cerrar sesión</button></li>
             </>
           ) : (
@@ -127,7 +147,6 @@ function Navbar() {
         </ul>
       )}
 
-      {/* Modal para todas las categorías (Ver más) */}
       {mostrarModalTodasCategorias && (
         <div className="modal-categorias-overlay">
           <div className="modal-categorias">
@@ -158,7 +177,6 @@ function Navbar() {
         </div>
       )}
 
-      {/* Modal para productos de categoría específica */}
       {categoriaSeleccionada && (
         <ModalCategoria
           categoria={categoriaSeleccionada}
@@ -168,6 +186,7 @@ function Navbar() {
           )}
           onClose={() => setCategoriaSeleccionada(null)}
           onAddToCart={handleAddToCart}
+          descuentos={descuentos}
         />
       )}
     </nav>

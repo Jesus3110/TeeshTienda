@@ -80,24 +80,37 @@ const ModalEditarProducto = ({ producto, onClose }) => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "imagen" && files.length > 0) {
-      setNuevaImagen(files[0]);
-    } else if (name === "precio") {
-      const precio = parseFloat(value);
+  // Dentro de tu componente ModalEditarProducto...
+
+const handleChange = (e) => {
+  const { name, value, files } = e.target;
+
+  if (name === "imagen" && files.length > 0) {
+    setNuevaImagen(files[0]);
+  } else if (name === "precio") {
+    // Permitimos borrar el campo
+    const precio = value === '' ? '' : parseFloat(value);
+
+    if (aplicarDescuento) {
       setFormData(prev => ({
         ...prev,
-        precio,
-        precioOriginal: aplicarDescuento ? prev.precioOriginal : precio
+        precioOriginal: precio
       }));
-      if (aplicarDescuento && descuentoSeleccionado) {
+
+      if (descuentoSeleccionado && precio !== '') {
         setPrecioConDescuento(calcularPrecioConDescuento(precio, descuentoSeleccionado.porcentaje));
       }
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      setFormData(prev => ({
+        ...prev,
+        precio: precio
+      }));
     }
-  };
+  } else {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  }
+};
+
 
   const validar = () => {
     const nuevosErrores = {};

@@ -1,26 +1,45 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { getDatabase, ref, set } from "firebase/database";
+import { getDatabase, ref, onValue, set, remove } from "firebase/database";
 
 function Carrito() {
   const [carrito, setCarrito] = useState([]);
   const navigate = useNavigate();
   const { usuario } = useContext(AuthContext);
 
+  // Cargar carrito desde Firebase al iniciar
   useEffect(() => {
-    const datos = JSON.parse(localStorage.getItem("carrito")) || [];
-    setCarrito(datos);
-  }, []);
+    if (!usuario) return;
 
+    const db = getDatabase();
+    const refCarrito = ref(db, `carritos/${usuario.uid}`);
+
+    const unsubscribe = onValue(refCarrito, (snapshot) => {
+      const datos = snapshot.val();
+      setCarrito(Array.isArray(datos) ? datos : []);
+    });
+
+    return () => unsubscribe();
+  }, [usuario]);
+
+  // Actualizar carrito en Firebase
   const actualizarCarrito = (nuevoCarrito) => {
     setCarrito(nuevoCarrito);
-    localStorage.setItem("carrito", JSON.stringify(nuevoCarrito));
+    if (usuario) {
+      const db = getDatabase();
+      const refCarrito = ref(db, `carritos/${usuario.uid}`);
+      set(refCarrito, nuevoCarrito);
+    }
   };
 
   const cambiarCantidad = (index, nuevaCantidad) => {
     const copia = [...carrito];
-    copia[index].cantidad = Math.max(1, nuevaCantidad);
+    if (nuevaCantidad === '' || isNaN(nuevaCantidad)) {
+      copia[index].cantidad = '';
+    } else {
+      copia[index].cantidad = Math.max(1, parseInt(nuevaCantidad));
+    }
     actualizarCarrito(copia);
   };
 
@@ -30,28 +49,27 @@ function Carrito() {
   };
 
   const vaciarCarrito = () => {
-    localStorage.removeItem("carrito");
+    if (usuario) {
+      const db = getDatabase();
+      const refCarrito = ref(db, `carritos/${usuario.uid}`);
+      remove(refCarrito);
+    }
     setCarrito([]);
   };
 
-  const total = carrito.reduce((acc, prod) => acc + prod.precio * prod.cantidad, 0);
+  const total = carrito.reduce((acc, prod) => acc + (prod.precio * (parseInt(prod.cantidad) || 0)), 0);
 
-  const confirmarCompra = async () => { 
+  const confirmarCompra = async () => {
     if (!usuario) {
       alert("Debes iniciar sesión para continuar con la compra.");
       navigate("/login");
       return;
     }
-
-    const db = getDatabase();
-    const refCarrito = ref(db, `carritos/${usuario.uid}`);
-    await set(refCarrito, carrito);
-
-    localStorage.removeItem("carrito");
-+       setCarrito([])
-
+  
+    // ✅ Solo redirige, no borres nada aquí
     navigate("/checkout");
   };
+  
 
   return (
     <div style={{ padding: "2rem" }}>
@@ -79,12 +97,14 @@ function Carrito() {
                   <input
                     type="number"
                     min="1"
-                    value={prod.cantidad || 1}
-                    onChange={(e) => cambiarCantidad(index, parseInt(e.target.value))}
+                    value={prod.cantidad === '' ? '' : prod.cantidad}
+                    onChange={(e) => cambiarCantidad(index, e.target.value)}
                     style={{ width: "60px" }}
                   />
                 </td>
-                <td>${(prod.precio * prod.cantidad).toFixed(2)}</td>
+                <td>
+                  ${!isNaN(prod.precio * prod.cantidad) ? (prod.precio * prod.cantidad).toFixed(2) : "0.00"}
+                </td>
                 <td>
                   <button onClick={() => eliminarProducto(index)}>❌</button>
                 </td>
@@ -101,19 +121,19 @@ function Carrito() {
             🗑️ Vaciar carrito
           </button>
           <button
-  style={{
-    marginTop: "1rem",
-    marginLeft: "1rem",
-    background: "#2ecc71",
-    color: "#fff",
-    padding: "0.5rem 1rem",
-    border: "none",
-    borderRadius: "5px"
-  }}
-  onClick={() => navigate("/checkout")}
->
-  ✅ Confirmar compra
-</button>
+            style={{
+              marginTop: "1rem",
+              marginLeft: "1rem",
+              background: "#2ecc71",
+              color: "#fff",
+              padding: "0.5rem 1rem",
+              border: "none",
+              borderRadius: "5px"
+            }}
+            onClick={confirmarCompra}
+          >
+            ✅ Confirmar compra
+          </button>
         </>
       )}
 

@@ -1,0 +1,54 @@
+
+.usuario-toggle {
+  background-color: #f0f0f0;
+  color: #333;
+  padding: 10px 15px;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  transition: background-color 0.2s ease;
+}
+
+.usuario-toggle:hover {
+  background-color: #ddd;
+}
+
+.pedidos-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.pedidos-table th,
+.pedidos-table td {
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.pedidos-table th {
+  background-color: #f7f7f7;
+  font-weight: bold;
+}
+
+.pedido-modal {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 500px;
+  margin: auto;
+}
+
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.estrellas {
+  color: gold;
+  font-size: 1.2em;
+}

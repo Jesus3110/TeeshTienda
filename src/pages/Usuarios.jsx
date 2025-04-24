@@ -117,6 +117,7 @@ const Usuarios = () => {
 
       {mostrarModalAgregar && (
         <ModalAgregarUsuario onClose={() => setMostrarModalAgregar(false)} />
+        
       )}
     </div>
   );

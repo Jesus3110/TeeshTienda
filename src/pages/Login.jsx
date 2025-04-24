@@ -3,9 +3,7 @@ import { auth } from "../firebase/firebaseConfig";
 import { getDatabase, ref, set, get } from "firebase/database";
 import { 
   signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup
+  createUserWithEmailAndPassword
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -31,7 +29,6 @@ function Login() {
   });
 
   const navigate = useNavigate();
-  const googleProvider = new GoogleAuthProvider();
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -44,7 +41,7 @@ function Login() {
 
   const guardarUsuarioEnDB = async (userId, email, nombre = "", imagenURL = "/img/user-default.png") => {
     const db = getDatabase();
-    const userRef = red(db, `usuarios/${userId}`);
+    const userRef = ref(db, `usuarios/${userId}`);
     
     const direccion = datos.calle ? 
       `${datos.calle} ${datos.numero}, ${datos.colonia}, ${datos.ciudad}, ${datos.estado}, CP ${datos.cp}` : 
@@ -56,7 +53,7 @@ function Login() {
       telefono: datos.telefono || "",
       direccion,
       imagen: imagenURL,
-      rol: "cliente", // Por defecto todos son clientes
+      rol: "cliente",
       activo: true
     });
   };
@@ -65,12 +62,12 @@ function Login() {
     const db = getDatabase();
     const userRef = ref(db, `usuarios/${userId}/rol`);
     const snapshot = await get(userRef);
-    const rol = snapshot.val() || "cliente"; // Por defecto cliente si no existe
+    const rol = snapshot.val() || "cliente";
     
     if (rol === "admin") {
       navigate("/admin");
     } else {
-      navigate("/"); // O a la ruta que prefieras para usuarios normales
+      navigate("/");
     }
   };
 
@@ -111,39 +108,6 @@ function Login() {
     }
   };
 
-  const loginConGoogle = async () => {
-    try {
-      setError("");
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      
-      // Verificar si existe en la base de datos
-      const db = getDatabase();
-      const userRef = ref(db, `usuarios/${user.uid}`);
-      const snapshot = await get(userRef);
-      
-      if (!snapshot.exists()) {
-        if (modoRegistro) {
-          await guardarUsuarioEnDB(
-            user.uid, 
-            user.email, 
-            user.displayName || "Usuario", 
-            user.photoURL || "/img/user-default.png"
-          );
-        } else {
-          setError("No existe una cuenta con Google. Regístrate primero.");
-          await auth.signOut();
-          return;
-        }
-      }
-      
-      await verificarRolYRedirigir(user.uid);
-    } catch (error) {
-      console.error("Error con Google:", error);
-      setError(error.message);
-    }
-  };
-
   return (
     <div className="auth-container">
       {exito && (
@@ -162,19 +126,6 @@ function Login() {
 
         {error && <div className="auth-error">{error}</div>}
 
-        {/* Botón de Google arriba */}
-        {modoRegistro && (
-          <div className="social-buttons">
-            <button
-              onClick={loginConGoogle}
-              className="social-btn google-btn"
-            >
-              <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" className="social-icon" />
-              Registrarse con Google
-            </button>
-          </div>
-        )}
-
         <div className="auth-form-group">
           <label className="auth-label">Correo electrónico</label>
           <input
@@ -182,6 +133,7 @@ function Login() {
             placeholder="tu@correo.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
 
@@ -193,37 +145,34 @@ function Login() {
             type="password"
             value={pass}
             onChange={(e) => setPass(e.target.value)}
+            required
           />
         </div>
 
         {modoRegistro && (
           <>
             <div className="auth-form-group">
-              <label className="auth-label">Nombre completo</label>
               <input
                 name="nombre"
                 className="auth-input"
-                placeholder="Ej. Juan Pérez"
+                placeholder="Nombre completo"
                 onChange={handleChange}
+                required
               />
             </div>
 
             <div className="auth-form-group">
-              <label className="auth-label">Teléfono</label>
               <input
                 name="telefono"
                 className="auth-input"
-                placeholder="Ej. 5551234567"
+                placeholder="Teléfono"
                 onChange={handleChange}
               />
             </div>
 
             <div className="address-section">
-              <h3 className="address-title">Dirección de envío</h3>
-
               <div className="address-row">
                 <div className="address-field">
-                  <label className="address-label">Calle</label>
                   <input
                     name="calle"
                     className="address-input"
@@ -232,7 +181,6 @@ function Login() {
                   />
                 </div>
                 <div className="address-field">
-                  <label className="address-label">Número</label>
                   <input
                     name="numero"
                     className="address-input"
@@ -243,7 +191,6 @@ function Login() {
               </div>
 
               <div className="auth-form-group">
-                <label className="address-label">Colonia</label>
                 <input
                   name="colonia"
                   className="address-input"
@@ -254,7 +201,6 @@ function Login() {
 
               <div className="address-row">
                 <div className="address-field">
-                  <label className="address-label">Ciudad</label>
                   <input
                     name="ciudad"
                     className="address-input"
@@ -263,7 +209,6 @@ function Login() {
                   />
                 </div>
                 <div className="address-field">
-                  <label className="address-label">Estado</label>
                   <input
                     name="estado"
                     className="address-input"
@@ -274,18 +219,17 @@ function Login() {
               </div>
 
               <div className="auth-form-group">
-                <label className="address-label">Código Postal</label>
                 <input
                   name="cp"
                   className="address-input"
-                  placeholder="CP"
+                  placeholder="Código Postal"
                   onChange={handleChange}
                 />
               </div>
             </div>
 
             <div className="auth-form-group">
-              <label className="auth-label">Foto de perfil (opcional)</label>
+              <label>Foto de perfil (opcional)</label>
               <input
                 name="imagen"
                 type="file"
@@ -303,26 +247,6 @@ function Login() {
         >
           {modoRegistro ? "Registrarse" : "Iniciar sesión"}
         </button>
-
-        {!modoRegistro && (
-          <>
-            <div className="auth-divider">
-              <div className="auth-divider-line"></div>
-              <span className="auth-divider-text">o</span>
-              <div className="auth-divider-line"></div>
-            </div>
-
-            <div className="social-buttons">
-              <button
-                onClick={loginConGoogle}
-                className="social-btn google-btn"
-              >
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" className="social-icon" />
-                Iniciar con Google
-              </button>
-            </div>
-          </>
-        )}
 
         <p className="auth-switch-text">
           {modoRegistro ? "¿Ya tienes cuenta?" : "¿No tienes cuenta?"}{" "}

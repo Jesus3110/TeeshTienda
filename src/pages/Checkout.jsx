@@ -2,35 +2,49 @@ import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { getDatabase, ref, set, get } from "firebase/database";
 import { v4 as uuidv4 } from "uuid";
-import PaypalButton from "../components/PaypalButton";
+import StripeButton from "../components/StripeButton";
 import { useNavigate } from "react-router-dom";
 
 const Checkout = () => {
+  const MODO_PRUEBA = true; // 🧪 Cambiar a false para modo real
+
   const { usuario } = useContext(AuthContext);
   const [direccion, setDireccion] = useState("");
   const [nuevaDireccion, setNuevaDireccion] = useState("");
   const [carrito, setCarrito] = useState([]);
   const [total, setTotal] = useState(0);
+  const [nombreUsuario, setNombreUsuario] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!usuario) return;
 
     const db = getDatabase();
-    const refUser = ref(db, `usuarios/${usuario.uid}/direccion`);
-
+    const refUser = ref(db, `usuarios/${usuario.uid}`);
     get(refUser).then(snapshot => {
-      if (snapshot.exists()) setDireccion(snapshot.val());
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        setDireccion(data.direccion || "");
+        setNombreUsuario(data.nombre || "");
+      }
     });
 
-    const localData = JSON.parse(localStorage.getItem("carrito")) || [];
-    setCarrito(localData);
-    const totalCalculado = localData.reduce(
-      (acc, prod) => acc + prod.precio * prod.cantidad,
-      0
-    );
-    setTotal(totalCalculado);
+    const refCarrito = ref(db, `carritos/${usuario.uid}`);
+    get(refCarrito).then(snapshot => {
+      const datos = snapshot.val();
+      setCarrito(Array.isArray(datos) ? datos : []);
+    });
   }, [usuario]);
+
+  useEffect(() => {
+    if (carrito.length > 0) {
+      const totalCalculado = carrito.reduce(
+        (acc, prod) => acc + (prod.precio || 0) * (prod.cantidad || 1),
+        0
+      );
+      setTotal(totalCalculado);
+    }
+  }, [carrito]);
 
   const confirmarCompra = async (tipoPago) => {
     const direccionFinal = nuevaDireccion || direccion;
@@ -50,6 +64,7 @@ const Checkout = () => {
 
     await set(pedidoRef, {
       usuario: usuario.uid,
+      nombre: nombreUsuario,
       productos: carrito,
       direccion: direccionFinal,
       metodoPago: tipoPago,
@@ -58,9 +73,11 @@ const Checkout = () => {
       total,
     });
 
-    localStorage.removeItem("carrito");
+    const refCarrito = ref(db, `carritos/${usuario.uid}`);
+    await set(refCarrito, null);
+
     alert("✅ Pedido registrado correctamente");
-    navigate("/"); // Puedes cambiarlo a /gracias si tienes página de agradecimiento
+    navigate("/");
   };
 
   return (
@@ -83,6 +100,7 @@ const Checkout = () => {
 
       <div style={{ marginTop: "1rem" }}>
         <button
+          disabled={total <= 0}
           onClick={() => confirmarCompra("efectivo")}
           style={{
             marginRight: "1rem",
@@ -90,7 +108,9 @@ const Checkout = () => {
             color: "#fff",
             padding: "0.5rem 1rem",
             border: "none",
-            borderRadius: "5px"
+            borderRadius: "5px",
+            opacity: total <= 0 ? 0.6 : 1,
+            cursor: total <= 0 ? "not-allowed" : "pointer"
           }}
         >
           💵 Pagar en efectivo
@@ -98,9 +118,18 @@ const Checkout = () => {
       </div>
 
       <h4 style={{ marginTop: "2rem" }}>O pagar con tarjeta:</h4>
-      <PaypalButton
+      <StripeButton
         total={total}
-        onSuccess={() => confirmarCompra("paypal")}
+        carrito={carrito}
+        usuario={usuario}
+        confirmar={() => {
+          if (MODO_PRUEBA) {
+            alert("🧪 Modo prueba: simulando pago con tarjeta...");
+            confirmarCompra("stripe (prueba)");
+          } else {
+            confirmarCompra("stripe");
+          }
+        }}
       />
 
       <div style={{ marginTop: "2rem" }}>

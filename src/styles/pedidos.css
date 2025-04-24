@@ -1,0 +1,126 @@
+.pedidos-container {
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .table-responsive {
+    overflow-x: auto;
+  }
+  
+  .pedidos-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  .pedidos-table th, 
+  .pedidos-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .pedidos-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+  }
+  
+  .ver-detalle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+  }
+  
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .pedido-modal {
+    background: white;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    outline: none;
+  }
+  
+  .modal-content {
+    padding: 2rem;
+  }
+  
+  .info-section p {
+    margin: 0.5rem 0;
+  }
+  
+  .mapa-container {
+    margin: 1rem 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .mapa-iframe {
+    width: 100%;
+    height: 300px;
+    border: none;
+  }
+  
+  .ver-mapa-link {
+    display: block;
+    text-align: center;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .productos-section {
+    margin: 1rem 0;
+  }
+  
+  .productos-section ul {
+    padding-left: 1.5rem;
+  }
+  
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  
+  .btn-success {
+    background-color: #28a745;
+    color: white;
+  }
+  
+  .btn-cerrar {
+    background-color: #dc3545;
+    color: white;
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+  }
