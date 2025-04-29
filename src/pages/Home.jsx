@@ -125,7 +125,13 @@ function Home() {
       if (index !== -1) {
         carritoActual[index].cantidad += cantidad;
       } else {
-        carritoActual.push({ ...producto, cantidad });
+        carritoActual.push({
+          idFirebase: producto.idFirebase,
+          nombre: producto.nombre,
+          precio: producto.precio,
+          cantidad,
+          categoria: producto.categoria || "Sin categoría" // 👈 Nuevo campo agregado
+        });        
       }
   
       set(carritoRef, carritoActual);

@@ -31,26 +31,11 @@ const AdminPanel = () => {
     { name: "Pendiente", value: 30 },
   ];
 
-  const categoriasData = [
-    { name: "Ropa", value: 45 },
-    { name: "Accesorios", value: 30 },
-    { name: "Calzado", value: 25 },
-  ];
-
-  const productosData = [
-    { name: "Camiseta básica", value: 60 },
-    { name: "Aretes", value: 25 },
-    { name: "Tenis blancos", value: 15 },
-  ];
-
-  const ingresosData = [
-    { name: "Enero", ingresos: 4000 },
-    { name: "Febrero", ingresos: 3000 },
-    { name: "Marzo", ingresos: 5000 },
-    { name: "Abril", ingresos: 2500 },
-    { name: "Mayo", ingresos: 6000 },
-    { name: "Junio", ingresos: 3200 },
-  ];
+  const [categoriasData, setCategoriasData] = useState([]);
+  const [productosData, setProductosData] = useState([]);
+  const [ingresosTotales, setIngresosTotales] = useState(0);
+  const [ingresosData, setIngresosData] = useState([]);
+  const [estadoPedidosSemana, setEstadoPedidosSemana] = useState([]);
 
   const COLORS = [
     "#FF9AA2", // Rosa más fuerte
@@ -62,30 +47,119 @@ const AdminPanel = () => {
   ];
 
   useEffect(() => {
-    const db = getDatabase(); // ✔️ generas 'db' aquí localmente
+    const db = getDatabase();
     const pedidosRef = ref(db, "pedidos/");
 
     onValue(pedidosRef, (snapshot) => {
       const data = snapshot.val();
       const nuevasEntregas = [];
+      const resumenSemanal = {
+        pendiente: 0,
+        "en proceso": 0,
+        entregado: 0,
+      };
+
+      const hoy = new Date();
+      const primerDiaSemana = new Date(
+        hoy.setDate(hoy.getDate() - hoy.getDay())
+      ); // domingo
+      primerDiaSemana.setHours(0, 0, 0, 0);
 
       if (data) {
-        Object.keys(data).forEach((key) => {
-          const pedido = data[key];
-          const fechaTimestamp = pedido.creadoEn;
-          if (fechaTimestamp) {
-            const fechaEntrega = new Date(fechaTimestamp);
+        Object.values(data).forEach((pedido) => {
+          const fechaPedido = new Date(pedido.creadoEn);
+          if (pedido.creadoEn && fechaPedido >= primerDiaSemana) {
+            const estado = pedido.estado?.toLowerCase();
+            if (resumenSemanal.hasOwnProperty(estado)) {
+              resumenSemanal[estado]++;
+            }
+          }
+
+          if (pedido.creadoEn) {
             nuevasEntregas.push({
-              fecha: fechaEntrega,
+              fecha: new Date(pedido.creadoEn),
               descripcion: `Pedido de ${pedido.nombre} - ${pedido.estado}`,
             });
           }
         });
+
+        // Transformar a array para el PieChart
+        const resumenFormateado = Object.entries(resumenSemanal).map(
+          ([name, value]) => ({
+            name: name.charAt(0).toUpperCase() + name.slice(1),
+            value,
+          })
+        );
+
+        setEstadoPedidosSemana(resumenFormateado); // nuevo useState: estadoPedidosSemana
       }
 
       setEntregas(nuevasEntregas);
     });
+
+    // Productos más vendidos
+    const productosRef = ref(db, "dashboard/productosVendidos");
+    onValue(productosRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const productos = Object.entries(data).map(([nombre, cantidad]) => ({
+          name: nombre,
+          value: cantidad,
+        }));
+        setProductosData(productos);
+      }
+    });
+
+    // Categorías más vendidas
+    const categoriasRef = ref(db, "dashboard/categoriasVendidas");
+    onValue(categoriasRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const categorias = Object.entries(data).map(([nombre, cantidad]) => ({
+          name: nombre,
+          value: cantidad,
+        }));
+        setCategoriasData(categorias);
+      }
+    });
+
+    // Ingresos totales
+    const ingresosRef = ref(db, "dashboard/ingresosTotales");
+    onValue(ingresosRef, (snapshot) => {
+      const total = snapshot.val() || 0;
+      setIngresosTotales(total);
+    });
+
+    // Ingresos por mes
+    const mesesOrdenados = [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
+    ];
+
+    const ingresosPorMesRef = ref(db, "dashboard/ingresosPorMes");
+    onValue(ingresosPorMesRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      const listaIngresos = mesesOrdenados.map((mes) => ({
+        name: mes,
+        ingresos: data[mes.toLowerCase()] || 0,
+      }));
+      setIngresosData(listaIngresos);
+    });
   }, []);
+
+  const capitalizeFirstLetter = (string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
 
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
@@ -131,26 +205,25 @@ const AdminPanel = () => {
         <div className="charts">
           {/* Estado de pedidos */}
           <div className="chart-card">
-            <h2>Estado de Pedidos</h2>
+            <h2>Pedidos de la Semana</h2>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
-                  data={estadoPedidosData}
+                  data={estadoPedidosSemana}
                   dataKey="value"
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
-                  innerRadius={40} // 👈 Añadimos esto para que sea anillo
+                  innerRadius={40}
                   label
                 >
-                  {estadoPedidosData.map((entry, index) => (
+                  {estadoPedidosSemana.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
                     />
                   ))}
                 </Pie>
-
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
@@ -161,7 +234,7 @@ const AdminPanel = () => {
             <h2>Categorías más vendidas</h2>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
-              <Pie
+                <Pie
                   data={categoriasData}
                   dataKey="value"
                   cx="50%"
@@ -187,7 +260,7 @@ const AdminPanel = () => {
             <h2>Productos más vendidos</h2>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
-              <Pie
+                <Pie
                   data={productosData}
                   dataKey="value"
                   cx="50%"
@@ -220,13 +293,25 @@ const AdminPanel = () => {
                 <Line
                   type="monotone"
                   dataKey="ingresos"
-                  stroke="#00FF00"
+                  stroke="#3498db" // Azul moderno
                   strokeWidth={3}
                   dot={{ r: 5, fill: "#fff" }}
                   activeDot={{ r: 8 }}
                 />
               </LineChart>
             </ResponsiveContainer>
+
+            {/* Total debajo */}
+            <p
+              style={{
+                marginTop: "1rem",
+                fontWeight: "bold",
+                textAlign: "center",
+                fontSize: "1.1rem",
+              }}
+            >
+              Total acumulado: ${ingresosTotales.toLocaleString()}
+            </p>
           </div>
 
           {/* Calendario de entregas */}

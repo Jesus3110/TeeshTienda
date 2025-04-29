@@ -1,22 +1,22 @@
-
-import React, { useContext, useEffect, useState } from 'react';
-import Modal from 'react-modal';
-import { AuthContext } from '../context/AuthContext';
-import { getDatabase, ref, onValue, update, remove } from 'firebase/database';
+import React, { useContext, useEffect, useState } from "react";
+import Modal from "react-modal";
+import { AuthContext } from "../context/AuthContext";
+import { getDatabase, ref, onValue, update, remove } from "firebase/database";
 import "../styles/pedidos.css";
 
-Modal.setAppElement('#root');
+Modal.setAppElement("#root");
 
 const Pedidos = () => {
   const { usuario, rol, loading } = useContext(AuthContext);
   const [pedidos, setPedidos] = useState([]);
   const [pedidoActivo, setPedidoActivo] = useState(null);
+  const [modalMapaAbierto, setModalMapaAbierto] = useState(false);
 
   useEffect(() => {
     if (!usuario) return;
 
     const db = getDatabase();
-    const refPedidos = ref(db, 'pedidos');
+    const refPedidos = ref(db, "pedidos");
 
     const unsubscribe = onValue(refPedidos, (snapshot) => {
       const data = snapshot.val() || {};
@@ -25,9 +25,11 @@ const Pedidos = () => {
         ...pedido,
       }));
 
-      setPedidos(rol === 'cliente' 
-        ? pedidosArray.filter((p) => p.usuario === usuario.uid) 
-        : pedidosArray);
+      setPedidos(
+        rol === "cliente"
+          ? pedidosArray.filter((p) => p.usuario === usuario.uid)
+          : pedidosArray
+      );
     });
 
     return () => unsubscribe();
@@ -36,9 +38,8 @@ const Pedidos = () => {
   const cambiarEstado = async (pedido) => {
     const db = getDatabase();
     const refPedido = ref(db, `pedidos/${pedido.id}`);
-    const nuevoEstado = pedido.estado === "pendiente"
-      ? "en proceso"
-      : "entregado";
+    const nuevoEstado =
+      pedido.estado === "pendiente" ? "en proceso" : "entregado";
 
     await update(refPedido, { estado: nuevoEstado });
 
@@ -46,14 +47,20 @@ const Pedidos = () => {
       const clienteUID = pedido.usuario;
 
       // Historial del cliente (con estado actualizado)
-      const refHistorialCliente = ref(db, `historialPedidos/${clienteUID}/${pedido.id}`);
+      const refHistorialCliente = ref(
+        db,
+        `historialPedidos/${clienteUID}/${pedido.id}`
+      );
       await update(refHistorialCliente, {
         ...pedido,
-        estado: "entregado"
+        estado: "entregado",
       });
 
       // Historial del admin (estado + calificación explícitos)
-      const refHistorialAdmin = ref(db, `historialPedidosAdmin/${clienteUID}/${pedido.id}`);
+      const refHistorialAdmin = ref(
+        db,
+        `historialPedidosAdmin/${clienteUID}/${pedido.id}`
+      );
       await update(refHistorialAdmin, {
         productos: pedido.productos,
         metodoPago: pedido.metodoPago,
@@ -62,9 +69,8 @@ const Pedidos = () => {
         nombreCliente: pedido.nombre || "Sin nombre",
         direccion: pedido.direccion || "",
         estado: "entregado",
-        calificacion: pedido.calificacion || null // <--- ESTE calificacion es null en ese momento
+        calificacion: pedido.calificacion || null, // <--- ESTE calificacion es null en ese momento
       });
-      
 
       await remove(refPedido);
     }
@@ -83,7 +89,7 @@ const Pedidos = () => {
   return (
     <div className="pedidos-container">
       <h2>{esAdmin ? "Pedidos de Clientes" : "Mis Pedidos"}</h2>
-      
+
       <div className="table-responsive">
         <table className="pedidos-table">
           <thead>
@@ -91,7 +97,6 @@ const Pedidos = () => {
               <th>ID</th>
               <th>Estado</th>
               <th>Pago</th>
-              {esAdmin && <th>Dirección</th>}
               {esAdmin && <th>Cliente</th>}
               <th>Total</th>
               <th>🔍</th>
@@ -103,11 +108,10 @@ const Pedidos = () => {
                 <td>{p.id.slice(0, 6)}...</td>
                 <td>{p.estado}</td>
                 <td>{p.metodoPago}</td>
-                {esAdmin && <td>{p.direccion}</td>}
                 {esAdmin && <td>{p.nombre}</td>}
                 <td>${p.total}</td>
                 <td>
-                  <button 
+                  <button
                     className="ver-detalle-btn"
                     onClick={() => handleAbrirModal(p)}
                   >
@@ -130,12 +134,34 @@ const Pedidos = () => {
         >
           <div className="modal-content">
             <h3>Pedido #{pedidoActivo.id.slice(0, 6)}</h3>
-            
+
             <div className="info-section">
-              <p><strong>Estado:</strong> {pedidoActivo.estado}</p>
-              <p><strong>Pago:</strong> {pedidoActivo.metodoPago}</p>
-              {esAdmin && <p><strong>Cliente:</strong> {pedidoActivo.nombre}</p>}
-              {esAdmin && <p><strong>Dirección:</strong> {pedidoActivo.direccion}</p>}
+              <p>
+                <strong>Estado:</strong> {pedidoActivo.estado}
+              </p>
+              <p>
+                <strong>Pago:</strong> {pedidoActivo.metodoPago}
+              </p>
+
+              {pedidoActivo.direccion && (
+                <>
+                  <p>
+                    <strong>Dirección:</strong>
+                  </p>
+                  <button
+                    className="btn-ver-maps"
+                    onClick={() => setModalMapaAbierto(true)}
+                  >
+                    📍 Ver en Google Maps
+                  </button>
+                </>
+              )}
+
+              {rol !== "cliente" && (
+                <p>
+                  <strong>Cliente:</strong> {pedidoActivo.nombre}
+                </p>
+              )}
             </div>
 
             <div className="productos-section">
@@ -143,7 +169,8 @@ const Pedidos = () => {
               <ul>
                 {pedidoActivo.productos.map((prod, i) => (
                   <li key={i}>
-                    {prod.nombre} × {prod.cantidad} — ${prod.precio * prod.cantidad}
+                    {prod.nombre} × {prod.cantidad} — $
+                    {prod.precio * prod.cantidad}
                   </li>
                 ))}
               </ul>
@@ -151,19 +178,25 @@ const Pedidos = () => {
 
             {pedidoActivo.calificacion && (
               <div className="calificacion-section">
-                <p><strong>Calificación:</strong> {"★".repeat(pedidoActivo.calificacion.estrellas)}</p>
-                <p><strong>Comentario:</strong> {pedidoActivo.calificacion.comentario || "Sin comentario."}</p>
+                <p>
+                  <strong>Calificación:</strong>{" "}
+                  {"★".repeat(pedidoActivo.calificacion.estrellas)}
+                </p>
+                <p>
+                  <strong>Comentario:</strong>{" "}
+                  {pedidoActivo.calificacion.comentario || "Sin comentario."}
+                </p>
               </div>
             )}
 
             <div className="modal-actions">
-              {esAdmin && pedidoActivo.estado !== "entregado" && (
+              {rol === "admin" && pedidoActivo.estado !== "entregado" && (
                 <button
                   className="btn btn-success"
                   onClick={() => cambiarEstado(pedidoActivo)}
                 >
-                  {pedidoActivo.estado === "pendiente" 
-                    ? "Marcar como En Proceso" 
+                  {pedidoActivo.estado === "pendiente"
+                    ? "Marcar como En Proceso"
                     : "Marcar como Entregado"}
                 </button>
               )}
@@ -176,6 +209,34 @@ const Pedidos = () => {
               </button>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {modalMapaAbierto && (
+        <Modal
+          isOpen={true}
+          onRequestClose={() => setModalMapaAbierto(false)}
+          contentLabel="Ubicación del Pedido"
+          className="modal-maps"
+          overlayClassName="overlay-maps"
+        >
+          <h3>Ubicación del Pedido</h3>
+          <iframe
+            src={`https://www.google.com/maps?q=${encodeURIComponent(
+              pedidoActivo?.direccion || ""
+            )}&output=embed`}
+            width="100%"
+            height="400"
+            style={{ borderRadius: "12px", border: "none" }}
+            loading="lazy"
+            allowFullScreen
+          ></iframe>
+          <button
+            className="btn-cerrar-maps"
+            onClick={() => setModalMapaAbierto(false)}
+          >
+            Cerrar Mapa
+          </button>
         </Modal>
       )}
     </div>

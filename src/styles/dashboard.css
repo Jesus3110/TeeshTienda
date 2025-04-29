@@ -39,6 +39,7 @@
 }
 
 /* Links */
+/* Links */
 .nav-links {
   flex: 1;
   display: flex;
@@ -49,13 +50,17 @@
 
 .nav-links a {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center;         /* Centra verticalmente íconos y texto */
+  justify-content: center;     /* Centrado por defecto */
   padding: 1rem 0;
-  color: #191919; /* Negro intenso SIEMPRE */
+  color: #191919;
   text-decoration: none;
   font-size: 1.2rem;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.3s ease;
+  white-space: nowrap;         /* Evita saltos de línea */
+  gap: 1rem;                   /* Espacio entre ícono y texto */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .sidebar-open .nav-links a {
@@ -63,38 +68,55 @@
   padding-left: 1.5rem;
 }
 
-
 .nav-links a:hover {
-  background: #E5E5E5; /* Gris claro */
-  color: #D62828; /* Rojo vibrante */
+  background: #E5E5E5;
+  color: #D62828;
 }
 
 .nav-links a span {
-  display: none;
-  margin-left: 1rem;
-  font-size: 1rem;
+  color: #191919; /* Negro intenso */
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  display: inline-block;
 }
+
 
 .sidebar-open .nav-links a span {
-  display: inline;
+  opacity: 1;
+  transform: translateX(0);
 }
 
-/* Scroll bonito */
-.nav-links::-webkit-scrollbar {
-  width: 6px;
+.nav-links a svg {
+  font-size: 1.6rem;
+  color: #191919;
+  flex-shrink: 0;
 }
 
-.nav-links::-webkit-scrollbar-thumb {
-  background-color: #555555; /* Gris oscuro */
-  border-radius: 3px;
+.sidebar-open .nav-links a svg {
+  margin-right: 0.5rem;
 }
+
+.nav-links a.active,
+.nav-links a[aria-current="page"] {
+  background: #E5E5E5;
+  color: #D62828;
+  font-weight: bold;
+}
+
+.nav-links a.active span,
+.nav-links a[aria-current="page"] span {
+  color: #D62828;
+}
+
+
 
 /* Main Content */
 .main-content {
   margin-left: 80px;
   flex: 1;
   padding: 2rem;
-  background-color: #FAF8F5;
+  background-color: #f5f5fa;
   overflow-x: auto;
   overflow-y: auto;
   min-height: 100vh;

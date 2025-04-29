@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { getDatabase, ref, set, get } from "firebase/database";
+import { getDatabase, ref, set, get, runTransaction } from "firebase/database";
 import { v4 as uuidv4 } from "uuid";
 import StripeButton from "../components/StripeButton";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +21,7 @@ const Checkout = () => {
 
     const db = getDatabase();
     const refUser = ref(db, `usuarios/${usuario.uid}`);
-    get(refUser).then(snapshot => {
+    get(refUser).then((snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setDireccion(data.direccion || "");
@@ -30,7 +30,7 @@ const Checkout = () => {
     });
 
     const refCarrito = ref(db, `carritos/${usuario.uid}`);
-    get(refCarrito).then(snapshot => {
+    get(refCarrito).then((snapshot) => {
       const datos = snapshot.val();
       setCarrito(Array.isArray(datos) ? datos : []);
     });
@@ -62,10 +62,17 @@ const Checkout = () => {
     const pedidoId = uuidv4();
     const pedidoRef = ref(db, `pedidos/${pedidoId}`);
 
+    const productosProcesados = carrito.map((p) => ({
+      nombre: p.nombre,
+      precio: p.precio,
+      cantidad: p.cantidad,
+      categoria: p.categoria || "Sin categoría",
+    }));
+
     await set(pedidoRef, {
       usuario: usuario.uid,
       nombre: nombreUsuario,
-      productos: carrito,
+      productos: productosProcesados,
       direccion: direccionFinal,
       metodoPago: tipoPago,
       estado: "pendiente",
@@ -73,6 +80,10 @@ const Checkout = () => {
       total,
     });
 
+    // ✅ Actualizar dashboard después de guardar el pedido
+    await actualizarDashboard(productosProcesados, total);
+
+    // ✅ Vaciar carrito
     const refCarrito = ref(db, `carritos/${usuario.uid}`);
     await set(refCarrito, null);
 
@@ -80,13 +91,51 @@ const Checkout = () => {
     navigate("/");
   };
 
+  const actualizarDashboard = async (carrito, total) => {
+    const db = getDatabase();
+    const fechaActual = new Date();
+    const mesActual = fechaActual.toLocaleString('default', { month: 'long' }); // Ej: "abril"
+  
+    // 1. Actualizar ingresos totales
+    const ingresosRef = ref(db, "dashboard/ingresosTotales");
+    await runTransaction(ingresosRef, (valorActual) => {
+      return (valorActual || 0) + total;
+    });
+  
+    // 2. Actualizar ingresos por mes
+    const ingresosMesRef = ref(db, `dashboard/ingresosPorMes/${mesActual}`);
+    await runTransaction(ingresosMesRef, (valorActual) => {
+      return (valorActual || 0) + total;
+    });
+  
+    // 3. Productos más vendidos
+    for (const prod of carrito) {
+      const prodRef = ref(db, `dashboard/productosVendidos/${prod.nombre}`);
+      await runTransaction(prodRef, (valorActual) => {
+        return (valorActual || 0) + prod.cantidad;
+      });
+    }
+  
+    // 4. Categorías más vendidas
+    for (const prod of carrito) {
+      const cat = prod.categoria || "Sin categoría";
+      const catRef = ref(db, `dashboard/categoriasVendidas/${cat}`);
+      await runTransaction(catRef, (valorActual) => {
+        return (valorActual || 0) + prod.cantidad;
+      });
+    }
+  };
+  
+
   return (
     <div style={{ padding: "2rem", maxWidth: "600px", margin: "auto" }}>
       <h2>Confirmar Compra</h2>
 
       <div style={{ marginBottom: "1rem" }}>
         <h4>Dirección de Envío</h4>
-        <p><strong>Guardada:</strong> {direccion || "No hay dirección guardada."}</p>
+        <p>
+          <strong>Guardada:</strong> {direccion || "No hay dirección guardada."}
+        </p>
         <textarea
           placeholder="Usar otra dirección (opcional)"
           value={nuevaDireccion}
@@ -110,7 +159,7 @@ const Checkout = () => {
             border: "none",
             borderRadius: "5px",
             opacity: total <= 0 ? 0.6 : 1,
-            cursor: total <= 0 ? "not-allowed" : "pointer"
+            cursor: total <= 0 ? "not-allowed" : "pointer",
           }}
         >
           💵 Pagar en efectivo
@@ -140,7 +189,7 @@ const Checkout = () => {
             color: "#fff",
             padding: "0.5rem 1rem",
             border: "none",
-            borderRadius: "5px"
+            borderRadius: "5px",
           }}
         >
           ❌ Cancelar compra
