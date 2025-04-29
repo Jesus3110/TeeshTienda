@@ -1,0 +1,93 @@
+import React, { useState, useEffect, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { getDatabase, ref, get, update } from "firebase/database";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+// import "../styles/perfil.css";
+
+const Perfil = () => {
+  const { usuario } = useContext(AuthContext);
+  const [perfil, setPerfil] = useState(null);
+  const [editando, setEditando] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [nuevaImagen, setNuevaImagen] = useState(null);
+
+  useEffect(() => {
+    if (!usuario) return;
+
+    const db = getDatabase();
+    const perfilRef = ref(db, `usuarios/${usuario.uid}`);
+
+    get(perfilRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        setPerfil(snapshot.val());
+        setFormData(snapshot.val());
+      }
+    });
+  }, [usuario]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImagenChange = (e) => {
+    if (e.target.files[0]) {
+      setNuevaImagen(e.target.files[0]);
+    }
+  };
+
+  const handleGuardar = async () => {
+    const db = getDatabase();
+    const perfilRef = ref(db, `usuarios/${usuario.uid}`);
+    let datosActualizados = { ...formData };
+
+    if (nuevaImagen) {
+      const storage = getStorage();
+      const storageReference = storageRef(storage, `usuarios/${usuario.uid}`);
+      await uploadBytes(storageReference, nuevaImagen);
+      const urlImagen = await getDownloadURL(storageReference);
+      datosActualizados.imagen = urlImagen;
+    }
+
+    await update(perfilRef, datosActualizados);
+    setPerfil(datosActualizados);
+    setEditando(false);
+    setNuevaImagen(null);
+  };
+
+  if (!perfil) return <div className="loading">Cargando perfil...</div>;
+
+  return (
+    <div className="perfil-container">
+      <div className="perfil-card">
+        <img src={perfil.imagen} alt="Foto de perfil" className="perfil-foto" />
+        {editando ? (
+          <div className="perfil-info">
+            <input type="file" accept="image/*" onChange={handleImagenChange} />
+            <input type="text" name="nombre" value={formData.nombre || ''} onChange={handleChange} placeholder="Nombre" />
+            <input type="text" name="correo" value={formData.correo || ''} onChange={handleChange} placeholder="Correo" />
+            <input type="text" name="telefono" value={formData.telefono || ''} onChange={handleChange} placeholder="Teléfono" />
+            <input type="text" name="calle" value={formData.calle || ''} onChange={handleChange} placeholder="Calle" />
+            <input type="text" name="numero" value={formData.numero || ''} onChange={handleChange} placeholder="Número" />
+            <input type="text" name="colonia" value={formData.colonia || ''} onChange={handleChange} placeholder="Colonia" />
+            <input type="text" name="ciudad" value={formData.ciudad || ''} onChange={handleChange} placeholder="Ciudad" />
+            <input type="text" name="estado" value={formData.estado || ''} onChange={handleChange} placeholder="Estado" />
+            <input type="text" name="cp" value={formData.cp || ''} onChange={handleChange} placeholder="Código Postal" />
+            <button onClick={handleGuardar}>Guardar</button>
+          </div>
+        ) : (
+          <div className="perfil-info">
+            <h2>{perfil.nombre}</h2>
+            <p><strong>Correo:</strong> {perfil.correo}</p>
+            <p><strong>Teléfono:</strong> {perfil.telefono}</p>
+            <p><strong>Dirección:</strong> {perfil.calle} {perfil.numero}, {perfil.colonia}, {perfil.ciudad}, {perfil.estado}, CP {perfil.cp}</p>
+            <p><strong>Rol:</strong> {perfil.rol}</p>
+            <button onClick={() => setEditando(true)}>Editar</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Perfil;

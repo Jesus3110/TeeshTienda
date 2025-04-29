@@ -52,3 +52,9 @@
   color: gold;
   font-size: 1.2em;
 }
+
+.estrellas-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}

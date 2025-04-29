@@ -108,7 +108,7 @@ function Home() {
     };
   }, []);
 
-  const añadirAlCarrito = (producto) => {
+  const añadirAlCarrito = (producto, cantidad = 1) => {
     if (!usuario || rol !== "cliente") {
       navigate("/login");
       return;
@@ -123,15 +123,16 @@ function Home() {
       const index = carritoActual.findIndex(p => p.idFirebase === producto.idFirebase);
   
       if (index !== -1) {
-        carritoActual[index].cantidad += 1;
+        carritoActual[index].cantidad += cantidad;
       } else {
-        carritoActual.push({ ...producto, cantidad: 1 });
+        carritoActual.push({ ...producto, cantidad });
       }
   
       set(carritoRef, carritoActual);
       alert(`✅ "${producto.nombre}" añadido al carrito.`);
-    }, { onlyOnce: true }); // evita loop infinito
+    }, { onlyOnce: true });
   };
+  
   
 
   const verDetalles = (producto) => {

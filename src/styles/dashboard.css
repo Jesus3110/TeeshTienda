@@ -1,93 +1,226 @@
 .dashboard {
-    display: flex;
-    min-height: 100vh;
-    background-color: #f4f4f4;
-    font-family: 'Segoe UI', sans-serif;
-  }
-  
-  .sidebar {
-    width: 220px;
-    background: #111;
-    color: white;
-    padding: 2rem 1rem;
-  }
-  
-  .sidebar .logo {
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
-  }
-  
-  .sidebar ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .sidebar ul li {
-    margin-bottom: 1rem;
-  }
-  
-  .sidebar ul li a,
-  .sidebar ul li button {
-    color: white;
-    text-decoration: none;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-  
-  .sidebar ul li a:hover,
-  .sidebar ul li button:hover {
-    text-decoration: underline;
-  }
-  
-  .main-content {
-    flex: 1;
-    padding: 2rem;
-  }
-  
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-  }
-  
-  .card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-  }
-  
-  .circle {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    margin: 0 auto 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 1.2rem;
-  }
-  
-  .circle.purple {
-    background: conic-gradient(#d946ef 0% 65%, #eee 65%);
-  }
-  
-  .circle.yellow {
-    background: conic-gradient(#facc15 0% 28%, #eee 28%);
-    color: #222;
-  }
-  
-  .circle.red {
-    background: conic-gradient(#f43f5e 0% 98%, #eee 98%);
-  }
-  
-  .circle.green {
-    background: conic-gradient(#4ade80 0% 50%, #eee 50%);
-    color: #222;
-  }
+  display: flex;
+  min-height: 100vh;
+  background-color: #FAF8F5; /* Fondo muy claro */
+  font-family: 'Segoe UI', sans-serif;
+  color: #191919; /* Texto principal negro intenso */
+}
+
+.sidebar {
+  background: #ffffff;
+  color: #191919;
+  width: 80px;
+  transition: width 0.3s;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow-x: hidden; /* ❗ solo oculta horizontalmente */
+  overflow-y: auto;    /* ❗ scroll vertical activado */
+  z-index: 1000;
+  border-right: 1px solid #E5E5E5;
+}
+
+
+.sidebar-open .sidebar {
+  width: 220px;
+}
+
+.top-section {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+/* Links */
+.nav-links {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0;
+  color: #191919; /* Negro intenso SIEMPRE */
+  text-decoration: none;
+  font-size: 1.2rem;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-open .nav-links a {
+  justify-content: flex-start;
+  padding-left: 1.5rem;
+}
+
+
+.nav-links a:hover {
+  background: #E5E5E5; /* Gris claro */
+  color: #D62828; /* Rojo vibrante */
+}
+
+.nav-links a span {
+  display: none;
+  margin-left: 1rem;
+  font-size: 1rem;
+}
+
+.sidebar-open .nav-links a span {
+  display: inline;
+}
+
+/* Scroll bonito */
+.nav-links::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nav-links::-webkit-scrollbar-thumb {
+  background-color: #555555; /* Gris oscuro */
+  border-radius: 3px;
+}
+
+/* Main Content */
+.main-content {
+  margin-left: 80px;
+  flex: 1;
+  padding: 2rem;
+  background-color: #FAF8F5;
+  overflow-x: auto;
+  overflow-y: auto;
+  min-height: 100vh;
+  transition: margin-left 0.3s;
+}
+
+.sidebar-open .main-content {
+  margin-left: 220px;
+}
+
+/* Gráficas */
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.chart-card {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  color: #191919;
+}
+
+.chart-card h2 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+/* Calendario */
+.custom-calendar {
+  background: #ffffff;
+  color: #191919;
+  border: none;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.custom-calendar abbr {
+  text-decoration: none;
+}
+
+.react-calendar__navigation button {
+  color: #D62828; /* Botones navegación rojo vibrante */
+  background: none;
+}
+
+.react-calendar__tile--active {
+  background: #D62828;
+  color: #ffffff;
+  border-radius: 8px;
+}
+
+.react-calendar__tile--now {
+  background: #E5E5E5;
+  color: #191919;
+}
+
+.fecha-entrega {
+  background: #D62828 !important;
+  color: white !important;
+  border-radius: 8px;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(25, 25, 25, 0.5); /* negro intenso con opacidad */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  color: #191919;
+  max-width: 400px;
+}
+
+.modal-content h2 {
+  margin-bottom: 1rem;
+}
+
+.modal-content p {
+  margin-bottom: 1.5rem;
+}
+
+.modal-content button {
+  background: #D62828;
+  color: #ffffff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.modal-content button:hover {
+  background: #b31f1f;
+}
+
+.nav-links a svg {
+  font-size: 1.6rem; /* tamaño grande para íconos */
+  color: #191919;    /* negro intenso de tu paleta */
+  flex-shrink: 0;
+}
+
+.sidebar-open .nav-links a svg {
+  margin-right: 1rem; /* separa el icono del texto cuando el sidebar está abierto */
+}
+
+.sidebar-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto;
+}

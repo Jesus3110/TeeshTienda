@@ -62,8 +62,9 @@ const Pedidos = () => {
         nombreCliente: pedido.nombre || "Sin nombre",
         direccion: pedido.direccion || "",
         estado: "entregado",
-        calificacion: pedido.calificacion || null
+        calificacion: pedido.calificacion || null // <--- ESTE calificacion es null en ese momento
       });
+      
 
       await remove(refPedido);
     }

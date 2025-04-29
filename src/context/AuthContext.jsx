@@ -13,10 +13,19 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setUsuario(user);
         const db = getDatabase();
-        const snap = await get(ref(db, `usuarios/${user.uid}/rol`));
-        setRol(snap.val());
+        const perfilRef = ref(db, `usuarios/${user.uid}`);
+        const snap = await get(perfilRef);
+
+        if (snap.exists()) {
+          const perfil = snap.val();
+          // Combinas los datos de Firebase Auth con los datos de tu base de datos
+          setUsuario({ ...user, ...perfil });
+          setRol(perfil.rol || null);
+        } else {
+          setUsuario(user);
+          setRol(null);
+        }
       } else {
         setUsuario(null);
         setRol(null);
