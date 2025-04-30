@@ -5,6 +5,24 @@ import { v4 as uuidv4 } from "uuid";
 import StripeButton from "../components/StripeButton";
 import { useNavigate } from "react-router-dom";
 
+
+const calcularFechaEntregaPorPendientes = async () => {
+  const db = getDatabase();
+  const refPedidos = ref(db, "pedidos");
+
+  const snapshot = await get(refPedidos);
+  const pedidos = snapshot.val() || {};
+  const pendientes = Object.values(pedidos).filter(
+    (pedido) => pedido.estado === "pendiente"
+  );
+
+  const dias = pendientes.length < 5 ? 2 : 3;
+  const fecha = new Date();
+  fecha.setDate(fecha.getDate() + dias);
+
+  return fecha.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+};
+
 const Checkout = () => {
   const MODO_PRUEBA = true; // 🧪 Cambiar a false para modo real
 
@@ -29,6 +47,7 @@ const Checkout = () => {
       }
     });
 
+    
     const refCarrito = ref(db, `carritos/${usuario.uid}`);
     get(refCarrito).then((snapshot) => {
       const datos = snapshot.val();
@@ -52,23 +71,26 @@ const Checkout = () => {
       alert("Debe especificar una dirección de envío.");
       return;
     }
-
+  
     if (carrito.length === 0) {
       alert("Tu carrito está vacío.");
       return;
     }
-
+  
     const db = getDatabase();
     const pedidoId = uuidv4();
     const pedidoRef = ref(db, `pedidos/${pedidoId}`);
-
+  
+    // 🆕 Fecha dinámica basada en pedidos pendientes
+    const fechaEntrega = await calcularFechaEntregaPorPendientes();
+  
     const productosProcesados = carrito.map((p) => ({
       nombre: p.nombre,
       precio: p.precio,
       cantidad: p.cantidad,
       categoria: p.categoria || "Sin categoría",
     }));
-
+  
     await set(pedidoRef, {
       usuario: usuario.uid,
       nombre: nombreUsuario,
@@ -78,18 +100,18 @@ const Checkout = () => {
       estado: "pendiente",
       creadoEn: Date.now(),
       total,
+      fechaEntrega, // 👈 se guarda en Firebase
     });
-
-    // ✅ Actualizar dashboard después de guardar el pedido
+  
     await actualizarDashboard(productosProcesados, total);
-
-    // ✅ Vaciar carrito
+  
     const refCarrito = ref(db, `carritos/${usuario.uid}`);
     await set(refCarrito, null);
-
+  
     alert("✅ Pedido registrado correctamente");
     navigate("/");
   };
+  
 
   const actualizarDashboard = async (carrito, total) => {
     const db = getDatabase();

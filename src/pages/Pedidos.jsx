@@ -11,6 +11,7 @@ const Pedidos = () => {
   const [pedidos, setPedidos] = useState([]);
   const [pedidoActivo, setPedidoActivo] = useState(null);
   const [modalMapaAbierto, setModalMapaAbierto] = useState(false);
+  const [tiempoRestante, setTiempoRestante] = useState("");
 
   useEffect(() => {
     if (!usuario) return;
@@ -34,6 +35,34 @@ const Pedidos = () => {
 
     return () => unsubscribe();
   }, [usuario, rol]);
+
+  useEffect(() => {
+    if (!pedidoActivo || !pedidoActivo.fechaEntrega) return;
+
+    const actualizarTiempo = () => {
+      const entrega = new Date(pedidoActivo.fechaEntrega + "T23:59:59"); // hasta fin del día
+      const ahora = new Date();
+      const diffMs = entrega - ahora;
+
+      if (diffMs <= 0) {
+        setTiempoRestante("Entregado o vencido");
+        return;
+      }
+
+      const diffSegs = Math.floor(diffMs / 1000);
+      const dias = Math.floor(diffSegs / 86400);
+      const horas = Math.floor((diffSegs % 86400) / 3600);
+      const minutos = Math.floor((diffSegs % 3600) / 60);
+      const segundos = diffSegs % 60;
+
+      setTiempoRestante(`${dias}d ${horas}h ${minutos}m ${segundos}s`);
+    };
+
+    const timer = setInterval(actualizarTiempo, 1000);
+    actualizarTiempo();
+
+    return () => clearInterval(timer);
+  }, [pedidoActivo]);
 
   const cambiarEstado = async (pedido) => {
     const db = getDatabase();
@@ -82,6 +111,12 @@ const Pedidos = () => {
     setPedidoActivo(pedido);
   };
 
+  const formatearFechaLarga = (fechaISO) => {
+    const fecha = new Date(fechaISO);
+    const opciones = { day: "numeric", month: "long", year: "numeric" };
+    return fecha.toLocaleDateString("es-MX", opciones);
+  };
+
   if (loading) return <div className="loading">Cargando...</div>;
 
   const esAdmin = rol === "admin";
@@ -98,6 +133,7 @@ const Pedidos = () => {
               <th>Estado</th>
               <th>Pago</th>
               {esAdmin && <th>Cliente</th>}
+              <th>Entrega</th> {/* Nueva columna */}
               <th>Total</th>
               <th>🔍</th>
             </tr>
@@ -109,6 +145,7 @@ const Pedidos = () => {
                 <td>{p.estado}</td>
                 <td>{p.metodoPago}</td>
                 {esAdmin && <td>{p.nombre}</td>}
+                <td>{p.fechaEntrega || "N/D"}</td> {/* Mostrar fecha */}
                 <td>${p.total}</td>
                 <td>
                   <button
@@ -142,6 +179,17 @@ const Pedidos = () => {
               <p>
                 <strong>Pago:</strong> {pedidoActivo.metodoPago}
               </p>
+              {pedidoActivo.fechaEntrega && (
+                <>
+                  <p>
+                    <strong>Entrega estimada:</strong>{" "}
+                    {formatearFechaLarga(pedidoActivo.fechaEntrega)}
+                  </p>
+                  <p>
+                    <strong>Tiempo restante:</strong> {tiempoRestante}
+                  </p>
+                </>
+              )}
 
               {pedidoActivo.direccion && (
                 <>

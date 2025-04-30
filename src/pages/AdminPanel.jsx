@@ -21,21 +21,15 @@ const AdminPanel = () => {
   const [toastVisible, setToastVisible] = useState(false);
   const [date, setDate] = useState(new Date());
   const [modalOpen, setModalOpen] = useState(false);
-  const [infoEntrega, setInfoEntrega] = useState("");
+  const [infoEntrega, setInfoEntrega] = useState([]); // antes era string
   const [entregas, setEntregas] = useState([]);
-
-  // Datos para gráficas estáticas (por ahora)
-  const estadoPedidosData = [
-    { name: "Excedente", value: 40 },
-    { name: "En Proceso", value: 30 },
-    { name: "Pendiente", value: 30 },
-  ];
-
   const [categoriasData, setCategoriasData] = useState([]);
   const [productosData, setProductosData] = useState([]);
   const [ingresosTotales, setIngresosTotales] = useState(0);
   const [ingresosData, setIngresosData] = useState([]);
   const [estadoPedidosSemana, setEstadoPedidosSemana] = useState([]);
+  const [modalMapaAbierto, setModalMapaAbierto] = useState(false);
+  const [pedidoActivo, setPedidoActivo] = useState(null);
 
   const COLORS = [
     "#FF9AA2", // Rosa más fuerte
@@ -75,12 +69,10 @@ const AdminPanel = () => {
             }
           }
 
-          if (pedido.creadoEn) {
-            nuevasEntregas.push({
-              fecha: new Date(pedido.creadoEn),
-              descripcion: `Pedido de ${pedido.nombre} - ${pedido.estado}`,
-            });
-          }
+          nuevasEntregas.push({
+            fecha: new Date(pedido.fechaEntrega + "T00:00:00"),
+            pedido,
+          });
         });
 
         // Transformar a array para el PieChart
@@ -179,15 +171,18 @@ const AdminPanel = () => {
 
   const handleDateClick = (selectedDate) => {
     setDate(selectedDate);
-    const entregaEncontrada = entregas.find(
-      (d) =>
-        d.fecha.getFullYear() === selectedDate.getFullYear() &&
-        d.fecha.getMonth() === selectedDate.getMonth() &&
-        d.fecha.getDate() === selectedDate.getDate()
-    );
 
-    if (entregaEncontrada) {
-      setInfoEntrega(entregaEncontrada.descripcion);
+    const pedidosEnFecha = entregas
+      .filter(
+        (d) =>
+          d.fecha.getFullYear() === selectedDate.getFullYear() &&
+          d.fecha.getMonth() === selectedDate.getMonth() &&
+          d.fecha.getDate() === selectedDate.getDate()
+      )
+      .map((d) => d.pedido);
+
+    if (pedidosEnFecha.length > 0) {
+      setInfoEntrega(pedidosEnFecha);
       setModalOpen(true);
     }
   };
@@ -330,9 +325,58 @@ const AdminPanel = () => {
         {modalOpen && (
           <div className="modal-overlay" onClick={closeModal}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h2>📦 Entrega programada</h2>
-              <p>{infoEntrega}</p>
-              <button onClick={closeModal}>Cerrar</button>
+              <h2>📦 Entregas programadas</h2>
+
+              {infoEntrega.map((p, index) => (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: "#f9f9f9",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  <p>
+                    <strong>Cliente:</strong> {p.nombre}
+                  </p>
+
+                  {p.direccion ? (
+                    <button
+                      className="btn-ver-maps"
+                      onClick={() => {
+                        setPedidoActivo(p); // asigna el pedido actual al estado
+                        setModalMapaAbierto(true);
+                      }}
+                    >
+                      📍 Ver en Google Maps
+                    </button>
+                  ) : (
+                    <p style={{ color: "gray" }}>Sin dirección disponible</p>
+                  )}
+
+                  <p>
+                    <strong>Total:</strong> ${p.total}
+                  </p>
+                  <p>
+                    <strong>Estado:</strong> {p.estado}
+                  </p>
+                </div>
+              ))}
+
+              <button
+                onClick={closeModal}
+                style={{
+                  marginTop: "1rem",
+                  backgroundColor: "#e74c3c",
+                  color: "#fff",
+                  padding: "0.5rem 1rem",
+                  border: "none",
+                  borderRadius: "5px",
+                }}
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         )}
@@ -343,6 +387,38 @@ const AdminPanel = () => {
           message="¡Sesión cerrada!"
           onClose={() => setToastVisible(false)}
         />
+      )}
+      {modalMapaAbierto && pedidoActivo && (
+        <div
+          className="modal-overlay"
+          onClick={() => setModalMapaAbierto(false)}
+        >
+          <div className="modal-maps" onClick={(e) => e.stopPropagation()}>
+            <h3>Ubicación del Pedido</h3>
+
+            {pedidoActivo.direccion ? (
+              <iframe
+                src={`https://www.google.com/maps?q=${encodeURIComponent(
+                  pedidoActivo.direccion
+                )}&output=embed`}
+                width="100%"
+                height="400"
+                style={{ borderRadius: "12px", border: "none" }}
+                loading="lazy"
+                allowFullScreen
+              ></iframe>
+            ) : (
+              <p style={{ color: "red" }}>Dirección no disponible.</p>
+            )}
+
+            <button
+              className="btn-cerrar-maps"
+              onClick={() => setModalMapaAbierto(false)}
+            >
+              Cerrar Mapa
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
