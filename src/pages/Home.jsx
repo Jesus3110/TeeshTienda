@@ -10,6 +10,7 @@ import "slick-carousel/slick/slick-theme.css";
 import "../styles/home.css";
 import ModalProducto from "../components/ModalProducto";
 import ModalCategoria from "../components/ModalCategoria";
+import ProductosDestacados from "../components/ProductosDestacados";
 
 function Home() {
   const [productos, setProductos] = useState([]);
@@ -22,37 +23,63 @@ function Home() {
   const { usuario, rol } = useContext(AuthContext);
   const navigate = useNavigate();
   const [descuentos, setDescuentos] = useState([]);
+  const [productosVendidos, setProductosVendidos] = useState({});
 
-  // Función para obtener el descuento de un producto
   const obtenerDescuentoProducto = (producto) => {
-    if (!producto || !producto.descuentoAplicado || !descuentos.length) return null;
-    
-    const descuentoEncontrado = descuentos.find(d => d.id === producto.descuentoAplicado);
-    
-    if (descuentoEncontrado && descuentoEncontrado.validoHasta) {
-      return new Date(descuentoEncontrado.validoHasta) > new Date() ? descuentoEncontrado : null;
+    if (!producto || !producto.descuentoAplicado || !descuentos?.length) {
+      console.log("Faltan datos para aplicar descuento:", {
+        producto: producto?.nombre,
+        tieneDescuento: !!producto?.descuentoAplicado,
+        descuentosDisponibles: descuentos?.length,
+      });
+      return null;
     }
-    
-    return descuentoEncontrado;
-  };
 
-  // Función para calcular precio con descuento
-  const calcularPrecioConDescuento = (precioActual, descuento, precioOriginal) => {
-    if (typeof precioActual !== 'number' || isNaN(precioActual)) return precioActual;
-    if (!descuento || typeof descuento.porcentaje !== 'number') return precioActual;
-    
-    const baseParaDescuento = precioOriginal && typeof precioOriginal === 'number' 
-      ? precioOriginal 
-      : precioActual;
-    
-    const precioConDescuento = baseParaDescuento * (1 - descuento.porcentaje / 100);
-    return Math.round(precioConDescuento * 100) / 100;
+    // Buscar el descuento que coincida con el ID aplicado al producto
+    const descuentoEncontrado = descuentos.find(
+      (d) =>
+        d.id === producto.descuentoAplicado ||
+        d.idFirebase === producto.descuentoAplicado
+    );
+
+    if (!descuentoEncontrado) {
+      console.log("Descuento no encontrado para producto:", {
+        producto: producto.nombre,
+        descuentoAplicado: producto.descuentoAplicado,
+        descuentosDisponibles: descuentos.map((d) => d.id || d.idFirebase),
+      });
+      return null;
+    }
+
+    // Verificar vigencia del descuento si tiene fecha
+    if (descuentoEncontrado.validoHasta) {
+      const fechaValidez = new Date(descuentoEncontrado.validoHasta);
+      const hoy = new Date();
+
+      if (isNaN(fechaValidez.getTime())) {
+        console.log(
+          "Fecha inválida en descuento:",
+          descuentoEncontrado.validoHasta
+        );
+        return null;
+      }
+
+      if (fechaValidez < hoy) {
+        console.log("Descuento vencido para:", producto.nombre);
+        return null;
+      }
+    }
+
+    console.log("Descuento aplicado correctamente a:", producto.nombre);
+    return descuentoEncontrado;
   };
 
   useEffect(() => {
     // Cargar productos
-    const unsubscribeProductos = escucharProductos((prods) => setProductos(prods));
-    
+    const unsubscribeProductos = escucharProductos((prods) =>
+      setProductos(prods)
+    );
+
     // Cargar banners
     const cargarBanners = async () => {
       try {
@@ -62,7 +89,7 @@ function Home() {
         console.error("Error cargando banners:", error);
       }
     };
-    
+
     // Cargar categorías
     const cargarCategorias = () => {
       const db = getDatabase();
@@ -72,25 +99,32 @@ function Home() {
         const lista = Object.entries(data)
           .map(([idFirebase, value]) => ({
             idFirebase,
-            ...value
+            ...value,
           }))
-          .filter(cat => cat.activa)
+          .filter((cat) => cat.activa)
           .sort((a, b) => a.nombre.localeCompare(b.nombre));
         setCategorias(lista);
       });
     };
-    
+
     // Cargar descuentos
     const cargarDescuentos = () => {
       const db = getDatabase();
       const descuentosRef = ref(db, "descuentos");
       return onValue(descuentosRef, (snapshot) => {
         const data = snapshot.val() || {};
-        const listaDescuentos = Object.entries(data).map(([id, value]) => ({
-          id,
-          ...value,
-          validoHasta: value.validoHasta ? new Date(value.validoHasta) : null
-        }));
+        const listaDescuentos = Object.entries(data).map(
+          ([idFirebase, value]) => ({
+            idFirebase, // Asegurar que tenemos esta propiedad
+            id: value.id || idFirebase, // Compatibilidad con ambos formatos
+            porcentaje: value.porcentaje,
+            nombre: value.nombre,
+            validoHasta: value.validoHasta,
+            activo: value.activo !== false, // Por defecto true si no está definido
+          })
+        );
+
+        console.log("Descuentos cargados:", listaDescuentos);
         setDescuentos(listaDescuentos);
       });
     };
@@ -99,12 +133,21 @@ function Home() {
     cargarBanners();
     const unsubscribeCategorias = cargarCategorias();
     const unsubscribeDescuentos = cargarDescuentos();
+    const db = getDatabase();
+    const refVendidos = ref(db, "dashboard/productosVendidos");
+
+    // ✅ Guarda la función de desuscripción
+    const unsubscribeVendidos = onValue(refVendidos, (snapshot) => {
+      const data = snapshot.val() || {};
+      setProductosVendidos(data);
+    });
 
     // Función de limpieza
     return () => {
       unsubscribeProductos();
       unsubscribeCategorias();
       unsubscribeDescuentos();
+      unsubscribeVendidos(); // ✅ ya está definida
     };
   }, []);
 
@@ -113,33 +156,37 @@ function Home() {
       navigate("/login");
       return;
     }
-  
+
     const db = getDatabase();
     const carritoRef = ref(db, `carritos/${usuario.uid}`);
-  
-    onValue(carritoRef, (snapshot) => {
-      const carritoActual = snapshot.val() || [];
-  
-      const index = carritoActual.findIndex(p => p.idFirebase === producto.idFirebase);
-  
-      if (index !== -1) {
-        carritoActual[index].cantidad += cantidad;
-      } else {
-        carritoActual.push({
-          idFirebase: producto.idFirebase,
-          nombre: producto.nombre,
-          precio: producto.precio,
-          cantidad,
-          categoria: producto.categoria || "Sin categoría" // 👈 Nuevo campo agregado
-        });        
-      }
-  
-      set(carritoRef, carritoActual);
-      alert(`✅ "${producto.nombre}" añadido al carrito.`);
-    }, { onlyOnce: true });
+
+    onValue(
+      carritoRef,
+      (snapshot) => {
+        const carritoActual = snapshot.val() || [];
+
+        const index = carritoActual.findIndex(
+          (p) => p.idFirebase === producto.idFirebase
+        );
+
+        if (index !== -1) {
+          carritoActual[index].cantidad += cantidad;
+        } else {
+          carritoActual.push({
+            idFirebase: producto.idFirebase,
+            nombre: producto.nombre,
+            precio: producto.precio,
+            cantidad,
+            categoria: producto.categoria || "Sin categoría", // 👈 Nuevo campo agregado
+          });
+        }
+
+        set(carritoRef, carritoActual);
+        alert(`✅ "${producto.nombre}" añadido al carrito.`);
+      },
+      { onlyOnce: true }
+    );
   };
-  
-  
 
   const verDetalles = (producto) => {
     setProductoSeleccionado(producto);
@@ -164,7 +211,7 @@ function Home() {
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 5000,
-    arrows: true
+    arrows: true,
   };
 
   return (
@@ -174,14 +221,38 @@ function Home() {
         <div className="banner-carousel">
           <Slider {...carouselSettings}>
             {banners.map((banner) => (
-              <div key={banner.id}>
+              <div
+                key={banner.id}
+                className="banner-slide"
+                style={{ position: "relative" }}
+              >
                 <Link to={banner.enlace || "#"}>
-                  <img 
-                    src={banner.imagenURL} 
-                    alt="Banner promocional" 
+                  <img
+                    src={banner.imagenURL}
+                    alt={banner.titulo || "Banner"}
                     className="banner-img"
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      borderRadius: "8px",
+                    }}
                   />
+                  {/* Título encima del banner */}
                 </Link>
+                {(banner.titulo || banner.porcentaje) && (
+                  <div className="banner-title-overlay">
+                    {banner.titulo && (
+                      <div style={{ fontSize: "1.4rem", fontWeight: "bold" }}>
+                        {banner.titulo}
+                      </div>
+                    )}
+                    {banner.porcentaje && (
+                      <div style={{ fontSize: "1.2rem", marginTop: "0.3rem" }}>
+                        -{banner.porcentaje}%
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </Slider>
@@ -197,7 +268,7 @@ function Home() {
             <p>En pedidos de +$150.00</p>
           </div>
         </div>
-        
+
         <div className="beneficio">
           <div className="beneficio-icono">🔄</div>
           <div className="beneficio-texto">
@@ -205,7 +276,7 @@ function Home() {
             <p>*las condiciones se aplican</p>
           </div>
         </div>
-        
+
         <div className="beneficio">
           <div className="beneficio-icono">🔥</div>
           <div className="beneficio-texto">
@@ -231,84 +302,33 @@ function Home() {
         </div>
       </div>
 
-      {/* Productos Destacados */}
-      <div className="seccion-productos">
-        <h2 className="titulo-seccion">Productos Destacados</h2>
-        <div className="grid-productos-destacados">
-          {productos.slice(0, 3).map((prod) => {
-            if (!prod || !prod.idFirebase || !prod.nombre || typeof prod.precio !== 'number') return null;
-            
-            const descuento = obtenerDescuentoProducto(prod);
-            const precioConDescuento = descuento 
-              ? calcularPrecioConDescuento(prod.precio, descuento, prod.precioOriginal)
-              : prod.precio;
-            
-            return (
-              <div className="card-producto-destacado" key={prod.idFirebase}>
-                {descuento && (
-                  <div className="descuento-badge">
-                    -{descuento.porcentaje}%
-                  </div>
-                )}
-                
-                <img 
-                  src={prod.imagen} 
-                  alt={prod.nombre} 
-                  className="img-producto-destacado"
-                  onClick={() => verDetalles(prod)}
-                />
-                
-                <div className="producto-info">
-                  <h3 className="producto-nombre">{prod.nombre}</h3>
-                  <div className="producto-rating">★★★★★</div>
-                  
-                  <div className="producto-precio-container">
-                    {descuento ? (
-                      <>
-                        <span className="precio-original">
-                          ${prod.precioOriginal?.toFixed(2) || prod.precio.toFixed(2)}
-                        </span>
-                        <span className="precio-descuento">
-                          ${precioConDescuento.toFixed(2)}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="precio-normal">
-                        ${prod.precio.toFixed(2)}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <button 
-                    className="btn-ver-detalles"
-                    onClick={() => verDetalles(prod)}
-                  >
-                    Ver detalles
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <ProductosDestacados
+        productos={productos}
+        descuentos={descuentos}
+        verDetalles={verDetalles}
+        obtenerDescuentoProducto={obtenerDescuentoProducto}
+        productosVendidos={productosVendidos}
+      />
 
       {/* Modal de categoría */}
       {mostrarModalCategoria && categoriaSeleccionada && (
         <ModalCategoria
           categoria={categoriaSeleccionada}
-          productos={productos.filter(p => 
-            p.categoria && 
-            p.categoria.toLowerCase() === categoriaSeleccionada.nombre.toLowerCase()
+          productos={productos.filter(
+            (p) =>
+              p.categoria &&
+              p.categoria.toLowerCase() ===
+                categoriaSeleccionada.nombre.toLowerCase()
           )}
           onClose={() => setMostrarModalCategoria(false)}
           onAddToCart={añadirAlCarrito}
-          descuentos={descuentos} 
+          descuentos={descuentos}
         />
       )}
 
       {/* Modal de detalles del producto */}
       {mostrarModal && productoSeleccionado && (
-        <ModalProducto 
+        <ModalProducto
           producto={productoSeleccionado}
           onClose={() => setMostrarModal(false)}
           onAddToCart={añadirAlCarrito}

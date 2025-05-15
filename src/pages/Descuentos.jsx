@@ -19,16 +19,44 @@ const Descuentos = () => {
 
     // Cargar descuentos
     const descuentosRef = ref(db, "descuentos");
-    const unsubscribeDescuentos = onValue(descuentosRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      const listaDescuentos = Object.entries(data).map(([id, value]) => ({
+const unsubscribeDescuentos = onValue(descuentosRef, async (snapshot) => {
+  const data = snapshot.val() || {};
+  const ahora = Date.now();
+  const listaFinal = [];
+
+  for (const [id, value] of Object.entries(data)) {
+    const validoHasta = value.validoHasta ? new Date(value.validoHasta) : null;
+
+    // Si el descuento ya expiró, lo eliminamos
+    if (validoHasta instanceof Date && validoHasta.getTime() <= ahora) {
+      const refDescuento = ref(db, `descuentos/${id}`);
+      await remove(refDescuento);
+
+      // También limpiamos el descuento en los productos relacionados
+      productos.forEach((p) => {
+        if (p.descuentoAplicado && p.descuentoAplicado === id) {
+          const refProducto = ref(db, `productos/${p.idFirebase}`);
+          update(refProducto, {
+            descuentoAplicado: null,
+            precio: p.precioOriginal || p.precio,
+            precioOriginal: null
+          });
+        }
+      });
+    } else {
+      // Si aún es válido, lo añadimos a la lista final
+      listaFinal.push({
         id,
         ...value,
-        validoHasta: value.validoHasta ? new Date(value.validoHasta) : null
-      }));
-      setDescuentos(listaDescuentos);
-      setCargando(false);
-    });
+        validoHasta
+      });
+    }
+  }
+
+  setDescuentos(listaFinal);
+  setCargando(false);
+});
+
 
     // Cargar productos
     const unsubscribeProductos = escucharProductos((productos) => {

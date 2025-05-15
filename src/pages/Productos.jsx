@@ -12,7 +12,9 @@ const toggleActivo = async (id, estadoActual) => {
 };
 
 const eliminarProducto = async (id) => {
-  const confirmar = window.confirm("¿Estás seguro de que quieres eliminar este producto?");
+  const confirmar = window.confirm(
+    "¿Estás seguro de que quieres eliminar este producto?"
+  );
   if (!confirmar) return;
 
   const db = getDatabase();
@@ -36,83 +38,100 @@ const Productos = () => {
   useEffect(() => {
     const db = getDatabase();
 
-    // Cargar productos
-    const productosRef = ref(db, "productos");
-    const unsubscribeProductos = onValue(productosRef, (snapshot) => {
-      const data = snapshot.val();
-      const lista = data ? Object.entries(data).map(([idFirebase, value]) => ({
-        idFirebase,
-        ...value,
-        descuentoId: value.descuentoId || null // Asegurar que siempre tenga valor
-      })) : [];
-      setProductos(lista);
-      setCargando(false);
-    });
-
-    // Cargar descuentos
     const descuentosRef = ref(db, "descuentos");
     const unsubscribeDescuentos = onValue(descuentosRef, (snapshot) => {
       const data = snapshot.val() || {};
-      const lista = Object.entries(data).map(([id, value]) => ({
+      const listaDescuentos = Object.entries(data).map(([id, value]) => ({
         id,
         ...value,
-        validoHasta: value.validoHasta ? new Date(value.validoHasta) : null
+        validoHasta: value.validoHasta ? new Date(value.validoHasta) : null,
       }));
-      setDescuentos(lista);
-    });
+      setDescuentos(listaDescuentos);
 
-    // Cargar categorías
-    const categoriasRef = ref(db, "categorias");
-    onValue(categoriasRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const lista = Object.values(data)
-          .filter((cat) => cat.activa)
-          .map((cat) => cat.nombre);
-        setCategoriasDisponibles(lista);
-      } else {
-        setCategoriasDisponibles([]);
-      }
+      const productosRef = ref(db, "productos");
+      const unsubscribeProductos = onValue(productosRef, async (snapshot) => {
+        const data = snapshot.val() || {};
+        const lista = [];
+
+        for (const [idFirebase, value] of Object.entries(data)) {
+          const producto = { idFirebase, ...value };
+          const descuentoId = producto.descuentoAplicado;
+
+          if (descuentoId) {
+            const descuento = listaDescuentos.find((d) => d.id === descuentoId);
+            if (!descuento || !descuento.validoHasta || !(descuento.validoHasta instanceof Date) || descuento.validoHasta.getTime() <= Date.now()) {
+              const refProducto = ref(db, `productos/${idFirebase}`);
+              await update(refProducto, {
+                descuentoAplicado: null,
+                precio: producto.precioOriginal || producto.precio,
+                precioOriginal: null,
+              });
+              producto.descuentoAplicado = null;
+              producto.precio = producto.precioOriginal || producto.precio;
+              producto.precioOriginal = null;
+            }
+          }
+
+          lista.push(producto);
+        }
+
+        setProductos(lista);
+        setCargando(false);
+      });
+
+      const categoriasRef = ref(db, "categorias");
+      onValue(categoriasRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const lista = Object.values(data)
+            .filter((cat) => cat.activa)
+            .map((cat) => cat.nombre);
+          setCategoriasDisponibles(lista);
+        } else {
+          setCategoriasDisponibles([]);
+        }
+      });
+
+      return () => {
+        unsubscribeProductos();
+      };
     });
 
     return () => {
-      unsubscribeProductos();
       unsubscribeDescuentos();
     };
   }, []);
 
-  // Obtener el descuento aplicado a un producto (versión mejorada)
   const obtenerDescuentoProducto = (producto) => {
     if (!producto.descuentoAplicado) return null;
-    return descuentos.find(d => d.id.trim() === producto.descuentoAplicado.trim());
+    return descuentos.find(
+      (d) => d.id.trim() === producto.descuentoAplicado.trim()
+    );
   };
 
-// Calcular precio con descuento (versión mejorada)
-const calcularPrecioConDescuento = (precio, descuento, precioOriginal = null) => {
-  // Validaciones básicas
-  if (typeof precio !== 'number' || isNaN(precio)) return precio;
-  if (!descuento || typeof descuento.porcentaje !== 'number') return precio;
-  
-  // Si tenemos precioOriginal, usamos ese como base para el descuento
-  const baseParaDescuento = precioOriginal && typeof precioOriginal === 'number' 
-    ? precioOriginal 
-    : precio;
-  
-  // Calcular descuento solo sobre la base original
-  const descuentoAplicado = baseParaDescuento * (descuento.porcentaje / 100);
-  
-  // Precio final (asegurando no aplicar descuento dos veces)
-  const precioFinal = precio - descuentoAplicado;
-  
-  // Redondear a 2 decimales
-  return Math.round(precioFinal * 100) / 100;
-};
+  const calcularPrecioConDescuento = (precio, descuento, precioOriginal = null) => {
+    if (typeof precio !== "number" || isNaN(precio)) return precio;
+    if (!descuento || typeof descuento.porcentaje !== "number") return precio;
+
+    const baseParaDescuento =
+      precioOriginal && typeof precioOriginal === "number"
+        ? precioOriginal
+        : precio;
+
+    const descuentoAplicado = baseParaDescuento * (descuento.porcentaje / 100);
+    const precioFinal = precio - descuentoAplicado;
+
+    return Math.round(precioFinal * 100) / 100;
+  };
 
   const productosFiltrados = productos
     .filter((prod) => prod && prod.nombre)
     .filter((prod) => {
-      const coincideBusqueda = (prod.nombre || "").toLowerCase().includes(busqueda.toLowerCase());
-      const coincideCategoria = categoriaFiltro === "todos" || prod.categoria === categoriaFiltro;
+      const coincideBusqueda = (prod.nombre || "")
+        .toLowerCase()
+        .includes(busqueda.toLowerCase());
+      const coincideCategoria =
+        categoriaFiltro === "todos" || prod.categoria === categoriaFiltro;
       const mostrarActivo = verActivos && prod.activo;
       const mostrarDeshabilitado = verDeshabilitados && !prod.activo;
 
@@ -143,25 +162,16 @@ const calcularPrecioConDescuento = (precio, descuento, precioOriginal = null) =>
         </select>
 
         <label>
-          <input
-            type="checkbox"
-            checked={verActivos}
-            onChange={(e) => setVerActivos(e.target.checked)}
-          />
+          <input type="checkbox" checked={verActivos} onChange={(e) => setVerActivos(e.target.checked)} />
           Ver activos
         </label>
 
         <label>
-          <input
-            type="checkbox"
-            checked={verDeshabilitados}
-            onChange={(e) => setVerDeshabilitados(e.target.checked)}
-          />
+          <input type="checkbox" checked={verDeshabilitados} onChange={(e) => setVerDeshabilitados(e.target.checked)} />
           Ver deshabilitados
         </label>
-        <button style={{ marginTop: "1rem" }} onClick={() => setMostrarModal(true)}>
-          ➕ Agregar producto
-        </button>
+
+        <button style={{ marginTop: "1rem" }} onClick={() => setMostrarModal(true)}>➕ Agregar producto</button>
       </div>
 
       <table>
@@ -178,39 +188,39 @@ const calcularPrecioConDescuento = (precio, descuento, precioOriginal = null) =>
           </tr>
         </thead>
         <tbody>
-        {productosFiltrados.map((prod) => {
-  const descuento = obtenerDescuentoProducto(prod);
-  const precioConDescuento = calcularPrecioConDescuento(
-    prod.precio, 
-    descuento, 
-    prod.precioOriginal // Pasamos el precio original si existe
-  );
-  
-  return (
-    <tr key={prod.idFirebase}>
-      <td><img src={prod.imagen} alt={prod.nombre} width="50" /></td>
-      <td>{prod.nombre}</td>
-      <td>
-        {descuento && prod.precioOriginal ? (
-          <>
-            <span style={{ textDecoration: 'line-through', color: '#999' }}>
-              ${prod.precioOriginal.toFixed(2)}
-            </span>
-            <span style={{ color: '#d62828', marginLeft: '0.5rem' }}>
-              ${precioConDescuento.toFixed(2)}
-            </span>
-          </>
-        ) : (
-          `$${prod.precio.toFixed(2)}`
-        )}
-      </td>
+          {productosFiltrados.map((prod) => {
+            const descuento = obtenerDescuentoProducto(prod);
+            const esDescuentoValido = descuento && descuento.validoHasta instanceof Date && descuento.validoHasta.getTime() > Date.now();
+            const precioConDescuento = descuento && prod.precioOriginal
+  ? prod.precioOriginal * (1 - descuento.porcentaje / 100)
+  : prod.precio;
+
+
+            return (
+              <tr key={prod.idFirebase}>
+                <td><img src={prod.imagen} alt={prod.nombre} width="50" /></td>
+                <td>{prod.nombre}</td>
                 <td>
-                  {descuento ? (
+                  {esDescuentoValido && prod.precioOriginal ? (
+                    <>
+                      <span style={{ textDecoration: "line-through", color: "#999" }}>
+                        ${prod.precioOriginal.toFixed(2)}
+                      </span>
+                      <span style={{ color: "#d62828", marginLeft: "0.5rem" }}>
+                        ${precioConDescuento.toFixed(2)}
+                      </span>
+                    </>
+                  ) : (
+                    `$${prod.precio.toFixed(2)}`
+                  )}
+                </td>
+                <td>
+                  {esDescuentoValido ? (
                     <span className="descuento-tag">
-                      {descuento.porcentaje}% (ID: {descuento.id.substring(0, 6)}...)
+                      {descuento.porcentaje}%
                     </span>
                   ) : (
-                    'Ninguno'
+                    "Ninguno"
                   )}
                 </td>
                 <td>
@@ -222,12 +232,7 @@ const calcularPrecioConDescuento = (precio, descuento, precioOriginal = null) =>
                 <td>{prod.categoria}</td>
                 <td>{prod.activo ? "Sí" : "No"}</td>
                 <td>
-                  <button onClick={() => {
-                    setProductoEditar(prod);
-                    setMostrarEditar(true);
-                  }}>
-                    Modificar
-                  </button>
+                  <button onClick={() => { setProductoEditar(prod); setMostrarEditar(true); }}>Modificar</button>
                   <button onClick={() => toggleActivo(prod.idFirebase, prod.activo)}>
                     {prod.activo ? "Deshabilitar" : "Habilitar"}
                   </button>
@@ -246,6 +251,7 @@ const calcularPrecioConDescuento = (precio, descuento, precioOriginal = null) =>
       {mostrarEditar && productoEditar && (
         <ModalEditarProducto
           producto={productoEditar}
+          descuentos={descuentos}
           onClose={() => {
             setMostrarEditar(false);
             setProductoEditar(null);

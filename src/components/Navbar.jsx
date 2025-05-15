@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { auth } from "../firebase/firebaseConfig";
 import { signOut } from "firebase/auth";
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, onValue, set } from "firebase/database";
 import "../styles/navbar.css";
 import ModalCategoria from "./ModalCategoria";
 
@@ -82,11 +82,26 @@ function Navbar() {
       navigate("/login");
       return;
     }
-    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-    carrito.push({ ...producto, cantidad: 1 });
-    localStorage.setItem("carrito", JSON.stringify(carrito));
-    alert(`✅ "${producto.nombre}" añadido al carrito.`);
+  
+    const productoConCategoria = {
+      ...producto,
+      cantidad: 1,
+      categoria: categoriaSeleccionada?.nombre || producto.categoria || "Sin categoría",
+      categoriaId: categoriaSeleccionada?.idFirebase || producto.categoriaId || "",
+    };
+  
+    const db = getDatabase();
+    const refCarrito = ref(db, `carritos/${usuario.uid}`);
+  
+    // Leer carrito actual
+    onValue(refCarrito, (snapshot) => {
+      const carritoExistente = snapshot.val() || [];
+      const nuevoCarrito = [...carritoExistente, productoConCategoria];
+      set(refCarrito, nuevoCarrito);
+      alert(`✅ "${producto.nombre}" añadido al carrito.`);
+    }, { onlyOnce: true });
   };
+  
 
   const categoriasPrincipales = categorias.slice(0, 7);
   const categoriasRestantes = categorias.slice(7);
@@ -177,18 +192,35 @@ function Navbar() {
         </div>
       )}
 
-      {categoriaSeleccionada && (
-        <ModalCategoria
-          categoria={categoriaSeleccionada}
-          productos={productos.filter(p => 
-            p.categoriaId === categoriaSeleccionada.idFirebase || 
-            p.categoria?.toLowerCase() === categoriaSeleccionada.nombre.toLowerCase()
-          )}
-          onClose={() => setCategoriaSeleccionada(null)}
-          onAddToCart={handleAddToCart}
-          descuentos={descuentos}
-        />
-      )}
+{categoriaSeleccionada && (
+  <ModalCategoria
+    categoria={categoriaSeleccionada}
+    productos={productos
+      .filter(p => 
+        p.categoriaId === categoriaSeleccionada.idFirebase ||
+        p.categoria?.toLowerCase() === categoriaSeleccionada.nombre.toLowerCase()
+      )
+      .map(producto => ({
+        idFirebase: producto.idFirebase,
+        nombre: producto.nombre,
+        imagen: producto.imagen,
+        precio: producto.precioOriginal || producto.precio,
+        descuentoAplicado: producto.descuentoAplicado || null, // <-- explícito aquí
+        categoriaId: producto.categoriaId,
+        descripcion: producto.descripcion,
+      }))
+    }
+    descuentos={descuentos}
+    onClose={() => setCategoriaSeleccionada(null)}
+    onAddToCart={handleAddToCart}
+  />
+)}
+
+
+
+
+
+
     </nav>
   );
 }

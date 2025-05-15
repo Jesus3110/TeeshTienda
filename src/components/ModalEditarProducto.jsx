@@ -4,7 +4,7 @@ import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "firebase/s
 import { v4 as uuidv4 } from "uuid";
 import "../styles/modal.css";
 
-const ModalEditarProducto = ({ producto, onClose }) => {
+const ModalEditarProducto = ({ producto,descuentos, onClose }) => {
   const [formData, setFormData] = useState({ ...producto });
   const [nuevaImagen, setNuevaImagen] = useState(null);
   const [subiendo, setSubiendo] = useState(false);
@@ -19,48 +19,44 @@ const ModalEditarProducto = ({ producto, onClose }) => {
   const [precioConDescuento, setPrecioConDescuento] = useState(0);
   const [sinCambiosVisible, setSinCambiosVisible] = useState(false);
 
-  useEffect(() => {
-    setFormData({ ...producto });
-    const db = getDatabase();
-    const refCategorias = ref(db, "categorias");
-    const refDescuentos = ref(db, "descuentos");
+useEffect(() => {
+  setFormData({ ...producto });
 
-    // Obtener categorías
-    onValue(refCategorias, (snapshot) => {
-      const data = snapshot.val() || {};
-      const lista = Object.values(data)
-        .filter((cat) => cat.activa)
-        .map((cat) => cat.nombre);
-      setCategorias(lista);
-    });
+  // Mostrar todos o solo válidos
+  const ahora = Date.now();
+  const descuentosValidos = descuentos.filter(desc =>
+    desc.validoHasta instanceof Date && desc.validoHasta.getTime() > ahora
+  );
 
-    // Obtener descuentos vigentes
-    const unsubscribeDescuentos = onValue(refDescuentos, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const ahora = Date.now();
-        const descuentosArray = Object.keys(data).map(key => ({
-          id: key,
-          ...data[key]
-        })).filter(desc => desc.validoHasta > ahora);
-        
-        setDescuentosDisponibles(descuentosArray);
-        
-        // Si el producto ya tiene un descuento aplicado
-        if (producto.descuentoAplicado) {
-          const descuentoActual = descuentosArray.find(d => d.id === producto.descuentoAplicado);
-          setDescuentoSeleccionado(descuentoActual);
-          if (descuentoActual && producto.precioOriginal) {
-            setPrecioConDescuento(
-              producto.precioOriginal - (producto.precioOriginal * (descuentoActual.porcentaje / 100))
-            );
-          }
-        }
-      }
-    });
+  setDescuentosDisponibles(descuentosValidos);
 
-    return () => unsubscribeDescuentos();
-  }, [producto]);
+  // Si el producto ya tiene un descuento aplicado
+  if (producto.descuentoAplicado) {
+    const descuentoActual = descuentosValidos.find(d => d.id === producto.descuentoAplicado);
+    setDescuentoSeleccionado(descuentoActual);
+
+    if (descuentoActual && producto.precioOriginal) {
+      setPrecioConDescuento(
+        producto.precioOriginal - (producto.precioOriginal * (descuentoActual.porcentaje / 100))
+      );
+    }
+  }
+
+  // Cargar categorías desde Firebase
+  const db = getDatabase();
+  const refCategorias = ref(db, "categorias");
+  const unsubscribeCategorias = onValue(refCategorias, (snapshot) => {
+    const data = snapshot.val() || {};
+    const lista = Object.values(data)
+      .filter((cat) => cat.activa)
+      .map((cat) => cat.nombre);
+    setCategorias(lista);
+  });
+
+  return () => unsubscribeCategorias();
+}, [producto, descuentos]);
+
+
 
   const calcularPrecioConDescuento = (precio, porcentaje) => {
     return precio - (precio * (porcentaje / 100));

@@ -138,13 +138,13 @@
 .descuento-badge {
   position: absolute;
   top: 15px;
-  right: 15px;
+  left: 15px; /* Cambiado de right a left para coincidir con la imagen */
   background-color: #E63946;
   color: white;
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
+  padding: 0.5rem 1rem; /* Más grande */
+  border-radius: 4px; /* Menos redondeado */
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 1rem; /* Tamaño aumentado */
   z-index: 2;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
@@ -195,16 +195,15 @@
 
 .precio-original {
   text-decoration: line-through;
-  color: #999;
-  margin-right: 0.8rem;
-  font-size: 1rem;
+  color: gray;
+  margin-right: 8px;
 }
 
 .precio-descuento {
-  color: #E63946;
-  font-weight: 700;
-  font-size: 1.3rem;
+  color: #d32f2f; /* rojo o como prefieras */
+  font-weight: bold;
 }
+
 
 .precio-normal {
   color: #062828;
@@ -241,6 +240,33 @@
   color: #062828 !important;
   font-size: 10px;
 }
+.producto-precios {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  margin: 1rem 0;
+}
+
+.precio-original.tachado {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 0.9rem;
+  order: 1; /* Para posicionarlo arriba */
+}
+
+.precio-final {
+  font-weight: bold;
+  color: #062828;
+  font-size: 1.2rem;
+  order: 2; /* Para posicionarlo abajo */
+}
+
+.precio-final.descuento {
+  color: #E63946; /* Rojo más vibrante */
+  font-size: 1.4rem; /* Más grande para destacar */
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -266,4 +292,23 @@
     font-size: 0.9rem;
   }
 }
+
+.banner-slide {
+  position: relative;
+}
+
+.banner-title-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0,0,0,0.6);
+  color: #fff;
+  padding: 1rem 2rem;
+  text-align: center;
+  border-radius: 8px;
+  font-size: 1.2rem;
+}
+
+
 
