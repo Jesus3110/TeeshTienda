@@ -29,7 +29,8 @@ const Perfil = () => {
     if (!usuario) return;
 
     const db = getDatabase();
-    const perfilRef = ref(db, `usuarios/${usuario.uid}`);
+    const perfilRef = ref(db, `usuarios/${usuario.id}`);
+
 
     get(perfilRef).then((snapshot) => {
       if (snapshot.exists()) {
@@ -51,23 +52,30 @@ const Perfil = () => {
   };
 
   const handleGuardar = async () => {
-    const db = getDatabase();
-    const perfilRef = ref(db, `usuarios/${usuario.uid}`);
-    let datosActualizados = { ...formData };
+  const db = getDatabase();
+  const perfilRef = ref(db, `usuarios/${usuario.uid}`);
+  let datosActualizados = { ...formData };
 
-    if (nuevaImagen) {
-      const storage = getStorage();
-      const storageReference = storageRef(storage, `usuarios/${usuario.uid}`);
-      await uploadBytes(storageReference, nuevaImagen);
-      const urlImagen = await getDownloadURL(storageReference);
-      datosActualizados.imagen = urlImagen;
-    }
+  if (formData.nuevaPass && formData.nuevaPass.length >= 6) {
+    datosActualizados.password = formData.nuevaPass;
+  }
 
-    await update(perfilRef, datosActualizados);
-    setPerfil(datosActualizados);
-    setEditando(false);
-    setNuevaImagen(null);
-  };
+  delete datosActualizados.nuevaPass;
+
+  if (nuevaImagen) {
+    const storage = getStorage();
+    const storageReference = storageRef(storage, `usuarios/${usuario.id}`);
+    await uploadBytes(storageReference, nuevaImagen);
+    const urlImagen = await getDownloadURL(storageReference);
+    datosActualizados.imagen = urlImagen;
+  }
+
+  await update(perfilRef, datosActualizados);
+  setPerfil(datosActualizados);
+  setEditando(false);
+  setNuevaImagen(null);
+};
+
 
   if (!perfil) return <div className="loading">Cargando perfil...</div>;
 
@@ -85,13 +93,18 @@ const Perfil = () => {
               onChange={handleChange}
               placeholder="Nombre"
             />
+            <p>
+              <strong>Correo:</strong> {perfil.correo}
+            </p>
+
             <input
-              type="text"
-              name="correo"
-              value={formData.correo || ""}
+              type="password"
+              name="nuevaPass"
+              value={formData.nuevaPass || ""}
               onChange={handleChange}
-              placeholder="Correo"
+              placeholder="Nueva contraseña"
             />
+
             <input
               type="text"
               name="telefono"

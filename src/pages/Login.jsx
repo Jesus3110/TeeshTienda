@@ -1,21 +1,25 @@
-import React, { useState } from "react";
-import { auth } from "../firebase/firebaseConfig";
+import React, { useState, useContext } from "react";
 import { getDatabase, ref, set, get } from "firebase/database";
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword
-} from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  getStorage,
+  ref as sRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
 import "../styles/login.css";
+import { AuthContext } from "../context/AuthContext"; // ✅ Importa el contexto
 
 function Login() {
+  const { setUsuario, setRol } = useContext(AuthContext); // ✅ Usa el contexto
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [modoRegistro, setModoRegistro] = useState(false);
   const [exito, setExito] = useState(false);
   const [error, setError] = useState("");
+  const [modalInhabilitado, setModalInhabilitado] = useState(false);
+
   const [datos, setDatos] = useState({
     nombre: "",
     telefono: "",
@@ -39,13 +43,18 @@ function Login() {
     }
   };
 
-  const guardarUsuarioEnDB = async (userId, email, nombre = "", imagenURL = "/img/user-default.png") => {
+  const guardarUsuarioEnDB = async (
+    userId,
+    email,
+    nombre = "",
+    imagenURL = "/img/user-default.png"
+  ) => {
     const db = getDatabase();
     const userRef = ref(db, `usuarios/${userId}`);
-    
-    const direccion = datos.calle ? 
-      `${datos.calle} ${datos.numero}, ${datos.colonia}, ${datos.ciudad}, ${datos.estado}, CP ${datos.cp}` : 
-      "Dirección no proporcionada";
+
+    const direccion = datos.calle
+      ? `${datos.calle} ${datos.numero}, ${datos.colonia}, ${datos.ciudad}, ${datos.estado}, CP ${datos.cp}`
+      : "Dirección no proporcionada";
 
     await set(userRef, {
       nombre: nombre || datos.nombre || "Usuario",
@@ -54,59 +63,94 @@ function Login() {
       direccion,
       imagen: imagenURL,
       rol: "cliente",
-      activo: true
+      activo: true,
+      password: pass,
+      primerInicio: false,
     });
   };
 
   const verificarRolYRedirigir = async (userId) => {
     const db = getDatabase();
-    const userRef = ref(db, `usuarios/${userId}/rol`);
+    const userRef = ref(db, `usuarios/${userId}`);
     const snapshot = await get(userRef);
-    const rol = snapshot.val() || "cliente";
-    
-    if (rol === "admin") {
-      navigate("/admin");
+
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      localStorage.setItem("adminId", userId);
+      setUsuario({ uid: userId, ...data });
+      setRol(data.rol || null);
+
+      if (data.rol === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } else {
-      navigate("/");
+      setError("Usuario no encontrado");
     }
   };
 
   const registrar = async () => {
     try {
       setError("");
-      if (!datos.nombre) {
-        throw new Error("El nombre es requerido");
-      }
-      
-      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      if (!datos.nombre) throw new Error("El nombre es requerido");
+
+      const db = getDatabase();
+      const userId = uuidv4();
       let urlImagen = "/img/user-default.png";
 
       if (datos.imagen) {
         const storage = getStorage();
-        const storageRef = sRef(storage, `usuarios/${uuidv4()}_${datos.imagen.name}`);
+        const storageRef = sRef(storage, `usuarios/${userId}_${datos.imagen.name}`);
         await uploadBytes(storageRef, datos.imagen);
         urlImagen = await getDownloadURL(storageRef);
       }
 
-      await guardarUsuarioEnDB(cred.user.uid, email, datos.nombre, urlImagen);
+      await guardarUsuarioEnDB(userId, email, datos.nombre, urlImagen);
       setExito(true);
-      setTimeout(() => verificarRolYRedirigir(cred.user.uid), 2000);
-    } catch (error) {
-      console.error("Error al registrar:", error);
-      setError(error.message);
+      setTimeout(() => verificarRolYRedirigir(userId), 2000);
+    } catch (err) {
+      console.error("Error al registrar:", err);
+      setError("Hubo un error al registrar el usuario");
     }
   };
 
-  const ingresar = async () => {
-    try {
-      setError("");
-      const cred = await signInWithEmailAndPassword(auth, email, pass);
-      await verificarRolYRedirigir(cred.user.uid);
-    } catch (error) {
-      console.error("Error al ingresar:", error);
-      setError("Correo o contraseña incorrectos");
+const ingresar = async () => {
+  const db = getDatabase();
+  const usuariosRef = ref(db, "usuarios");
+  const snapshot = await get(usuariosRef);
+
+  if (snapshot.exists()) {
+    const usuarios = Object.entries(snapshot.val()).map(([id, u]) => ({
+      id,
+      ...u,
+    }));
+
+    const encontrado = usuarios.find(
+      (u) => u.correo === email && u.password === pass
+    );
+
+    // 🚫 Si existe pero está inhabilitado
+if (encontrado && !encontrado.activo) {
+  setModalInhabilitado(true); // Abre el modal
+  return;
+}
+
+    // ✅ Si está activo y coincide
+    if (encontrado) {
+      localStorage.setItem("adminId", encontrado.id);
+      setUsuario({ uid: encontrado.id, ...encontrado });
+      setRol(encontrado.rol || null);
+
+      return encontrado.primerInicio
+        ? navigate(`/completar-perfil/${encontrado.id}`)
+        : navigate(encontrado.rol === "admin" ? "/admin" : "/");
     }
-  };
+  }
+
+  setError("Correo o contraseña incorrectos");
+};
+
 
   return (
     <div className="auth-container">
@@ -172,60 +216,48 @@ function Login() {
 
             <div className="address-section">
               <div className="address-row">
-                <div className="address-field">
-                  <input
-                    name="calle"
-                    className="address-input"
-                    placeholder="Calle"
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="address-field">
-                  <input
-                    name="numero"
-                    className="address-input"
-                    placeholder="Número"
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-
-              <div className="auth-form-group">
                 <input
-                  name="colonia"
+                  name="calle"
                   className="address-input"
-                  placeholder="Colonia"
+                  placeholder="Calle"
+                  onChange={handleChange}
+                />
+                <input
+                  name="numero"
+                  className="address-input"
+                  placeholder="Número"
                   onChange={handleChange}
                 />
               </div>
+
+              <input
+                name="colonia"
+                className="address-input"
+                placeholder="Colonia"
+                onChange={handleChange}
+              />
 
               <div className="address-row">
-                <div className="address-field">
-                  <input
-                    name="ciudad"
-                    className="address-input"
-                    placeholder="Ciudad"
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="address-field">
-                  <input
-                    name="estado"
-                    className="address-input"
-                    placeholder="Estado"
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-
-              <div className="auth-form-group">
                 <input
-                  name="cp"
+                  name="ciudad"
                   className="address-input"
-                  placeholder="Código Postal"
+                  placeholder="Ciudad"
+                  onChange={handleChange}
+                />
+                <input
+                  name="estado"
+                  className="address-input"
+                  placeholder="Estado"
                   onChange={handleChange}
                 />
               </div>
+
+              <input
+                name="cp"
+                className="address-input"
+                placeholder="Código Postal"
+                onChange={handleChange}
+              />
             </div>
 
             <div className="auth-form-group">
@@ -250,7 +282,7 @@ function Login() {
 
         <p className="auth-switch-text">
           {modoRegistro ? "¿Ya tienes cuenta?" : "¿No tienes cuenta?"}{" "}
-          <button 
+          <button
             onClick={() => {
               setModoRegistro(!modoRegistro);
               setError("");
@@ -261,6 +293,23 @@ function Login() {
           </button>
         </p>
       </div>
+      {modalInhabilitado && (
+  <div className="modal-backdrop">
+    <div className="modal-form">
+      <h3>🚫 Cuenta inhabilitada</h3>
+      <p>Tu cuenta ha sido desactivada por un administrador.</p>
+      <p>Si crees que se trata de un error, por favor contacta con soporte:</p>
+      <p style={{ fontWeight: "bold" }}>📧 soporte@mystore.com</p>
+      <button
+        onClick={() => setModalInhabilitado(false)}
+        className="auth-submit-btn"
+      >
+        Cerrar
+      </button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

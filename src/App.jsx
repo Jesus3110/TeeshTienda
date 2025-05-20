@@ -17,6 +17,10 @@ import Banners from "./pages/Banners";
 import Descuentos from "./pages/Descuentos"; 
 import Historial from "./pages/HistorialPedidos";
 import Perfil from "./pages/Perfil"; 
+import CompletarPerfil from "./pages/CompletarPerfil";
+import RutaProtegidaPorRol from "./router/RutaProtegidaPorRol";
+import Ingresos from "./pages/Ingresos";
+
 
 
 
@@ -35,31 +39,52 @@ function App() {
         <Route path="/producto/:id" element={<Producto />} />
         <Route path="/carrito" element={<Carrito />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/completar-perfil/:id" element={<CompletarPerfil />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/pedidos" element={<Pedidos />} />
         <Route path="/historial" element={<Historial />} />
         <Route path="/perfil" element={<Perfil />} />
 
-        {/* Rutas admin anidadas con layout */}
         <Route
-          path="/admin"
-          element={
-            <RutaAdmin>
-              <AdminLayout />
-            </RutaAdmin>
-          }
-        >
-          <Route index element={<AdminPanel />} />
-          <Route path="productos" element={<Productos />} />
-          <Route path="pedidos" element={<Pedidos />} />
-          <Route path="categorias" element={<Categorias />} />
-          <Route path="usuarios" element={<Usuarios />} />
-          <Route path="banners" element={<Banners />} />
-          <Route path="descuentos" element={<Descuentos />} />
-          <Route path="historial" element={<Historial />} />
-          <Route path="perfil" element={<Perfil />} />
-          {/* Agrega aquí más subrutas */}
-        </Route>
+  path="/admin"
+  element={
+    <RutaAdmin>
+      <AdminLayout />
+    </RutaAdmin>
+  }
+>
+  <Route index element={<AdminPanel />} />
+
+  {/* Accesibles para todos los administradores */}
+  <Route path="productos" element={<Productos />} />
+  <Route path="categorias" element={<Categorias />} />
+  <Route path="pedidos" element={<Pedidos />} />
+  <Route path="banners" element={<Banners />} />
+  <Route path="descuentos" element={<Descuentos />} />
+  <Route path="historial" element={<Historial />} />
+  <Route path="perfil" element={<Perfil />} />
+
+  {/* Usuarios: solo god y premium */}
+  <Route
+    path="usuarios"
+    element={
+      <RutaProtegidaPorRol rolesPermitidos={["god", "premium"]}>
+        <Usuarios />
+      </RutaProtegidaPorRol>
+    }
+  />
+
+  {/* Ingresos: solo god */}
+  <Route
+    path="ingresos"
+    element={
+      <RutaProtegidaPorRol rolesPermitidos={["god"]}>
+        <Ingresos />
+      </RutaProtegidaPorRol>
+    }
+  />
+</Route>
+
       </Routes>
     </>
   );

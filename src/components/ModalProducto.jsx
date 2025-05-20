@@ -20,14 +20,21 @@ function ModalProducto({
     .slice(0, 3);
 
   // Obtener descuento del producto actual
-  const descuento = producto.descuentoAplicado
-    ? descuentos.find((d) => d.id === producto.descuentoAplicado)
-    : null;
+ const hoy = new Date();
+const descuento = producto.descuentoAplicado
+  ? descuentos.find((d) => {
+      if (d.id !== producto.descuentoAplicado) return false;
+      if (!d.validoHasta) return true; // No tiene fecha límite
+      const fechaLimite = new Date(d.validoHasta);
+      return hoy <= fechaLimite; // Solo aplica si no ha vencido
+    })
+  : null;
 
-  // Calcular precio con descuento
+
+  const precioOriginal = producto.precioOriginal || producto.precio;
   const precioConDescuento = descuento
-    ? (producto.precio * (1 - descuento.porcentaje / 100)).toFixed(2)
-    : producto.precio.toFixed(2);
+    ? (precioOriginal * (1 - descuento.porcentaje / 100)).toFixed(2)
+    : precioOriginal.toFixed(2);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -61,7 +68,7 @@ function ModalProducto({
                   {descuento ? (
                     <>
                       <span className="precio-original-modal">
-                        ${producto.precio.toFixed(2)}
+                        ${precioOriginal.toFixed(2)}
                       </span>
                       <span className="precio-descuento-modal">
                         ${precioConDescuento}
@@ -69,7 +76,7 @@ function ModalProducto({
                     </>
                   ) : (
                     <span className="precio-normal-modal">
-                      ${producto.precio.toFixed(2)}
+                      ${precioOriginal.toFixed(2)}
                     </span>
                   )}
                 </div>

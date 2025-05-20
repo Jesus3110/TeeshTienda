@@ -1,105 +1,117 @@
 import React, { useState } from "react";
 import { getDatabase, ref, set } from "firebase/database";
-import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
+import { enviarCorreoAdmin } from "../utils/emailService"; // <- Asegúrate de implementar esto
 import "../styles/modal.css";
 
-
 const ModalAgregarUsuario = ({ onClose }) => {
-  const [datos, setDatos] = useState({
-    nombre: "",
-    correo: "",
-    telefono: "",
-    calle: "",
-    numero: "",
-    colonia: "",
-    ciudad: "",
-    estado: "",
-    cp: "",
-    rol: "admin",
-    imagen: null,
-  });
+  const [correoDestino, setCorreoDestino] = useState("");
+  const [nivel, setNivel] = useState("estandar");
   const [subiendo, setSubiendo] = useState(false);
   const [exito, setExito] = useState(false);
   const [error, setError] = useState("");
+  const [nombre, setNombre] = useState("");
+const [apellido, setApellido] = useState("");
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "imagen") {
-      setDatos((prev) => ({ ...prev, imagen: files[0] }));
-    } else {
-      setDatos((prev) => ({ ...prev, [name]: value }));
-    }
-  };
 
-  const validar = () => {
-    if (!datos.nombre || !datos.correo || !datos.telefono || !datos.calle || !datos.numero || !datos.colonia || !datos.ciudad || !datos.estado || !datos.cp) {
-      setError("Todos los campos son obligatorios.");
-      return false;
-    }
-    return true;
+const generarCorreo = () => {
+  const limpio = (str) =>
+    str.toLowerCase().replace(/\s+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const nombreLimpio = limpio(nombre);
+  const apellidoLimpio = limpio(apellido);
+  return `${nombreLimpio}.${apellidoLimpio}@adminm&jshop.com`;
+};
+
+
+  const generarPassword = () => {
+    return Math.random().toString(36).slice(-10) + "A1!";
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validar()) return;
-  
+    if (!correoDestino) return setError("Debes ingresar un correo destino");
+
+    const correo = generarCorreo();
+    const password = generarPassword();
+
     setSubiendo(true);
     try {
-        let urlImagen = "/img/default-user.png";// ✅ Ruta accesible directamente
-  
-      if (datos.imagen) {
-        const storage = getStorage();
-        const storageRef = sRef(storage, `usuarios/${uuidv4()}_${datos.imagen.name}`);
-        await uploadBytes(storageRef, datos.imagen);
-        urlImagen = await getDownloadURL(storageRef);
-      }
-  
-      const direccion = `${datos.calle} ${datos.numero}, ${datos.colonia}, ${datos.ciudad}, ${datos.estado}, CP ${datos.cp}`;
       const db = getDatabase();
       const newRef = ref(db, `usuarios/${uuidv4()}`);
       await set(newRef, {
-        ...datos,
-        direccion,
-        imagen: urlImagen,
-        activo: true,
-      });
-  
+  correo,
+  password,
+  rol: "admin",
+  privilegios: nivel,
+  primerInicio: true,
+  activo: true,
+  nombre,
+  apellido,
+});
+
+
+      await enviarCorreoAdmin(
+  correoDestino,       // a quién se lo mandas (no se usa en plantilla)
+  correo,              // correo generado para el nuevo admin
+  password,            // contraseña generada
+  `${nombre} ${apellido}` // nombre completo
+);
+
+
+
       setExito(true);
     } catch (err) {
-      setError("Error al registrar usuario.");
+      setError("Error al crear administrador");
       console.error(err);
     } finally {
       setSubiendo(false);
     }
   };
-  
 
   return (
     <div className="modal-backdrop">
       <div className="modal-form">
         {exito ? (
           <>
-            <h3>✅ Usuario agregado correctamente</h3>
+            <h3>✅ Admin creado y correo enviado</h3>
             <button onClick={onClose}>Aceptar</button>
           </>
         ) : (
           <form onSubmit={handleSubmit}>
-            <h2>Agregar Administrador</h2>
-            <input name="nombre" placeholder="Nombre" onChange={handleChange} />
-            <input name="correo" placeholder="Correo electrónico" onChange={handleChange} type="email" />
-            <input name="telefono" placeholder="Teléfono" onChange={handleChange} />
-            <input name="calle" placeholder="Calle" onChange={handleChange} />
-            <input name="numero" placeholder="Número" onChange={handleChange} />
-            <input name="colonia" placeholder="Colonia" onChange={handleChange} />
-            <input name="ciudad" placeholder="Ciudad" onChange={handleChange} />
-            <input name="estado" placeholder="Estado" onChange={handleChange} />
-            <input name="cp" placeholder="Código Postal" onChange={handleChange} />
-            <input name="imagen" type="file" accept="image/*" onChange={handleChange} />
+            <h2>Crear nuevo Administrador</h2>
+            <input
+              name="nombre"
+              placeholder="Nombre"
+              onChange={(e) => setNombre(e.target.value)}
+              required
+            />
+            <input
+              name="apellido"
+              placeholder="Apellido"
+              onChange={(e) => setApellido(e.target.value)}
+              required
+            />
+
+            <input
+              name="correoDestino"
+              placeholder="Correo destino para enviar credenciales"
+              onChange={(e) => setCorreoDestino(e.target.value)}
+              type="email"
+            />
+
+            <label>Privilegios:</label>
+            <select value={nivel} onChange={(e) => setNivel(e.target.value)}>
+              <option value="god">Admin God (acceso total)</option>
+              <option value="premium">Admin Premium (sin ingresos)</option>
+              <option value="estandar">Admin Estándar (limitado)</option>
+            </select>
+
             <button type="submit" disabled={subiendo}>
-              {subiendo ? "Subiendo..." : "Registrar"}
+              {subiendo ? "Creando..." : "Registrar"}
             </button>
-            <button type="button" onClick={onClose}>Cancelar</button>
+            <button type="button" onClick={onClose}>
+              Cancelar
+            </button>
             {error && <p style={{ color: "red" }}>{error}</p>}
           </form>
         )}

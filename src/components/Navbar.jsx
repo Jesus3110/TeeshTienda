@@ -1,8 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { auth } from "../firebase/firebaseConfig";
-import { signOut } from "firebase/auth";
+
 import { getDatabase, ref, onValue, set } from "firebase/database";
 import "../styles/navbar.css";
 import ModalCategoria from "./ModalCategoria";
@@ -64,14 +63,11 @@ function Navbar() {
     return descuentoEncontrado;
   };
 
-  const cerrarSesion = async () => {
-    try {
-      await signOut(auth);
-      navigate("/");
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-    }
-  };
+const cerrarSesion = () => {
+  localStorage.removeItem("adminId");
+  window.location.href = "/login";
+};
+
 
   const handleCategoriaClick = (categoria) => {
     setCategoriaSeleccionada(categoria);

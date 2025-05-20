@@ -12,8 +12,8 @@ const Usuarios = () => {
   const [filtroRol, setFiltroRol] = useState("todos");
   const [mostrarModalAgregar, setMostrarModalAgregar] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
-const [direccionSeleccionada, setDireccionSeleccionada] = useState("");
-
+  const [direccionSeleccionada, setDireccionSeleccionada] = useState("");
+  const [verInactivos, setVerInactivos] = useState(false);
 
   useEffect(() => {
     const db = getDatabase();
@@ -30,20 +30,26 @@ const [direccionSeleccionada, setDireccionSeleccionada] = useState("");
   }, []);
 
   const usuariosFiltrados = usuarios.filter((user) => {
-    const coincideBusqueda =
-      user.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      user.correo?.toLowerCase().includes(busqueda.toLowerCase());
+  const coincideBusqueda =
+    user.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    user.correo?.toLowerCase().includes(busqueda.toLowerCase());
 
-    const coincideRol = filtroRol === "todos" || user.rol === filtroRol;
+  const coincideRol =
+    filtroRol === "todos"
+      ? true
+      : filtroRol === "inhabilitados"
+      ? user.activo === false
+      : user.rol === filtroRol && user.activo;
 
-    return coincideBusqueda && coincideRol;
-  });
+  return coincideBusqueda && coincideRol;
+});
 
-  const inhabilitarUsuario = async (id) => {
-    const db = getDatabase();
-    const userRef = ref(db, `usuarios/${id}`);
-    await update(userRef, { activo: false });
-  };
+
+ const cambiarEstadoUsuario = async (id, nuevoEstado) => {
+  const db = getDatabase();
+  const userRef = ref(db, `usuarios/${id}`);
+  await update(userRef, { activo: nuevoEstado });
+};
 
   return (
     <div className="usuarios-admin">
@@ -64,7 +70,9 @@ const [direccionSeleccionada, setDireccionSeleccionada] = useState("");
           <option value="todos">Todos los roles</option>
           <option value="cliente">Cliente</option>
           <option value="admin">Administrador</option>
+          <option value="inhabilitados">Inhabilitados</option>
         </select>
+        
 
         <button onClick={() => setMostrarModalAgregar(true)}>
           ➕ Agregar administrador
@@ -81,6 +89,7 @@ const [direccionSeleccionada, setDireccionSeleccionada] = useState("");
             <th>Dirección</th>
             <th>Teléfono</th>
             <th>Rol</th>
+            <th>Privilegio</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -111,16 +120,22 @@ const [direccionSeleccionada, setDireccionSeleccionada] = useState("");
                   </button>
                 )}
               </td>
-
               <td>{user.telefono}</td>
               <td>{user.rol}</td>
+              <td>{user.privilegios}</td>
               <td>
                 {user.activo ? (
-                  <button onClick={() => inhabilitarUsuario(user.idFirebase)}>
+                  <button
+                    onClick={() => cambiarEstadoUsuario(user.idFirebase, false)}
+                  >
                     Inhabilitar
                   </button>
                 ) : (
-                  <span style={{ color: "gray" }}>Inhabilitado</span>
+                  <button
+                    onClick={() => cambiarEstadoUsuario(user.idFirebase, true)}
+                  >
+                    Habilitar
+                  </button>
                 )}
               </td>
             </tr>

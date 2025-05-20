@@ -112,41 +112,47 @@ const Checkout = () => {
     navigate("/");
   };
   
+const actualizarDashboard = async (carrito, total) => {
+  const db = getDatabase();
+  const fechaActual = new Date();
+  const meses = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  ];
 
-  const actualizarDashboard = async (carrito, total) => {
-    const db = getDatabase();
-    const fechaActual = new Date();
-    const mesActual = fechaActual.toLocaleString('default', { month: 'long' }); // Ej: "abril"
-  
-    // 1. Actualizar ingresos totales
-    const ingresosRef = ref(db, "dashboard/ingresosTotales");
-    await runTransaction(ingresosRef, (valorActual) => {
-      return (valorActual || 0) + total;
+  const mesActual = meses[fechaActual.getMonth()];
+  const anioActual = fechaActual.getFullYear();
+
+  // ✅ 1. Ingresos totales
+  const ingresosRef = ref(db, "dashboard/ingresosTotales");
+  await runTransaction(ingresosRef, (valorActual) => {
+    return (valorActual || 0) + total;
+  });
+
+  // ✅ 2. Ingresos por año/mes (estructura nueva)
+  const ingresosMesAnioRef = ref(db, `dashboard/ingresosPorMes/${anioActual}/${mesActual}`);
+  await runTransaction(ingresosMesAnioRef, (valorActual) => {
+    return (valorActual || 0) + total;
+  });
+
+  // ✅ 3. Productos más vendidos
+  for (const prod of carrito) {
+    const prodRef = ref(db, `dashboard/productosVendidos/${prod.nombre}`);
+    await runTransaction(prodRef, (valorActual) => {
+      return (valorActual || 0) + prod.cantidad;
     });
-  
-    // 2. Actualizar ingresos por mes
-    const ingresosMesRef = ref(db, `dashboard/ingresosPorMes/${mesActual}`);
-    await runTransaction(ingresosMesRef, (valorActual) => {
-      return (valorActual || 0) + total;
+  }
+
+  // ✅ 4. Categorías más vendidas
+  for (const prod of carrito) {
+    const cat = prod.categoria || "Sin categoría";
+    const catRef = ref(db, `dashboard/categoriasVendidas/${cat}`);
+    await runTransaction(catRef, (valorActual) => {
+      return (valorActual || 0) + prod.cantidad;
     });
-  
-    // 3. Productos más vendidos
-    for (const prod of carrito) {
-      const prodRef = ref(db, `dashboard/productosVendidos/${prod.nombre}`);
-      await runTransaction(prodRef, (valorActual) => {
-        return (valorActual || 0) + prod.cantidad;
-      });
-    }
-  
-    // 4. Categorías más vendidas
-    for (const prod of carrito) {
-      const cat = prod.categoria || "Sin categoría";
-      const catRef = ref(db, `dashboard/categoriasVendidas/${cat}`);
-      await runTransaction(catRef, (valorActual) => {
-        return (valorActual || 0) + prod.cantidad;
-      });
-    }
-  };
+  }
+};
+
   
 
   return (

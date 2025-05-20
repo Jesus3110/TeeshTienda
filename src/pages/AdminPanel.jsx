@@ -139,14 +139,32 @@ const AdminPanel = () => {
     ];
 
     const ingresosPorMesRef = ref(db, "dashboard/ingresosPorMes");
-    onValue(ingresosPorMesRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      const listaIngresos = mesesOrdenados.map((mes) => ({
-        name: mes,
-        ingresos: data[mes.toLowerCase()] || 0,
-      }));
-      setIngresosData(listaIngresos);
+onValue(ingresosPorMesRef, (snapshot) => {
+  const data = snapshot.val() || {};
+
+  // Inicializar acumulador mensual
+  const acumulado = {};
+  mesesOrdenados.forEach((mes) => {
+    acumulado[mes.toLowerCase()] = 0;
+  });
+
+  // Sumar ingresos por mes a través de los años
+  Object.values(data).forEach((anioData) => {
+    Object.entries(anioData).forEach(([mes, valor]) => {
+      if (acumulado[mes] !== undefined) {
+        acumulado[mes] += valor;
+      }
     });
+  });
+
+  const listaIngresos = mesesOrdenados.map((mes) => ({
+    name: mes,
+    ingresos: acumulado[mes.toLowerCase()],
+  }));
+
+  setIngresosData(listaIngresos);
+});
+
   }, []);
 
   const capitalizeFirstLetter = (string) => {
