@@ -6,105 +6,106 @@
     justify-content: center;
     align-items: center;
     padding: 2rem;
-  }
-  
-  .auth-card {
+}
+
+.auth-card {
     background-color: white;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     padding: 2.5rem;
     width: 100%;
     max-width: 500px;
-  }
-  
-  .auth-title {
+}
+
+.auth-title {
     color: #191919;
     text-align: center;
     margin-bottom: 1.5rem;
     font-size: 1.8rem;
-  }
-  
-  /* Mensajes de error */
-  .auth-error {
+    font-weight: 700;
+}
+
+/* Mensajes de error */
+.auth-error {
     background-color: #FFEBEE;
     color: #D62828;
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
     text-align: center;
-  }
-  
-  /* Grupos de formulario */
-  .auth-form-group {
+}
+
+/* Grupos de formulario */
+.auth-form-group {
     margin-bottom: 1.5rem;
-  }
-  
-  .auth-label {
+}
+
+.auth-label {
     display: block;
     color: #555555;
     margin-bottom: 0.5rem;
     font-weight: 500;
-  }
-  
-  .auth-input {
+}
+
+.auth-input {
     width: 100%;
     padding: 0.8rem 1rem;
     border-radius: 8px;
     border: 1px solid #E5E5E5;
     font-size: 1rem;
     color: #191919;
-  }
-  
-  /* Sección de dirección */
-  .address-section {
+}
+
+/* Sección de dirección */
+.address-section {
     background-color: #FAF8F5;
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
-  }
-  
-  .address-title {
+}
+
+.address-title {
     color: #191919;
     font-size: 1.1rem;
     margin-bottom: 1rem;
-  }
-  
-  .address-row {
+}
+
+.address-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
     margin-bottom: 1rem;
-  }
-  
-  .address-field {
+}
+
+.address-field {
     width: 100%;
-  }
-  
-  .address-label {
+}
+
+.address-label {
     display: block;
     color: #555555;
     margin-bottom: 0.5rem;
     font-size: 0.9rem;
-  }
-  
-  .address-input {
+}
+
+.address-input {
     width: 100%;
     padding: 0.6rem 0.8rem;
     border-radius: 6px;
     border: 1px solid #E5E5E5;
     font-size: 0.9rem;
-  }
-  
-  /* Input de archivo */
-  .auth-file-input {
+}
+
+/* Input de archivo */
+.auth-file-input {
     width: 100%;
     padding: 0.5rem;
     border-radius: 8px;
     border: 1px solid #E5E5E5;
-  }
-  
-  /* Botón principal */
-  .auth-submit-btn {
+}
+
+/* Botón principal */
+.auth-submit-btn {
     width: 100%;
     padding: 1rem;
     background-color: #D62828;
@@ -116,40 +117,40 @@
     cursor: pointer;
     margin-bottom: 1.5rem;
     transition: background-color 0.3s;
-  }
-  
-  .auth-submit-btn:hover {
+}
+
+.auth-submit-btn:hover {
     background-color: #A4161A;
-  }
-  
-  /* Divisor */
-  .auth-divider {
+}
+
+/* Divisor */
+.auth-divider {
     display: flex;
     align-items: center;
     margin-bottom: 1.5rem;
-  }
-  
-  .auth-divider-line {
+}
+
+.auth-divider-line {
     flex: 1;
     height: 1px;
     background-color: #E5E5E5;
-  }
-  
-  .auth-divider-text {
+}
+
+.auth-divider-text {
     padding: 0 1rem;
     color: #555555;
     font-size: 0.9rem;
-  }
-  
-  /* Botones sociales */
-  .social-buttons {
+}
+
+/* Botones sociales */
+.social-buttons {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
     margin-bottom: 1.5rem;
-  }
-  
-  .social-btn {
+}
+
+.social-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -162,35 +163,35 @@
     font-size: 0.9rem;
     font-weight: 500;
     transition: background-color 0.3s;
-  }
-  
-  .social-btn:hover {
+}
+
+.social-btn:hover {
     background-color: #FAF8F5;
-  }
-  
-  .social-icon {
+}
+
+.social-icon {
     width: 20px;
     height: 20px;
-  }
-  
-  /* Texto de cambio */
-  .auth-switch-text {
+}
+
+/* Texto de cambio */
+.auth-switch-text {
     text-align: center;
     color: #555555;
     margin-top: 1.5rem;
-  }
-  
-  .auth-switch-btn {
+}
+
+.auth-switch-btn {
     background: none;
     border: none;
     color: #D62828;
     cursor: pointer;
     font-weight: 500;
     text-decoration: underline;
-  }
-  
-  /* Modal de éxito */
-  .modal-backdrop {
+}
+
+/* Modal de éxito */
+.modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
@@ -201,48 +202,67 @@
     justify-content: center;
     align-items: center;
     z-index: 1000;
-  }
-  
-  .modal-form {
+}
+
+.modal-form {
     background-color: white;
     padding: 2rem;
     border-radius: 8px;
     max-width: 400px;
     width: 100%;
-  }
-  
-  /* Responsive */
-  @media (max-width: 768px) {
+}
+
+/* Responsive */
+@media (max-width: 768px) {
     .auth-card {
-      padding: 1.5rem;
+        padding: 1.5rem;
     }
-    
+
     .social-buttons {
-      grid-template-columns: 1fr;
+        grid-template-columns: 1fr;
     }
-    
+
     .address-row {
-      grid-template-columns: 1fr;
+        grid-template-columns: 1fr;
     }
-  }
+}
 
-  /* Mantén tus estilos existentes y añade estos */
-
-.social-buttons {
-    margin-bottom: 1.5rem;
-  }
-  
-  .google-btn {
+/* Extra */
+.google-btn {
     background-color: #4285F4;
     color: white;
     border: none;
-  }
-  
-  .google-btn:hover {
+}
+
+.google-btn:hover {
     background-color: #357ABD;
-  }
-  
-  /* Ajusta el espaciado para el botón de Google arriba */
-  .auth-form-group:first-of-type {
+}
+
+.auth-form-group:first-of-type {
     margin-top: 1.5rem;
-  }
+}
+
+.auth-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: -40px;
+    z-index: 1;
+    position: relative;
+}
+
+.auth-icon-circle {
+    background-color: white;
+    border: 4px solid #D62828;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.auth-icon-circle img {
+    width: 40px;
+    height: 40px;
+}

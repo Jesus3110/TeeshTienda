@@ -8,8 +8,17 @@ function ModalProducto({
   productosRelacionados = [],
   onProductoClick,
   descuentos = [],
+  carrito = [],
 }) {
-  const [cantidad, setCantidad] = useState(1); // <-- Aquí el estado de cantidad
+  const [cantidad, setCantidad] = useState(1);
+
+  const cantidadEnCarrito = carrito
+    .filter((p) => p.idFirebase === producto.idFirebase)
+    .reduce((acc, p) => acc + (parseInt(p.cantidad) || 0), 0);
+
+  const stockReal = parseInt(producto.stock || 0);
+  const stockDisponible = Math.max(0, stockReal - cantidadEnCarrito);
+
   // Filtrar productos relacionados
   const productosSimilares = productosRelacionados
     .filter(
@@ -20,16 +29,15 @@ function ModalProducto({
     .slice(0, 3);
 
   // Obtener descuento del producto actual
- const hoy = new Date();
-const descuento = producto.descuentoAplicado
-  ? descuentos.find((d) => {
-      if (d.id !== producto.descuentoAplicado) return false;
-      if (!d.validoHasta) return true; // No tiene fecha límite
-      const fechaLimite = new Date(d.validoHasta);
-      return hoy <= fechaLimite; // Solo aplica si no ha vencido
-    })
-  : null;
-
+  const hoy = new Date();
+  const descuento = producto.descuentoAplicado
+    ? descuentos.find((d) => {
+        if (d.id !== producto.descuentoAplicado) return false;
+        if (!d.validoHasta) return true; // No tiene fecha límite
+        const fechaLimite = new Date(d.validoHasta);
+        return hoy <= fechaLimite; // Solo aplica si no ha vencido
+      })
+    : null;
 
   const precioOriginal = producto.precioOriginal || producto.precio;
   const precioConDescuento = descuento
@@ -104,11 +112,14 @@ const descuento = producto.descuentoAplicado
                   <input
                     type="number"
                     min="1"
+                    max={stockDisponible}
                     value={cantidad}
                     onChange={(e) => {
                       const value = parseInt(e.target.value, 10);
                       if (isNaN(value)) {
-                        setCantidad(1); // Si borra el input, lo regresa a 1
+                        setCantidad(1);
+                      } else if (value > stockDisponible) {
+                        setCantidad(stockDisponible);
                       } else {
                         setCantidad(Math.max(1, value));
                       }
@@ -124,12 +135,30 @@ const descuento = producto.descuentoAplicado
                     }}
                   />
 
-                  <button
-                    className="quantity-btn"
-                    onClick={() => setCantidad(cantidad + 1)}
+                  <p
+                    style={{
+                      fontSize: "0.9rem",
+                      color: "#666",
+                      marginTop: "5px",
+                    }}
                   >
-                    +
-                  </button>
+                    Stock disponible: {stockDisponible}
+                  </p>
+
+
+                  <button
+  className="quantity-btn"
+  onClick={() => {
+    if (cantidad < stockDisponible) {
+      setCantidad(cantidad + 1);
+    }
+  }}
+  disabled={cantidad >= stockDisponible}
+  title={cantidad >= stockDisponible ? "Límite alcanzado" : ""}
+>
+  +
+</button>
+
                 </div>
               </div>
 
@@ -138,11 +167,24 @@ const descuento = producto.descuentoAplicado
                 <button
                   className="btn-agregar-carrito-modal"
                   onClick={() => {
+                    if (cantidad > stockDisponible) {
+                      alert(
+                        `❌ Solo quedan ${stockDisponible} disponibles (ya tienes ${cantidadEnCarrito} en tu carrito)`
+                      );
+                      return;
+                    }
                     onAddToCart(producto, cantidad);
                     onClose();
                   }}
+                  disabled={stockDisponible === 0}
+                  style={{
+                    opacity: stockDisponible === 0 ? 0.5 : 1,
+                    cursor: stockDisponible === 0 ? "not-allowed" : "pointer",
+                  }}
                 >
-                  Agregar al carrito
+                  {stockDisponible === 0
+                    ? "Sin stock disponible"
+                    : "Agregar al carrito"}
                 </button>
               </div>
 

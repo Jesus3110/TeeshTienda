@@ -24,6 +24,8 @@ function Home() {
   const navigate = useNavigate();
   const [descuentos, setDescuentos] = useState([]);
   const [productosVendidos, setProductosVendidos] = useState({});
+  const [carrito, setCarrito] = useState([]);
+
 
   const obtenerDescuentoProducto = (producto) => {
     if (!producto || !producto.descuentoAplicado || !descuentos?.length) {
@@ -150,6 +152,21 @@ function Home() {
       unsubscribeVendidos(); // ✅ ya está definida
     };
   }, []);
+
+  useEffect(() => {
+  if (!usuario) return;
+
+  const db = getDatabase();
+  const refCarrito = ref(db, `carritos/${usuario.uid}`);
+
+  const unsubscribe = onValue(refCarrito, (snapshot) => {
+    const datos = snapshot.val();
+    setCarrito(Array.isArray(datos) ? datos : []);
+  });
+
+  return () => unsubscribe();
+}, [usuario]);
+
 
   const añadirAlCarrito = (producto, cantidad = 1) => {
     if (!usuario || rol !== "cliente") {
@@ -280,7 +297,7 @@ function Home() {
         <div className="beneficio">
           <div className="beneficio-icono">🔥</div>
           <div className="beneficio-texto">
-            <h4>-12%</h4>
+            <h4>Aprovecha descuentos</h4>
             <p>Para artículos seleccionados</p>
           </div>
         </div>
@@ -335,6 +352,7 @@ function Home() {
           descuentos={descuentos}
           productosRelacionados={productos}
           onProductoClick={handleProductoRelacionadoClick}
+          carrito={carrito} 
         />
       )}
     </div>

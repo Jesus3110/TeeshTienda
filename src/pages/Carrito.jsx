@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { getDatabase, ref, onValue, set, remove } from "firebase/database";
+import { getDatabase, ref, onValue, set, remove, get } from "firebase/database";
 
 function Carrito() {
   const [carrito, setCarrito] = useState([]);
@@ -33,14 +33,49 @@ function Carrito() {
     }
   };
 
-  const cambiarCantidad = (index, nuevaCantidad) => {
+  const cambiarCantidad = async (index, nuevaCantidad) => {
     const copia = [...carrito];
-    if (nuevaCantidad === '' || isNaN(nuevaCantidad)) {
-      copia[index].cantidad = '';
-    } else {
-      copia[index].cantidad = Math.max(1, parseInt(nuevaCantidad));
+
+    // ✅ Si el input está vacío, permitimos que lo esté temporalmente
+    if (nuevaCantidad === "") {
+      copia[index].cantidad = "";
+      actualizarCarrito(copia);
+      return;
     }
-    actualizarCarrito(copia);
+
+    const cantidadInt = parseInt(nuevaCantidad);
+    if (isNaN(cantidadInt) || cantidadInt < 1) {
+      copia[index].cantidad = 1;
+      actualizarCarrito(copia);
+      return;
+    }
+
+    const producto = copia[index];
+
+    try {
+      const db = getDatabase();
+      const stockRef = ref(db, `productos/${producto.idFirebase}/stock`);
+      const snapshot = await get(stockRef);
+      const stockReal = parseInt(snapshot.val() || "0");
+
+      const totalEnCarrito = carrito
+        .filter((p, i) => i !== index && p.idFirebase === producto.idFirebase)
+        .reduce((acc, p) => acc + parseInt(p.cantidad || 0), 0);
+
+      const stockDisponible = Math.max(0, stockReal - totalEnCarrito);
+
+      if (cantidadInt > stockDisponible) {
+        copia[index].cantidad = stockDisponible;
+        alert(`❌ Solo hay ${stockDisponible} unidades disponibles.`);
+      } else {
+        copia[index].cantidad = cantidadInt;
+      }
+
+      actualizarCarrito(copia);
+    } catch (error) {
+      console.error("Error al validar stock:", error);
+      alert("Error al validar stock.");
+    }
   };
 
   const eliminarProducto = (index) => {
@@ -57,7 +92,10 @@ function Carrito() {
     setCarrito([]);
   };
 
-  const total = carrito.reduce((acc, prod) => acc + (prod.precio * (parseInt(prod.cantidad) || 0)), 0);
+  const total = carrito.reduce(
+    (acc, prod) => acc + prod.precio * (parseInt(prod.cantidad) || 0),
+    0
+  );
 
   const confirmarCompra = async () => {
     if (!usuario) {
@@ -65,11 +103,10 @@ function Carrito() {
       navigate("/login");
       return;
     }
-  
+
     // ✅ Solo redirige, no borres nada aquí
     navigate("/checkout");
   };
-  
 
   return (
     <div style={{ padding: "2rem" }}>
@@ -78,7 +115,13 @@ function Carrito() {
       {carrito.length === 0 ? (
         <p>No hay productos en el carrito.</p>
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "1rem" }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            marginTop: "1rem",
+          }}
+        >
           <thead>
             <tr>
               <th>Producto</th>
@@ -97,13 +140,16 @@ function Carrito() {
                   <input
                     type="number"
                     min="1"
-                    value={prod.cantidad === '' ? '' : prod.cantidad}
+                    value={prod.cantidad === "" ? "" : prod.cantidad}
                     onChange={(e) => cambiarCantidad(index, e.target.value)}
                     style={{ width: "60px" }}
                   />
                 </td>
                 <td>
-                  ${!isNaN(prod.precio * prod.cantidad) ? (prod.precio * prod.cantidad).toFixed(2) : "0.00"}
+                  $
+                  {!isNaN(prod.precio * prod.cantidad)
+                    ? (prod.precio * prod.cantidad).toFixed(2)
+                    : "0.00"}
                 </td>
                 <td>
                   <button onClick={() => eliminarProducto(index)}>❌</button>
@@ -128,7 +174,7 @@ function Carrito() {
               color: "#fff",
               padding: "0.5rem 1rem",
               border: "none",
-              borderRadius: "5px"
+              borderRadius: "5px",
             }}
             onClick={confirmarCompra}
           >

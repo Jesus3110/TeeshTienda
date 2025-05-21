@@ -97,7 +97,7 @@ function Login() {
 
       const db = getDatabase();
       const userId = uuidv4();
-      let urlImagen = "/img/user-default.png";
+      let urlImagen = "/img/default-user.png";
 
       if (datos.imagen) {
         const storage = getStorage();
@@ -162,6 +162,7 @@ if (encontrado && !encontrado.activo) {
           </div>
         </div>
       )}
+     
 
       <div className="auth-card">
         <h2 className="auth-title">

@@ -110,6 +110,15 @@ const Checkout = () => {
   
     alert("✅ Pedido registrado correctamente");
     navigate("/");
+
+    for (const prod of carrito) {
+  const stockRef = ref(db, `productos/${prod.idFirebase}/stock`);
+  await runTransaction(stockRef, (stockActual) => {
+    const stockNum = parseInt(stockActual || "0");
+    return Math.max(0, stockNum - prod.cantidad);
+  });
+}
+
   };
   
 const actualizarDashboard = async (carrito, total) => {
@@ -135,22 +144,38 @@ const actualizarDashboard = async (carrito, total) => {
     return (valorActual || 0) + total;
   });
 
-  // ✅ 3. Productos más vendidos
-  for (const prod of carrito) {
-    const prodRef = ref(db, `dashboard/productosVendidos/${prod.nombre}`);
-    await runTransaction(prodRef, (valorActual) => {
-      return (valorActual || 0) + prod.cantidad;
-    });
-  }
+// 🆕 3. Productos más vendidos (general y por mes/año)
+for (const prod of carrito) {
+  // General
+  const prodRef = ref(db, `dashboard/productosVendidos/${prod.nombre}`);
+  await runTransaction(prodRef, (valorActual) => {
+    return (valorActual || 0) + prod.cantidad;
+  });
 
-  // ✅ 4. Categorías más vendidas
-  for (const prod of carrito) {
-    const cat = prod.categoria || "Sin categoría";
-    const catRef = ref(db, `dashboard/categoriasVendidas/${cat}`);
-    await runTransaction(catRef, (valorActual) => {
-      return (valorActual || 0) + prod.cantidad;
-    });
-  }
+  // Por mes/año
+  const prodMesRef = ref(db, `dashboard/productosVendidosPorMes/${anioActual}/${mesActual}/${prod.nombre}`);
+  await runTransaction(prodMesRef, (valorActual) => {
+    return (valorActual || 0) + prod.cantidad;
+  });
+}
+
+// 🆕 4. Categorías más vendidas (general y por mes/año)
+for (const prod of carrito) {
+  const cat = prod.categoria || "Sin categoría";
+
+  // General
+  const catRef = ref(db, `dashboard/categoriasVendidas/${cat}`);
+  await runTransaction(catRef, (valorActual) => {
+    return (valorActual || 0) + prod.cantidad;
+  });
+
+  // Por mes/año
+  const catMesRef = ref(db, `dashboard/categoriasVendidasPorMes/${anioActual}/${mesActual}/${cat}`);
+  await runTransaction(catMesRef, (valorActual) => {
+    return (valorActual || 0) + prod.cantidad;
+  });
+}
+
 };
 
   

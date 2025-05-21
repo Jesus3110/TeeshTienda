@@ -109,3 +109,14 @@
   font-size: 0.95rem;
 }
 
+.resumen-metodos {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 1.1rem;
+}
+
+.resumen-metodos p {
+  margin: 0.3rem 0;
+}
+
+

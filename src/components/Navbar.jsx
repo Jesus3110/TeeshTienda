@@ -1,16 +1,19 @@
 import React, { useContext, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { FiLock } from "react-icons/fi"; // minimalista
 
 import { getDatabase, ref, onValue, set } from "firebase/database";
 import "../styles/navbar.css";
 import ModalCategoria from "./ModalCategoria";
+//import { Link } from "react-router-dom";
 
 function Navbar() {
   const { usuario, rol } = useContext(AuthContext);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [categorias, setCategorias] = useState([]);
-  const [mostrarModalTodasCategorias, setMostrarModalTodasCategorias] = useState(false);
+  const [mostrarModalTodasCategorias, setMostrarModalTodasCategorias] =
+    useState(false);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
   const [productos, setProductos] = useState([]);
   const [descuentos, setDescuentos] = useState([]);
@@ -18,16 +21,16 @@ function Navbar() {
 
   useEffect(() => {
     const db = getDatabase();
-    
+
     const refCat = ref(db, "categorias");
     onValue(refCat, (snapshot) => {
       const data = snapshot.val() || {};
       const lista = Object.entries(data)
         .map(([idFirebase, value]) => ({
           idFirebase,
-          ...value
+          ...value,
         }))
-        .filter(cat => cat.activa)
+        .filter((cat) => cat.activa)
         .sort((a, b) => a.nombre.localeCompare(b.nombre));
       setCategorias(lista);
     });
@@ -37,7 +40,7 @@ function Navbar() {
       const data = snapshot.val() || {};
       const lista = Object.entries(data).map(([idFirebase, value]) => ({
         idFirebase,
-        ...value
+        ...value,
       }));
       setProductos(lista);
     });
@@ -48,26 +51,30 @@ function Navbar() {
       const listaDescuentos = Object.entries(data).map(([id, value]) => ({
         id,
         ...value,
-        validoHasta: value.validoHasta ? new Date(value.validoHasta) : null
+        validoHasta: value.validoHasta ? new Date(value.validoHasta) : null,
       }));
       setDescuentos(listaDescuentos);
     });
   }, []);
 
   const obtenerDescuentoProducto = (producto) => {
-    if (!producto || !producto.descuentoAplicado || !descuentos.length) return null;
-    const descuentoEncontrado = descuentos.find(d => d.id === producto.descuentoAplicado);
+    if (!producto || !producto.descuentoAplicado || !descuentos.length)
+      return null;
+    const descuentoEncontrado = descuentos.find(
+      (d) => d.id === producto.descuentoAplicado
+    );
     if (descuentoEncontrado && descuentoEncontrado.validoHasta) {
-      return new Date(descuentoEncontrado.validoHasta) > new Date() ? descuentoEncontrado : null;
+      return new Date(descuentoEncontrado.validoHasta) > new Date()
+        ? descuentoEncontrado
+        : null;
     }
     return descuentoEncontrado;
   };
 
-const cerrarSesion = () => {
-  localStorage.removeItem("adminId");
-  window.location.href = "/login";
-};
-
+  const cerrarSesion = () => {
+    localStorage.removeItem("adminId");
+    window.location.href = "/login";
+  };
 
   const handleCategoriaClick = (categoria) => {
     setCategoriaSeleccionada(categoria);
@@ -78,26 +85,31 @@ const cerrarSesion = () => {
       navigate("/login");
       return;
     }
-  
+
     const productoConCategoria = {
       ...producto,
       cantidad: 1,
-      categoria: categoriaSeleccionada?.nombre || producto.categoria || "Sin categoría",
-      categoriaId: categoriaSeleccionada?.idFirebase || producto.categoriaId || "",
+      categoria:
+        categoriaSeleccionada?.nombre || producto.categoria || "Sin categoría",
+      categoriaId:
+        categoriaSeleccionada?.idFirebase || producto.categoriaId || "",
     };
-  
+
     const db = getDatabase();
     const refCarrito = ref(db, `carritos/${usuario.uid}`);
-  
+
     // Leer carrito actual
-    onValue(refCarrito, (snapshot) => {
-      const carritoExistente = snapshot.val() || [];
-      const nuevoCarrito = [...carritoExistente, productoConCategoria];
-      set(refCarrito, nuevoCarrito);
-      alert(`✅ "${producto.nombre}" añadido al carrito.`);
-    }, { onlyOnce: true });
+    onValue(
+      refCarrito,
+      (snapshot) => {
+        const carritoExistente = snapshot.val() || [];
+        const nuevoCarrito = [...carritoExistente, productoConCategoria];
+        set(refCarrito, nuevoCarrito);
+        alert(`✅ "${producto.nombre}" añadido al carrito.`);
+      },
+      { onlyOnce: true }
+    );
   };
-  
 
   const categoriasPrincipales = categorias.slice(0, 7);
   const categoriasRestantes = categorias.slice(7);
@@ -110,7 +122,7 @@ const cerrarSesion = () => {
             <span>M&J</span>
           </Link>
         </div>
-        
+
         <div className="menu-principal">
           {categoriasPrincipales.map((categoria) => (
             <button
@@ -121,9 +133,9 @@ const cerrarSesion = () => {
               {categoria.nombre}
             </button>
           ))}
-          
+
           {categoriasRestantes.length > 0 && (
-            <button 
+            <button
               className="ver-mas-btn"
               onClick={() => setMostrarModalTodasCategorias(true)}
             >
@@ -135,25 +147,49 @@ const cerrarSesion = () => {
 
       <div className="menu-usuario">
         {rol === "cliente" && <Link to="/carrito">🛒</Link>}
-        <div className="hamburguesa" onClick={() => setMenuAbierto(!menuAbierto)}>
-          ☰
-        </div>
+        <button
+          className={`hamburguesa ${menuAbierto ? "abierta" : ""}`}
+          onClick={() => setMenuAbierto(!menuAbierto)}
+          aria-label="Menú"
+        >
+          <span className="linea" />
+          <span className="linea" />
+          <span className="linea" />
+        </button>
       </div>
 
       {menuAbierto && (
-        <ul className={`menu-cliente ${menuAbierto ? "activo" : ""}`}>
+        <ul className={`menu-cliente ${menuAbierto ? "abierto" : ""}`}>
           {rol === "cliente" ? (
             <>
-              <li><Link to="/perfil">👤 Perfil</Link></li>
-              <li><Link to="/carrito">🛒 Carrito</Link></li>
-              <li><Link to="/pedidos">📦 Pedidos</Link></li>
-              <li><Link to="/historial">📦 Historial</Link></li>
-              <li><button onClick={cerrarSesion}>🚪 Cerrar sesión</button></li>
-            </>
-          ) : (
-            <li>
-              <Link to="/login">🔐 Iniciar sesión</Link>
-            </li>
+               <li>
+      <Link to="/perfil" onClick={() => setMenuAbierto(false)}>👤 Perfil</Link>
+    </li>
+    <li>
+      <Link to="/carrito" onClick={() => setMenuAbierto(false)}>🛒 Carrito</Link>
+    </li>
+    <li>
+      <Link to="/pedidos" onClick={() => setMenuAbierto(false)}>📦 Pedidos</Link>
+    </li>
+    <li>
+      <Link to="/historial" onClick={() => setMenuAbierto(false)}>🗂 Historial</Link>
+    </li>
+    <li>
+      <button onClick={() => {
+        cerrarSesion();
+        setMenuAbierto(false);
+      }}>🚪 Cerrar sesión</button>
+    </li>
+  </>
+) : (
+  <li>
+    <div className="card-login-wrapper">
+      <Link to="/login" className="btn-login" onClick={() => setMenuAbierto(false)}>
+        <FiLock size={18} />
+        Iniciar sesión
+      </Link>
+    </div>
+  </li>
           )}
         </ul>
       )}
@@ -161,15 +197,15 @@ const cerrarSesion = () => {
       {mostrarModalTodasCategorias && (
         <div className="modal-categorias-overlay">
           <div className="modal-categorias">
-            <button 
+            <button
               className="cerrar-modal"
               onClick={() => setMostrarModalTodasCategorias(false)}
             >
               ×
             </button>
-            
+
             <h3>Todas las categorías</h3>
-            
+
             <div className="categorias-modal-grid">
               {categorias.map((categoria) => (
                 <button
@@ -188,35 +224,30 @@ const cerrarSesion = () => {
         </div>
       )}
 
-{categoriaSeleccionada && (
-  <ModalCategoria
-    categoria={categoriaSeleccionada}
-    productos={productos
-      .filter(p => 
-        p.categoriaId === categoriaSeleccionada.idFirebase ||
-        p.categoria?.toLowerCase() === categoriaSeleccionada.nombre.toLowerCase()
-      )
-      .map(producto => ({
-        idFirebase: producto.idFirebase,
-        nombre: producto.nombre,
-        imagen: producto.imagen,
-        precio: producto.precioOriginal || producto.precio,
-        descuentoAplicado: producto.descuentoAplicado || null, // <-- explícito aquí
-        categoriaId: producto.categoriaId,
-        descripcion: producto.descripcion,
-      }))
-    }
-    descuentos={descuentos}
-    onClose={() => setCategoriaSeleccionada(null)}
-    onAddToCart={handleAddToCart}
-  />
-)}
-
-
-
-
-
-
+      {categoriaSeleccionada && (
+        <ModalCategoria
+          categoria={categoriaSeleccionada}
+          productos={productos
+            .filter(
+              (p) =>
+                p.categoriaId === categoriaSeleccionada.idFirebase ||
+                p.categoria?.toLowerCase() ===
+                  categoriaSeleccionada.nombre.toLowerCase()
+            )
+            .map((producto) => ({
+              idFirebase: producto.idFirebase,
+              nombre: producto.nombre,
+              imagen: producto.imagen,
+              precio: producto.precioOriginal || producto.precio,
+              descuentoAplicado: producto.descuentoAplicado || null, // <-- explícito aquí
+              categoriaId: producto.categoriaId,
+              descripcion: producto.descripcion,
+            }))}
+          descuentos={descuentos}
+          onClose={() => setCategoriaSeleccionada(null)}
+          onAddToCart={handleAddToCart}
+        />
+      )}
     </nav>
   );
 }

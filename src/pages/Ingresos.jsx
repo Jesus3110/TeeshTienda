@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import "../styles/ingresos.css";
 import { generarReporteAnual } from "../utils/generarReporte";
-
+import { generarReporteMensual } from "../utils/generarReporteMensual";
 
 function Ingresos() {
   const [mesActual, setMesActual] = useState(""); // abril, mayo, etc.
@@ -31,6 +31,20 @@ function Ingresos() {
   const [ingresosTotales, setIngresosTotales] = useState(0);
   const [guardado, setGuardado] = useState(false); // si ya fue guardado
   const [mensajeActualizacion, setMensajeActualizacion] = useState("");
+  const [metodosPago, setMetodosPago] = useState([]);
+
+  useEffect(() => {
+  const db = getDatabase();
+  const totalRef = ref(db, "dashboard/ingresosTotales");
+
+  get(totalRef).then((snap) => {
+    if (snap.exists()) {
+      setIngresosTotales(snap.val());
+    } else {
+      setIngresosTotales(0);
+    }
+  });
+}, [anioSeleccionado, mesActual]);
 
 
   useEffect(() => {
@@ -152,52 +166,121 @@ function Ingresos() {
     setDisponible(ingresoMes - inversion);
   }, [ingresoMes, porcentaje]);
 
- useEffect(() => {
-  const db = getDatabase();
+  useEffect(() => {
+    const db = getDatabase();
 
-  const verificarReinversion = async () => {
-    const reinversionRef = ref(db, `dashboard/reinversion/${anioSeleccionado}/${mesActual}`);
-    const snap = await get(reinversionRef);
+    const verificarReinversion = async () => {
+      const reinversionRef = ref(
+        db,
+        `dashboard/reinversion/${anioSeleccionado}/${mesActual}`
+      );
+      const snap = await get(reinversionRef);
 
-    if (snap.exists()) {
-      const data = snap.val();
+      if (snap.exists()) {
+        const data = snap.val();
 
-      if (!isNaN(data.porcentaje)) {
-        setPorcentaje(data.porcentaje);
-        setGuardado(true);
+        if (!isNaN(data.porcentaje)) {
+          setPorcentaje(data.porcentaje);
+          setGuardado(true);
 
-        if (!isNaN(ingresoMes) && ingresoMes > 0) {
-          const nuevoMonto = (ingresoMes * data.porcentaje) / 100;
+          if (!isNaN(ingresoMes) && ingresoMes > 0) {
+            const nuevoMonto = (ingresoMes * data.porcentaje) / 100;
 
-          if (!isNaN(nuevoMonto) && data.monto !== nuevoMonto) {
-            await set(ref(db, `dashboard/reinversion/${anioSeleccionado}/${mesActual}/monto`), nuevoMonto);
-            setMensajeActualizacion("💰 Monto actualizado automáticamente");
-          } else {
-            setMensajeActualizacion("");
+            if (!isNaN(nuevoMonto) && data.monto !== nuevoMonto) {
+              await set(
+                ref(
+                  db,
+                  `dashboard/reinversion/${anioSeleccionado}/${mesActual}/monto`
+                ),
+                nuevoMonto
+              );
+              setMensajeActualizacion("💰 Monto actualizado automáticamente");
+            } else {
+              setMensajeActualizacion("");
+            }
           }
         }
+      } else {
+        setGuardado(false);
+        setMensajeActualizacion("");
       }
-    } else {
-      setGuardado(false);
-      setMensajeActualizacion("");
-    }
-  };
+    };
 
-  verificarReinversion();
-}, [anioSeleccionado, mesActual, ingresoMes]);
+    verificarReinversion();
+  }, [anioSeleccionado, mesActual, ingresoMes]);
 
 useEffect(() => {
-  const db = getDatabase();
-  const totalRef = ref(db, "dashboard/ingresosTotales");
+  if (!mesActual || !anioSeleccionado) return;
 
-  get(totalRef).then((snap) => {
+  const db = getDatabase();
+  const pedidosRef = ref(db, "pedidos");
+
+  get(pedidosRef).then((snap) => {
     if (snap.exists()) {
-      setIngresosTotales(snap.val());
-    } else {
-      setIngresosTotales(0); // prevenir que quede como undefined
+      const pedidos = Object.values(snap.val());
+
+      // Mapeo de nombres de mes a índice (0 = enero)
+      const meses = [
+        "enero", "febrero", "marzo", "abril", "mayo", "junio",
+        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+      ];
+      const mesIndexActual = meses.indexOf(mesActual.toLowerCase());
+      const anioActual = parseInt(anioSeleccionado);
+
+      const pedidosDelMes = pedidos.filter((pedido) => {
+        if (!pedido.creadoEn) return false;
+
+        const fecha = new Date(pedido.creadoEn);
+        const mesPedidoIndex = fecha.getMonth();
+        const anioPedido = fecha.getFullYear();
+
+        return mesPedidoIndex === mesIndexActual && anioPedido === anioActual;
+      });
+
+      // Debug para asegurar que el filtro funciona
+      console.log("Pedidos filtrados para gráfica:", pedidosDelMes.map(p => ({
+        total: p.total,
+        fecha: new Date(p.creadoEn).toLocaleString(),
+        metodo: p.metodoPago,
+      })));
+
+      let tarjeta = 0;
+      let efectivo = 0;
+      let totalTarjeta = 0;
+      let totalEfectivo = 0;
+
+      pedidosDelMes.forEach((pedido) => {
+        if (
+          pedido.metodoPago &&
+          pedido.metodoPago.toLowerCase().includes("stripe")
+        ) {
+          tarjeta++;
+          totalTarjeta += Number(pedido.total || 0);
+        } else {
+          efectivo++;
+          totalEfectivo += Number(pedido.total || 0);
+        }
+      });
+
+      const totalMonto = totalTarjeta + totalEfectivo || 1;
+
+      setMetodosPago([
+        {
+          name: "Tarjeta",
+          monto: totalTarjeta,
+          porcentaje: ((totalTarjeta / totalMonto) * 100).toFixed(1),
+        },
+        {
+          name: "Efectivo",
+          monto: totalEfectivo,
+          porcentaje: ((totalEfectivo / totalMonto) * 100).toFixed(1),
+        },
+      ]);
     }
   });
-}, [anioSeleccionado, mesActual]);
+}, [mesActual, anioSeleccionado]);
+
+
 
 
 
@@ -224,6 +307,12 @@ useEffect(() => {
       <h2 className="titulo-principal">
         📊 Panel de Ingresos - {mesActual.toUpperCase()}
       </h2>
+        <button onClick={() => generarReporteAnual()} className="boton-guardar">
+          📄 Generar Reporte Anual PDF
+        </button>
+        <button onClick={() => generarReporteMensual(mesActual, anioSeleccionado)} className="boton-guardar">
+  📆 Reporte del Mes
+</button>
 
       {/* Gráfica de ingresos mensuales (historial para PDF) */}
       <div style={{ marginBottom: "1.5rem" }}>
@@ -331,16 +420,59 @@ useEffect(() => {
           )}
         </div>
         {mensajeActualizacion && (
-  <p className="mensaje-actualizacion">{mensajeActualizacion}</p>
-)}
-<p className="monto-recomendado">
-  💸 Monto recomendado: <strong>${recomendado.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong>
-</p>
+          <p className="mensaje-actualizacion">{mensajeActualizacion}</p>
+        )}
+        <p className="monto-recomendado">
+          💸 Monto recomendado:{" "}
+          <strong>
+            $
+            {recomendado.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
+          </strong>
+        </p>
 
-<button onClick={() => generarReporteAnual()} className="boton-guardar">
-  📄 Generar Reporte PDF
-</button>
+      
 
+
+      </div>
+      <div className="donut-box">
+        <h3 className="seccion-titulo">💳 Distribución por Método de Pago</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={metodosPago}
+              cx="50%"
+              cy="50%"
+              outerRadius={90}
+              innerRadius={50}
+              dataKey="monto"
+              label={({ name, percent }) =>
+                `${name} (${(percent * 100).toFixed(0)}%)`
+              }
+            >
+              {metodosPago.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={index === 0 ? "#6366f1" : "#facc15"}
+                />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(value, name, props) => {
+    return `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  }}
+            />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="resumen-metodos">
+  {metodosPago.map((item) => (
+    <p key={item.name}>
+      {item.name}: <strong>${item.monto.toLocaleString()} ({item.porcentaje}%)</strong>
+    </p>
+  ))}
+</div>
 
       </div>
     </div>
