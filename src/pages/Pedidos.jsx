@@ -2,11 +2,15 @@ import React, { useContext, useEffect, useState } from "react";
 import Modal from "react-modal";
 import { AuthContext } from "../context/AuthContext";
 import { getDatabase, ref, onValue, update, remove } from "firebase/database";
+import ClienteLayout from "../components/ClienteLayout";
 import "../styles/pedidos.css";
+
+
 
 Modal.setAppElement("#root");
 
 const Pedidos = () => {
+
   const { usuario, rol, loading } = useContext(AuthContext);
   const [pedidos, setPedidos] = useState([]);
   const [pedidoActivo, setPedidoActivo] = useState(null);
@@ -121,174 +125,151 @@ const Pedidos = () => {
 
   const esAdmin = rol === "admin";
 
-  return (
-    <div className="pedidos-container">
-      <h2>{esAdmin ? "Pedidos de Clientes" : "Mis Pedidos"}</h2>
+  
+const contenido = (
+  <div className="pedidos-container">
+    <h2>{esAdmin ? "Pedidos de Clientes" : "Mis Pedidos"}</h2>
 
-      <div className="table-responsive">
-        <table className="pedidos-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Estado</th>
-              <th>Pago</th>
-              {esAdmin && <th>Cliente</th>}
-              <th>Entrega</th> {/* Nueva columna */}
-              <th>Total</th>
-              <th>🔍</th>
+    <div className="table-responsive">
+      <table className="pedidos-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Estado</th>
+            <th>Pago</th>
+            {esAdmin && <th>Cliente</th>}
+            <th>Entrega</th>
+            <th>Total</th>
+            <th>🔍</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pedidos.map((p) => (
+            <tr key={p.id}>
+              <td>{p.id.slice(0, 6)}...</td>
+              <td>{p.estado}</td>
+              <td>{p.metodoPago}</td>
+              {esAdmin && <td>{p.nombre}</td>}
+              <td>{p.fechaEntrega || "N/D"}</td>
+              <td>${p.total}</td>
+              <td>
+                <button
+                  className="ver-detalle-btn"
+                  onClick={() => handleAbrirModal(p)}
+                >
+                  👁️
+                </button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {pedidos.map((p) => (
-              <tr key={p.id}>
-                <td>{p.id.slice(0, 6)}...</td>
-                <td>{p.estado}</td>
-                <td>{p.metodoPago}</td>
-                {esAdmin && <td>{p.nombre}</td>}
-                <td>{p.fechaEntrega || "N/D"}</td> {/* Mostrar fecha */}
-                <td>${p.total}</td>
-                <td>
-                  <button
-                    className="ver-detalle-btn"
-                    onClick={() => handleAbrirModal(p)}
-                  >
-                    👁️
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
+    </div>
 
-      {pedidoActivo && (
-        <Modal
-          isOpen={true}
-          onRequestClose={() => setPedidoActivo(null)}
-          contentLabel="Detalles del Pedido"
-          className="pedido-modal"
-          overlayClassName="modal-overlay"
-        >
-          <div className="modal-content">
-            <h3>Pedido #{pedidoActivo.id.slice(0, 6)}</h3>
+    {pedidoActivo && (
+      <Modal
+        isOpen={true}
+        onRequestClose={() => setPedidoActivo(null)}
+        contentLabel="Detalles del Pedido"
+        className="pedido-modal"
+        overlayClassName="modal-overlay"
+      >
+        <div className="modal-content">
+          <h3>Pedido #{pedidoActivo.id.slice(0, 6)}</h3>
 
-            <div className="info-section">
-              <p>
-                <strong>Estado:</strong> {pedidoActivo.estado}
-              </p>
-              <p>
-                <strong>Pago:</strong> {pedidoActivo.metodoPago}
-              </p>
-              {pedidoActivo.fechaEntrega && (
-                <>
-                  <p>
-                    <strong>Entrega estimada:</strong>{" "}
-                    {formatearFechaLarga(pedidoActivo.fechaEntrega)}
-                  </p>
-                  <p>
-                    <strong>Tiempo restante:</strong> {tiempoRestante}
-                  </p>
-                </>
-              )}
+          <div className="info-section">
+            <p><strong>Estado:</strong> {pedidoActivo.estado}</p>
+            <p><strong>Pago:</strong> {pedidoActivo.metodoPago}</p>
 
-              {pedidoActivo.direccion && (
-                <>
-                  <p>
-                    <strong>Dirección:</strong>
-                  </p>
-                  <button
-                    className="btn-ver-maps"
-                    onClick={() => setModalMapaAbierto(true)}
-                  >
-                    📍 Ver en Google Maps
-                  </button>
-                </>
-              )}
-
-              {rol !== "cliente" && (
-                <p>
-                  <strong>Cliente:</strong> {pedidoActivo.nombre}
-                </p>
-              )}
-            </div>
-
-            <div className="productos-section">
-              <h4>Productos:</h4>
-              <ul>
-                {pedidoActivo.productos.map((prod, i) => (
-                  <li key={i}>
-                    {prod.nombre} × {prod.cantidad} — $
-                    {prod.precio * prod.cantidad}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {pedidoActivo.calificacion && (
-              <div className="calificacion-section">
-                <p>
-                  <strong>Calificación:</strong>{" "}
-                  {"★".repeat(pedidoActivo.calificacion.estrellas)}
-                </p>
-                <p>
-                  <strong>Comentario:</strong>{" "}
-                  {pedidoActivo.calificacion.comentario || "Sin comentario."}
-                </p>
-              </div>
+            {pedidoActivo.fechaEntrega && (
+              <>
+                <p><strong>Entrega estimada:</strong> {formatearFechaLarga(pedidoActivo.fechaEntrega)}</p>
+                <p><strong>Tiempo restante:</strong> {tiempoRestante}</p>
+              </>
             )}
 
-            <div className="modal-actions">
-              {rol === "admin" && pedidoActivo.estado !== "entregado" && (
-                <button
-                  className="btn btn-success"
-                  onClick={() => cambiarEstado(pedidoActivo)}
-                >
-                  {pedidoActivo.estado === "pendiente"
-                    ? "Marcar como En Proceso"
-                    : "Marcar como Entregado"}
+            {pedidoActivo.direccion && (
+              <>
+                <p><strong>Dirección:</strong></p>
+                <button className="btn-ver-maps" onClick={() => setModalMapaAbierto(true)}>
+                  📍 Ver en Google Maps
                 </button>
-              )}
+              </>
+            )}
 
-              <button
-                className="btn btn-cerrar"
-                onClick={() => setPedidoActivo(null)}
-              >
-                Cerrar
-              </button>
-            </div>
+            {rol !== "cliente" && (
+              <p><strong>Cliente:</strong> {pedidoActivo.nombre}</p>
+            )}
           </div>
-        </Modal>
-      )}
 
-      {modalMapaAbierto && (
-        <Modal
-          isOpen={true}
-          onRequestClose={() => setModalMapaAbierto(false)}
-          contentLabel="Ubicación del Pedido"
-          className="modal-maps"
-          overlayClassName="overlay-maps"
-        >
-          <h3>Ubicación del Pedido</h3>
-          <iframe
-            src={`https://www.google.com/maps?q=${encodeURIComponent(
-              pedidoActivo?.direccion || ""
-            )}&output=embed`}
-            width="100%"
-            height="400"
-            style={{ borderRadius: "12px", border: "none" }}
-            loading="lazy"
-            allowFullScreen
-          ></iframe>
-          <button
-            className="btn-cerrar-maps"
-            onClick={() => setModalMapaAbierto(false)}
-          >
-            Cerrar Mapa
-          </button>
-        </Modal>
-      )}
-    </div>
-  );
-};
+          <div className="productos-section">
+            <h4>Productos:</h4>
+            <ul>
+              {pedidoActivo.productos.map((prod, i) => (
+                <li key={i}>
+                  {prod.nombre} × {prod.cantidad} — ${prod.precio * prod.cantidad}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {pedidoActivo.calificacion && (
+            <div className="calificacion-section">
+              <p><strong>Calificación:</strong> {"★".repeat(pedidoActivo.calificacion.estrellas)}</p>
+              <p><strong>Comentario:</strong> {pedidoActivo.calificacion.comentario || "Sin comentario."}</p>
+            </div>
+          )}
+
+          <div className="modal-actions">
+            {rol === "admin" && pedidoActivo.estado !== "entregado" && (
+              <button
+                className="btn btn-success"
+                onClick={() => cambiarEstado(pedidoActivo)}
+              >
+                {pedidoActivo.estado === "pendiente"
+                  ? "Marcar como En Proceso"
+                  : "Marcar como Entregado"}
+              </button>
+            )}
+            <button className="btn btn-cerrar" onClick={() => setPedidoActivo(null)}>
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </Modal>
+    )}
+
+    {modalMapaAbierto && (
+      <Modal
+        isOpen={true}
+        onRequestClose={() => setModalMapaAbierto(false)}
+        contentLabel="Ubicación del Pedido"
+        className="modal-maps"
+        overlayClassName="overlay-maps"
+      >
+        <h3>Ubicación del Pedido</h3>
+        <iframe
+          src={`https://www.google.com/maps?q=${encodeURIComponent(pedidoActivo?.direccion || "")}&output=embed`}
+          width="100%"
+          height="400"
+          style={{ borderRadius: "12px", border: "none" }}
+          loading="lazy"
+          allowFullScreen
+        ></iframe>
+        <button className="btn-cerrar-maps" onClick={() => setModalMapaAbierto(false)}>
+          Cerrar Mapa
+        </button>
+      </Modal>
+    )}
+  </div>
+);
+
+// 👇 Este es el return final:
+return rol === "cliente" ? (
+  <ClienteLayout>{contenido}</ClienteLayout>
+) : (
+  contenido
+);
+}
 
 export default Pedidos;

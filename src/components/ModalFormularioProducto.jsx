@@ -24,6 +24,7 @@ const ModalFormularioProducto = ({ onClose }) => {
     imagen: null,
     precioOriginal: 0,
     descuentoAplicado: null,
+     marca: "",
   });
 
   const [subiendo, setSubiendo] = useState(false);
@@ -105,6 +106,8 @@ const ModalFormularioProducto = ({ onClose }) => {
     if (!producto.descripcion) nuevosErrores.descripcion = "La descripción es obligatoria";
     if (!producto.precio) nuevosErrores.precio = "El precio es obligatorio";
     if (!producto.stock) nuevosErrores.stock = "El stock es obligatorio";
+    if (!producto.marca) nuevosErrores.marca = "La marca es obligatoria";
+
   
     setErrores(nuevosErrores);
   
@@ -139,6 +142,7 @@ const ModalFormularioProducto = ({ onClose }) => {
         precio: precioFinal,
         precioOriginal: parseFloat(producto.precio),
         stock: parseInt(producto.stock),
+        marca: producto.marca,
         categoria: producto.categoria,
         imagen: urlImagen,
         activo: true,
@@ -264,6 +268,19 @@ const ModalFormularioProducto = ({ onClose }) => {
                 />
                 {errores.stock && <small style={{ color: "red" }}>{errores.stock}</small>}
               </div>
+
+              <div className="form-group">
+  <label>Marca:</label>
+  <input
+    name="marca"
+    placeholder="Marca del producto"
+    value={producto.marca}
+    onChange={handleChange}
+    style={{ borderColor: errores.marca ? 'red' : undefined }}
+  />
+  {errores.marca && <small style={{ color: "red" }}>{errores.marca}</small>}
+</div>
+
 
               <div className="form-group">
                 <label>Categoría:</label>

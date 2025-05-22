@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getDatabase, ref, onValue, update, remove } from "firebase/database";
 import ModalFormularioProducto from "../components/ModalFormularioProducto";
 import ModalEditarProducto from "../components/ModalEditarProducto";
+import { generarReporteStockBajo } from "../utils/generarReporteStockBajo";
 import "../styles/modal.css";
 import "../styles/categorias.css";
 
@@ -172,7 +173,9 @@ const Productos = () => {
         </label>
 
         <button style={{ marginTop: "1rem" }} onClick={() => setMostrarModal(true)}>➕ Agregar producto</button>
+        <button onClick={generarReporteStockBajo}>📄 Reporte de Stock Bajo</button>
       </div>
+      
 
       <table>
         <thead>
@@ -182,6 +185,7 @@ const Productos = () => {
             <th>Precio</th>
             <th>Descuento</th>
             <th>Stock</th>
+            <th>Marca</th>
             <th>Categoría</th>
             <th>Activo</th>
             <th>Acciones</th>
@@ -229,6 +233,7 @@ const Productos = () => {
                     <span style={{ color: "red", marginLeft: "0.5rem" }}>⚠️ Bajo stock</span>
                   )}
                 </td>
+                <td>{prod.marca}</td>
                 <td>{prod.categoria}</td>
                 <td>{prod.activo ? "Sí" : "No"}</td>
                 <td>

@@ -11,6 +11,8 @@ import "../styles/home.css";
 import ModalProducto from "../components/ModalProducto";
 import ModalCategoria from "../components/ModalCategoria";
 import ProductosDestacados from "../components/ProductosDestacados";
+import ClienteLayout from "../components/ClienteLayout";
+
 
 function Home() {
   const [productos, setProductos] = useState([]);
@@ -231,132 +233,143 @@ function Home() {
     arrows: true,
   };
 
-  return (
-    <div className="home-container">
-      {/* Carrusel de Banners */}
-      {banners.length > 0 && (
-        <div className="banner-carousel">
-          <Slider {...carouselSettings}>
-            {banners.map((banner) => (
-              <div
-                key={banner.id}
-                className="banner-slide"
-                style={{ position: "relative" }}
-              >
+  const renderContenido = () => (
+  <div className="home-container">
+    {/* Carrusel de Banners */}
+    {banners.length > 0 && (
+      <div className="banner-carousel">
+        <Slider {...carouselSettings}>
+          {banners.map((banner) => {
+            const ahora = Date.now();
+            const descuento = descuentos.find(
+              (d) =>
+                d.id === banner.descuentoId ||
+                d.idFirebase === banner.descuentoId
+            );
+            const tieneFechaValida =
+              descuento?.validoHasta &&
+              ahora <= new Date(descuento.validoHasta).getTime();
+            const tieneDescuento =
+              typeof banner.porcentaje === "number" &&
+              descuento &&
+              tieneFechaValida;
+            const mostrarTitulo =
+              banner.titulo &&
+              (tieneDescuento || !banner.descuentoId);
+
+            return (
+              <div key={banner.id} className="banner-slide">
                 <Link to={banner.enlace || "#"}>
                   <img
                     src={banner.imagenURL}
                     alt={banner.titulo || "Banner"}
                     className="banner-img"
-                    style={{
-                      width: "100%",
-                      height: "auto",
-                      borderRadius: "8px",
-                    }}
                   />
-                  {/* Título encima del banner */}
                 </Link>
-                {(banner.titulo || banner.porcentaje) && (
-                  <div className="banner-title-overlay">
-                    {banner.titulo && (
-                      <div style={{ fontSize: "1.4rem", fontWeight: "bold" }}>
-                        {banner.titulo}
-                      </div>
-                    )}
-                    {banner.porcentaje && (
-                      <div style={{ fontSize: "1.2rem", marginTop: "0.3rem" }}>
-                        -{banner.porcentaje}%
-                      </div>
-                    )}
+                {tieneDescuento && (
+                  <div className="banner-discount">
+                    -{banner.porcentaje}%
                   </div>
                 )}
+                {mostrarTitulo && (
+                  <div className="banner-title">{banner.titulo}</div>
+                )}
               </div>
-            ))}
-          </Slider>
-        </div>
-      )}
+            );
+          })}
+        </Slider>
+      </div>
+    )}
 
-      {/* Beneficios */}
-      <div className="beneficios-container">
-        <div className="beneficio">
-          <div className="beneficio-icono">🚚</div>
-          <div className="beneficio-texto">
-            <h4>Envío gratis</h4>
-            <p>En pedidos de +$150.00</p>
-          </div>
-        </div>
-
-        <div className="beneficio">
-          <div className="beneficio-icono">🔄</div>
-          <div className="beneficio-texto">
-            <h4>Devoluciones gratuitas</h4>
-            <p>*las condiciones se aplican</p>
-          </div>
-        </div>
-
-        <div className="beneficio">
-          <div className="beneficio-icono">🔥</div>
-          <div className="beneficio-texto">
-            <h4>Aprovecha descuentos</h4>
-            <p>Para artículos seleccionados</p>
-          </div>
+    {/* Beneficios */}
+    <div className="beneficios-container">
+      <div className="beneficio">
+        <div className="beneficio-icono">🚚</div>
+        <div className="beneficio-texto">
+          <h4>Envío gratis</h4>
+          <p>En pedidos de +$150.00</p>
         </div>
       </div>
-
-      {/* Categorías */}
-      <div className="seccion-categorias">
-        <h3 className="titulo-seccion">Conseguir</h3>
-        <div className="grid-categorias">
-          {categorias.map((categoria) => (
-            <button
-              key={categoria.idFirebase}
-              className="categoria-btn"
-              onClick={() => verProductosCategoria(categoria)}
-            >
-              {categoria.nombre}
-            </button>
-          ))}
+      <div className="beneficio">
+        <div className="beneficio-icono">🔄</div>
+        <div className="beneficio-texto">
+          <h4>Devoluciones gratuitas</h4>
+          <p>*las condiciones se aplican</p>
         </div>
       </div>
-
-      <ProductosDestacados
-        productos={productos}
-        descuentos={descuentos}
-        verDetalles={verDetalles}
-        obtenerDescuentoProducto={obtenerDescuentoProducto}
-        productosVendidos={productosVendidos}
-      />
-
-      {/* Modal de categoría */}
-      {mostrarModalCategoria && categoriaSeleccionada && (
-        <ModalCategoria
-          categoria={categoriaSeleccionada}
-          productos={productos.filter(
-            (p) =>
-              p.categoria &&
-              p.categoria.toLowerCase() ===
-                categoriaSeleccionada.nombre.toLowerCase()
-          )}
-          onClose={() => setMostrarModalCategoria(false)}
-          onAddToCart={añadirAlCarrito}
-          descuentos={descuentos}
-        />
-      )}
-
-      {/* Modal de detalles del producto */}
-      {mostrarModal && productoSeleccionado && (
-        <ModalProducto
-          producto={productoSeleccionado}
-          onClose={() => setMostrarModal(false)}
-          onAddToCart={añadirAlCarrito}
-          descuentos={descuentos}
-          productosRelacionados={productos}
-          onProductoClick={handleProductoRelacionadoClick}
-          carrito={carrito} 
-        />
-      )}
+      <div className="beneficio">
+        <div className="beneficio-icono">🔥</div>
+        <div className="beneficio-texto">
+          <h4>Aprovecha descuentos</h4>
+          <p>Para artículos seleccionados</p>
+        </div>
+      </div>
     </div>
-  );
+
+    {/* Categorías */}
+    <div className="seccion-categorias">
+      <h3 className="titulo-seccion">Conseguir</h3>
+      <div className="grid-categorias">
+        {categorias.map((categoria) => (
+          <button
+            key={categoria.idFirebase}
+            className="categoria-btn"
+            onClick={() => verProductosCategoria(categoria)}
+          >
+            {categoria.nombre}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <ProductosDestacados
+      productos={productos.filter((p) => p.activo !== false)}
+      descuentos={descuentos}
+      verDetalles={verDetalles}
+      obtenerDescuentoProducto={obtenerDescuentoProducto}
+      productosVendidos={productosVendidos}
+    />
+
+    {mostrarModalCategoria && categoriaSeleccionada && (
+      <ModalCategoria
+        categoria={categoriaSeleccionada}
+        productos={productos.filter(
+          (p) =>
+            p.categoria &&
+            p.categoria.toLowerCase() ===
+              categoriaSeleccionada.nombre.toLowerCase()
+        )}
+        onClose={() => setMostrarModalCategoria(false)}
+        onAddToCart={añadirAlCarrito}
+        descuentos={descuentos}
+      />
+    )}
+
+    {mostrarModal && productoSeleccionado && (
+      <ModalProducto
+        producto={productoSeleccionado}
+        onClose={() => setMostrarModal(false)}
+        onAddToCart={añadirAlCarrito}
+        descuentos={descuentos}
+        productosRelacionados={productos}
+        onProductoClick={handleProductoRelacionadoClick}
+        carrito={carrito}
+      />
+    )}
+  </div>
+);
+
+return (
+  <>
+    {usuario && rol === "cliente" ? (
+      <ClienteLayout>
+        {renderContenido()}
+      </ClienteLayout>
+    ) : (
+      renderContenido()
+    )}
+  </>
+);
 }
 
 export default Home;

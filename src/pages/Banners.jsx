@@ -3,6 +3,7 @@ import { obtenerBanners, eliminarBanner } from "../services/bannersService";
 import ModalBanner from "../components/ModalBanner";
 import "../styles/modal.css";
 import { escucharProductos } from "../services/productosService";
+import { getDatabase, ref, update } from "firebase/database"; // Asegúrate de tenerlo
 
 function AdminBanners() {
   const [banners, setBanners] = useState([]);
@@ -24,17 +25,42 @@ function AdminBanners() {
     
   }, []);
 
-  const cargarBanners = async () => {
-    setCargando(true);
-    try {
-      const lista = await obtenerBanners();
-      setBanners(lista);
-    } catch (error) {
-      console.error("Error cargando banners:", error);
-    } finally {
-      setCargando(false);
+const cargarBanners = async () => {
+  setCargando(true);
+  try {
+    const lista = await obtenerBanners();
+
+    // Todos los descuentos aún usados por productos
+    const descuentosVigentes = new Set(
+      productos.map(p => p.descuentoAplicado).filter(Boolean)
+    );
+
+    const db = getDatabase();
+
+    for (const banner of lista) {
+      const descuentoObsoleto =
+        banner.descuentoId && !descuentosVigentes.has(banner.descuentoId);
+
+      if (descuentoObsoleto) {
+        const bannerRef = ref(db, `banners/${banner.id}`);
+        await update(bannerRef, {
+          porcentaje: null,
+          titulo: null,
+          descuentoId: null,
+        });
+        console.log(`🔧 Banner ${banner.id} limpiado`);
+      }
     }
-  };
+
+    // Recarga la lista con banners limpios
+    const listaFinal = await obtenerBanners();
+    setBanners(listaFinal);
+  } catch (error) {
+    console.error("Error limpiando banners:", error);
+  } finally {
+    setCargando(false);
+  }
+};
 
   const contarProductosConDescuento = (descuentoId) => {
   return productos.filter(p => p.descuentoAplicado === descuentoId).length;

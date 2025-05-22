@@ -33,17 +33,53 @@ body {
   object-fit: cover;
   border-radius: 8px;
 }
-.banner-title-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0,0,0,0.6);
-  color: #fff;
-  padding: 1rem 2rem;
-  text-align: center;
+.banner-slide {
+  position: relative;
+}
+
+.banner-img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
   border-radius: 8px;
+}
+
+/* 🔥 Descuento */
+.banner-discount {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: #d72638;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  z-index: 10;
+}
+
+.banner-discount::before {
+  content: "🔥";
   font-size: 1.2rem;
+}
+
+/* 🟥 Título */
+.banner-title {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background-color: rgba(215, 38, 56, 0.9);
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 700;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  z-index: 10;
 }
 
 /* Beneficios */
@@ -235,22 +271,14 @@ body {
   }
 }
 
-.banner-slide {
-  position: relative;
-}
 
-.banner-title-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 1rem 2rem;
-  border-radius: 10px;
-  font-size: 1.6rem;
-  font-weight: bold;
-  text-align: center;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-  z-index: 10;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -40%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }

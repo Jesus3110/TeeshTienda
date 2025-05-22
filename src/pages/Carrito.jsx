@@ -2,6 +2,8 @@ import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { getDatabase, ref, onValue, set, remove, get } from "firebase/database";
+import ClienteLayout from "../components/ClienteLayout";
+
 
 function Carrito() {
   const [carrito, setCarrito] = useState([]);
@@ -109,6 +111,7 @@ function Carrito() {
   };
 
   return (
+    <ClienteLayout>
     <div style={{ padding: "2rem" }}>
       <h2>🛒 Carrito de Compras</h2>
 
@@ -188,6 +191,7 @@ function Carrito() {
         ⬅️ Seguir comprando
       </button>
     </div>
+    </ClienteLayout>
   );
 }
 

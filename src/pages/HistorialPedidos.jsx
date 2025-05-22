@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { getDatabase, ref, onValue, update } from "firebase/database";
+import  ClienteLayout  from "../components/ClienteLayout";
 import Modal from "react-modal";
 import "../styles/historial_pedidos.css";
 
@@ -94,7 +95,7 @@ const HistorialPedidos = () => {
     setComentario("");
   };
 
-  return (
+  const contenido =(
     <div className="historial-container">
       <h2>
         {rol === "admin"
@@ -261,6 +262,12 @@ const HistorialPedidos = () => {
       )}
     </div>
   );
+
+return rol === "cliente" ? (
+  <ClienteLayout>{contenido}</ClienteLayout>
+) : (
+  contenido
+);
 };
 
 export default HistorialPedidos;

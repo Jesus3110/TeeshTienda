@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
+import { AuthContext } from "./context/AuthContext";
 import Home from "./pages/Home";
 import Producto from "./pages/Producto";
 import Carrito from "./pages/Carrito";
@@ -21,13 +22,11 @@ import CompletarPerfil from "./pages/CompletarPerfil";
 import RutaProtegidaPorRol from "./router/RutaProtegidaPorRol";
 import Ingresos from "./pages/Ingresos";
 
-
-
-
-
 function App() {
   const location = useLocation();
-  const ocultarNavbar = location.pathname.startsWith("/admin");
+  const { usuario, rol } = useContext(AuthContext);
+
+ const ocultarNavbar = location.pathname.startsWith("/admin") || (usuario && rol === "cliente");
 
   return (
     <>
@@ -46,45 +45,40 @@ function App() {
         <Route path="/perfil" element={<Perfil />} />
 
         <Route
-  path="/admin"
-  element={
-    <RutaAdmin>
-      <AdminLayout />
-    </RutaAdmin>
-  }
->
-  <Route index element={<AdminPanel />} />
+          path="/admin"
+          element={
+            <RutaAdmin>
+              <AdminLayout />
+            </RutaAdmin>
+          }
+        >
+          <Route index element={<AdminPanel />} />
+          <Route path="productos" element={<Productos />} />
+          <Route path="categorias" element={<Categorias />} />
+          <Route path="pedidos" element={<Pedidos />} />
+          <Route path="banners" element={<Banners />} />
+          <Route path="descuentos" element={<Descuentos />} />
+          <Route path="historial" element={<Historial />} />
+          <Route path="perfil" element={<Perfil />} />
 
-  {/* Accesibles para todos los administradores */}
-  <Route path="productos" element={<Productos />} />
-  <Route path="categorias" element={<Categorias />} />
-  <Route path="pedidos" element={<Pedidos />} />
-  <Route path="banners" element={<Banners />} />
-  <Route path="descuentos" element={<Descuentos />} />
-  <Route path="historial" element={<Historial />} />
-  <Route path="perfil" element={<Perfil />} />
+          <Route
+            path="usuarios"
+            element={
+              <RutaProtegidaPorRol rolesPermitidos={["god", "premium"]}>
+                <Usuarios />
+              </RutaProtegidaPorRol>
+            }
+          />
 
-  {/* Usuarios: solo god y premium */}
-  <Route
-    path="usuarios"
-    element={
-      <RutaProtegidaPorRol rolesPermitidos={["god", "premium"]}>
-        <Usuarios />
-      </RutaProtegidaPorRol>
-    }
-  />
-
-  {/* Ingresos: solo god */}
-  <Route
-    path="ingresos"
-    element={
-      <RutaProtegidaPorRol rolesPermitidos={["god"]}>
-        <Ingresos />
-      </RutaProtegidaPorRol>
-    }
-  />
-</Route>
-
+          <Route
+            path="ingresos"
+            element={
+              <RutaProtegidaPorRol rolesPermitidos={["god"]}>
+                <Ingresos />
+              </RutaProtegidaPorRol>
+            }
+          />
+        </Route>
       </Routes>
     </>
   );

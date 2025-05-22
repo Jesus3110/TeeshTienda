@@ -146,7 +146,6 @@ function Navbar() {
       </div>
 
       <div className="menu-usuario">
-        {rol === "cliente" && <Link to="/carrito">🛒</Link>}
         <button
           className={`hamburguesa ${menuAbierto ? "abierta" : ""}`}
           onClick={() => setMenuAbierto(!menuAbierto)}
@@ -160,36 +159,19 @@ function Navbar() {
 
       {menuAbierto && (
         <ul className={`menu-cliente ${menuAbierto ? "abierto" : ""}`}>
-          {rol === "cliente" ? (
-            <>
-               <li>
-      <Link to="/perfil" onClick={() => setMenuAbierto(false)}>👤 Perfil</Link>
-    </li>
-    <li>
-      <Link to="/carrito" onClick={() => setMenuAbierto(false)}>🛒 Carrito</Link>
-    </li>
-    <li>
-      <Link to="/pedidos" onClick={() => setMenuAbierto(false)}>📦 Pedidos</Link>
-    </li>
-    <li>
-      <Link to="/historial" onClick={() => setMenuAbierto(false)}>🗂 Historial</Link>
-    </li>
-    <li>
-      <button onClick={() => {
-        cerrarSesion();
-        setMenuAbierto(false);
-      }}>🚪 Cerrar sesión</button>
-    </li>
-  </>
-) : (
-  <li>
-    <div className="card-login-wrapper">
-      <Link to="/login" className="btn-login" onClick={() => setMenuAbierto(false)}>
-        <FiLock size={18} />
-        Iniciar sesión
-      </Link>
-    </div>
-  </li>
+          {!usuario && (
+            <li>
+              <div className="card-login-wrapper">
+                <Link
+                  to="/login"
+                  className="btn-login"
+                  onClick={() => setMenuAbierto(false)}
+                >
+                  <FiLock size={18} />
+                  Iniciar sesión
+                </Link>
+              </div>
+            </li>
           )}
         </ul>
       )}

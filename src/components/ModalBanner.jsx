@@ -8,7 +8,7 @@ function ModalBanner({ banner, onClose, onGuardarExitoso }) {
     activo: banner?.activo !== false,
     imagenURL: banner?.imagenURL || "",
     descuentoId: banner?.descuentoId || "",
-    porcentaje: banner?.porcentaje || ""
+    porcentaje: banner?.porcentaje || "",
   });
 
   const [imagenFile, setImagenFile] = useState(null);
@@ -63,33 +63,35 @@ function ModalBanner({ banner, onClose, onGuardarExitoso }) {
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>Título:</label>
+            <label style={{ display: "block", marginBottom: "0.5rem" }}>
+              Título:
+            </label>
             <input
               type="text"
               name="titulo"
               value={formData.titulo}
               onChange={handleInputChange}
               placeholder="Título del banner"
-              required
               style={{ width: "100%", padding: "0.5rem" }}
             />
           </div>
 
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>Descuento asociado:</label>
+            <label style={{ display: "block", marginBottom: "0.5rem" }}>
+              Descuento asociado:
+            </label>
             <select
               name="descuentoId"
               value={formData.descuentoId}
               onChange={(e) => {
                 const id = e.target.value;
-                const selected = descuentosDisponibles.find(d => d.id === id);
-                setFormData(prev => ({
+                const selected = descuentosDisponibles.find((d) => d.id === id);
+                setFormData((prev) => ({
                   ...prev,
                   descuentoId: id,
-                  porcentaje: selected ? selected.porcentaje : ""
+                  porcentaje: selected ? selected.porcentaje : "",
                 }));
               }}
-              required
               style={{ width: "100%", padding: "0.5rem" }}
             >
               <option value="">-- Selecciona un descuento --</option>
@@ -99,10 +101,36 @@ function ModalBanner({ banner, onClose, onGuardarExitoso }) {
                 </option>
               ))}
             </select>
+            {formData.descuentoId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    descuentoId: "",
+                    porcentaje: "",
+                    titulo: "", // Descomenta esta línea si quieres limpiar también el título
+                  }));
+                }}
+                style={{
+                  marginTop: "0.5rem",
+                  padding: "0.4rem 0.8rem",
+                  backgroundColor: "#999",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                🧹 Quitar descuento
+              </button>
+            )}
           </div>
 
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>Porcentaje visual:</label>
+            <label style={{ display: "block", marginBottom: "0.5rem" }}>
+              Porcentaje visual:
+            </label>
             <input
               type="number"
               name="porcentaje"
@@ -111,13 +139,14 @@ function ModalBanner({ banner, onClose, onGuardarExitoso }) {
               min={1}
               max={100}
               placeholder="Ej. 25"
-              required
               style={{ width: "100%", padding: "0.5rem" }}
             />
           </div>
 
           <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <label
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
               <input
                 type="checkbox"
                 name="activo"

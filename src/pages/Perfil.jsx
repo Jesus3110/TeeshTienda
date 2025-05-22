@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import ClienteLayout from "../components/ClienteLayout";
+
 import { getDatabase, ref, get, update } from "firebase/database";
 import {
   getStorage,
@@ -29,7 +31,7 @@ const Perfil = () => {
     if (!usuario) return;
 
     const db = getDatabase();
-    const perfilRef = ref(db, `usuarios/${usuario.id}`);
+    const perfilRef = ref(db, `usuarios/${usuario.uid}`);
 
 
     get(perfilRef).then((snapshot) => {
@@ -64,7 +66,7 @@ const Perfil = () => {
 
   if (nuevaImagen) {
     const storage = getStorage();
-    const storageReference = storageRef(storage, `usuarios/${usuario.id}`);
+    const storageReference = storageRef(storage, `usuarios/${usuario.uid}`);
     await uploadBytes(storageReference, nuevaImagen);
     const urlImagen = await getDownloadURL(storageReference);
     datosActualizados.imagen = urlImagen;
@@ -79,7 +81,8 @@ const Perfil = () => {
 
   if (!perfil) return <div className="loading">Cargando perfil...</div>;
 
-  return (
+
+  const contenido = (
     <div className="perfil-container">
       <div className="perfil-card">
         <img src={perfil.imagen} alt="Foto de perfil" className="perfil-foto" />
@@ -217,6 +220,13 @@ const Perfil = () => {
       </div>
     </div>
   );
+
+return perfil?.rol === "cliente" ? (
+  <ClienteLayout>{contenido}
+</ClienteLayout>
+) : (
+  contenido
+);
 };
 
 export default Perfil;
