@@ -8,7 +8,13 @@ dotenv.config();
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-app.use(cors({ origin: "http://localhost:5173" })); // Cambia por tu frontend en producción
+app.use(cors({
+  origin: [
+    "http://localhost:5173",             // Para desarrollo local
+    "https://teesh-tienda.vercel.app"    // ⚠️ Tu frontend en producción
+  ]
+}));
+
 app.use(express.json());
 
 app.post("/create-payment-intent", async (req, res) => {
