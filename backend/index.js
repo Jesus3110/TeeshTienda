@@ -12,7 +12,8 @@ app.use(cors({
   origin: [
     "http://localhost:5173",
     "https://teesh-tienda.vercel.app",
-    "https://teesh-tienda-6jj2x4i45-jesus3110s-projects.vercel.app"  // ← Este es el deploy temporal de Vercel
+    "https://teesh-tienda-6jj2x4i45-jesus3110s-projects.vercel.app",
+    "https://teesh-tienda-git-main-jesus3110s-projects.vercel.app" // 👈 este es el nuevo
   ]
 }));
 
