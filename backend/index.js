@@ -23,7 +23,7 @@ app.post("/create-payment-intent", async (req, res) => {
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
-      currency: "mxn",
+      currency: "usd",
       payment_method_types: ["card"],
     });
 
@@ -31,6 +31,7 @@ app.post("/create-payment-intent", async (req, res) => {
       clientSecret: paymentIntent.client_secret,
     });
   } catch (err) {
+    console.error("❌ Error Stripe:", err);
     res.status(500).send({ error: err.message });
   }
 });
