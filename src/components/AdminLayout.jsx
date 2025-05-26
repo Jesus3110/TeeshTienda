@@ -6,6 +6,8 @@ import {
   FaImage, FaPercent, FaChartLine, FaHistory, FaSignOutAlt,
 } from "react-icons/fa";
 import "../styles/dashboard.css";
+import { useNavigate } from "react-router-dom";
+
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -13,11 +15,14 @@ const AdminLayout = () => {
 
   const toggleSidebar = () => setSidebarOpen(true);
   const closeSidebar = () => setSidebarOpen(false);
+  const navigate = useNavigate();
 
-  const cerrarSesion = () => {
-    localStorage.removeItem("adminId");
-    window.location.href = "/login";
-  };
+
+const cerrarSesion = () => {
+  localStorage.removeItem("adminId");
+  navigate("/login");
+};
+
 
   const privilegios = usuario?.privilegios || "";
 
