@@ -8,13 +8,25 @@ dotenv.config();
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
+const cors = require("cors");
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://teesh-tienda.vercel.app",
-    "https://teesh-tienda-6jj2x4i45-jesus3110s-projects.vercel.app",
-    "https://teesh-tienda-git-main-jesus3110s-projects.vercel.app" // 👈 este es el nuevo
-  ]
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      "http://localhost:5173",
+      "https://teesh-tienda.vercel.app"
+    ];
+
+    if (
+      !origin || // permitir Postman / curl
+      allowedOrigins.includes(origin) ||
+      origin.endsWith(".vercel.app")
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error("❌ Not allowed by CORS: " + origin));
+    }
+  }
 }));
 
 
