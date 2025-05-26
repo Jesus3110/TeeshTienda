@@ -18,16 +18,18 @@ app.use(cors({
     ];
 
     if (
-      !origin || // permitir Postman / curl
+      !origin ||
       allowedOrigins.includes(origin) ||
       origin.endsWith(".vercel.app")
     ) {
       callback(null, true);
     } else {
-      callback(new Error("❌ Not allowed by CORS: " + origin));
+      console.error("❌ CORS bloqueado:", origin);
+      callback(new Error("Not allowed by CORS"));
     }
   }
 }));
+
 
 
 app.use(express.json());
