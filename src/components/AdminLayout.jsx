@@ -83,7 +83,7 @@ const AdminLayout = () => {
             </Link>
           )}
 
-          <Link to="#" onClick={cerrarSesion}>
+          <Link to="/login" onClick={cerrarSesion}>
             <FaSignOutAlt /> {sidebarOpen && <span>Salir</span>}
           </Link>
         </nav>

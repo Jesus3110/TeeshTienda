@@ -18,7 +18,7 @@ const CheckoutForm = ({ total, confirmar }) => {
   useEffect(() => {
     if (total <= 0) return;
 
-    fetch("http://localhost:4000/create-payment-intent", {
+    fetch(`${import.meta.env.VITE_API_URL}/create-payment-intent`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ amount: Math.round(total * 100) })
