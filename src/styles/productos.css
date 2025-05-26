@@ -1,0 +1,161 @@
+/* productos.css */
+
+.productos-admin {
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f9f9fc;
+}
+
+.filtros-productos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.input-busqueda,
+.select-categorias {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: white;
+  transition: border 0.2s ease;
+}
+
+.input-busqueda:focus,
+.select-categorias:focus {
+  border-color: #4a90e2;
+  outline: none;
+}
+
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 14px;
+  color: #333;
+}
+
+.btn-agregar {
+  background-color: #062e2e;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.4rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+}
+
+.btn-agregar:hover {
+  background-color: #054141;
+}
+
+.btn-reporte {
+  background-color: #f4f4f4;
+  color: #000;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.btn-reporte:hover {
+  background-color: #e0e0e0;
+}
+
+.tabla-productos {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.tabla-productos th,
+.tabla-productos td {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.tabla-productos th {
+  background-color: #fefaf3;
+  font-weight: 600;
+}
+
+.precio-tachado {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.precio-descuento {
+  color: #d62828;
+  margin-left: 0.5rem;
+  font-weight: bold;
+}
+
+.descuento-tag {
+  background: #ffe9aa;
+  color: #444;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+
+.stock-bajo {
+  color: #d62828;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.acciones-producto button {
+  margin: 0 0.2rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-modificar {
+  background-color: #f2b400;
+  color: #fff;
+}
+
+.btn-deshabilitar {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.btn-habilitar {
+  background-color: #2ecc71;
+  color: #fff;
+}
+
+.btn-eliminar {
+  background-color: #ccc;
+  color: #333;
+}
+
+.btn-modificar:hover,
+.btn-deshabilitar:hover,
+.btn-habilitar:hover,
+.btn-eliminar:hover {
+  opacity: 0.9;
+}

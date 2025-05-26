@@ -4,7 +4,8 @@ import ModalFormularioProducto from "../components/ModalFormularioProducto";
 import ModalEditarProducto from "../components/ModalEditarProducto";
 import { generarReporteStockBajo } from "../utils/generarReporteStockBajo";
 import "../styles/modal.css";
-import "../styles/categorias.css";
+import "../styles/productos.css"; 
+import { FaPlus, FaFileAlt } from "react-icons/fa";
 
 const toggleActivo = async (id, estadoActual) => {
   const db = getDatabase();
@@ -145,125 +146,149 @@ const Productos = () => {
 
   return (
     <div className="productos-admin">
-      <h2>Gestión de Productos</h2>
+  <h2>Gestión de Productos</h2>
 
-      <div className="filtros">
-        <input
-          type="text"
-          placeholder="Buscar producto..."
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
+  <div className="filtros-productos">
+    <input
+      type="text"
+      className="input-busqueda"
+      placeholder="Buscar producto..."
+      value={busqueda}
+      onChange={(e) => setBusqueda(e.target.value)}
+    />
 
-        <select onChange={(e) => setCategoriaFiltro(e.target.value)} value={categoriaFiltro}>
-          <option value="todos">Todas las categorías</option>
-          {categoriasDisponibles.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
+    <select
+      className="select-categorias"
+      onChange={(e) => setCategoriaFiltro(e.target.value)}
+      value={categoriaFiltro}
+    >
+      <option value="todos">Todas las categorías</option>
+      {categoriasDisponibles.map((cat) => (
+        <option key={cat} value={cat}>{cat}</option>
+      ))}
+    </select>
 
-        <label>
-          <input type="checkbox" checked={verActivos} onChange={(e) => setVerActivos(e.target.checked)} />
-          Ver activos
-        </label>
+    <label className="check-label">
+      <input
+        type="checkbox"
+        checked={verActivos}
+        onChange={(e) => setVerActivos(e.target.checked)}
+      />
+      Ver activos
+    </label>
 
-        <label>
-          <input type="checkbox" checked={verDeshabilitados} onChange={(e) => setVerDeshabilitados(e.target.checked)} />
-          Ver deshabilitados
-        </label>
+    <label className="check-label">
+      <input
+        type="checkbox"
+        checked={verDeshabilitados}
+        onChange={(e) => setVerDeshabilitados(e.target.checked)}
+      />
+      Ver deshabilitados
+    </label>
 
-        <button style={{ marginTop: "1rem" }} onClick={() => setMostrarModal(true)}>➕ Agregar producto</button>
-        <button onClick={generarReporteStockBajo}>📄 Reporte de Stock Bajo</button>
-      </div>
-      
+    <button className="btn-agregar" onClick={() => setMostrarModal(true)}>
+      <FaPlus /> Agregar producto
+    </button>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Imagen</th>
-            <th>Nombre</th>
-            <th>Precio</th>
-            <th>Descuento</th>
-            <th>Stock</th>
-            <th>Marca</th>
-            <th>Categoría</th>
-            <th>Activo</th>
-            <th>Acciones</th>
+    <button className="btn-reporte" onClick={generarReporteStockBajo}>
+      <FaFileAlt /> Reporte de Stock Bajo
+    </button>
+  </div>
+
+  <table className="tabla-productos">
+    <thead>
+      <tr>
+        <th>Imagen</th>
+        <th>Nombre</th>
+        <th>Precio</th>
+        <th>Descuento</th>
+        <th>Stock</th>
+        <th>Marca</th>
+        <th>Categoría</th>
+        <th>Activo</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {productosFiltrados.map((prod) => {
+        const descuento = obtenerDescuentoProducto(prod);
+        const esDescuentoValido = descuento && descuento.validoHasta instanceof Date && descuento.validoHasta.getTime() > Date.now();
+        const precioConDescuento = descuento && prod.precioOriginal
+          ? prod.precioOriginal * (1 - descuento.porcentaje / 100)
+          : prod.precio;
+
+        return (
+          <tr key={prod.idFirebase}>
+            <td><img src={prod.imagen} alt={prod.nombre} width="50" /></td>
+            <td>{prod.nombre}</td>
+            <td>
+              {esDescuentoValido && prod.precioOriginal ? (
+                <>
+                  <span className="precio-tachado">
+                    ${prod.precioOriginal.toFixed(2)}
+                  </span>
+                  <span className="precio-descuento">
+                    ${precioConDescuento.toFixed(2)}
+                  </span>
+                </>
+              ) : (
+                `$${prod.precio.toFixed(2)}`
+              )}
+            </td>
+            <td>
+              {esDescuentoValido ? (
+                <span className="descuento-tag">{descuento.porcentaje}%</span>
+              ) : (
+                "Ninguno"
+              )}
+            </td>
+            <td>
+              {prod.stock}
+              {prod.activo && prod.stock <= 5 && (
+                <span className="stock-bajo">⚠️ Bajo stock</span>
+              )}
+            </td>
+            <td>{prod.marca}</td>
+            <td>{prod.categoria}</td>
+            <td>{prod.activo ? "Sí" : "No"}</td>
+            <td className="acciones-producto">
+              <button className="btn-modificar" onClick={() => {
+                setProductoEditar(prod);
+                setMostrarEditar(true);
+              }}>
+                Modificar
+              </button>
+              <button
+                className={`btn-${prod.activo ? "deshabilitar" : "habilitar"}`}
+                onClick={() => toggleActivo(prod.idFirebase, prod.activo)}
+              >
+                {prod.activo ? "Deshabilitar" : "Habilitar"}
+              </button>
+              <button className="btn-eliminar" onClick={() => eliminarProducto(prod.idFirebase)}>
+                Eliminar
+              </button>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {productosFiltrados.map((prod) => {
-            const descuento = obtenerDescuentoProducto(prod);
-            const esDescuentoValido = descuento && descuento.validoHasta instanceof Date && descuento.validoHasta.getTime() > Date.now();
-            const precioConDescuento = descuento && prod.precioOriginal
-  ? prod.precioOriginal * (1 - descuento.porcentaje / 100)
-  : prod.precio;
+        );
+      })}
+    </tbody>
+  </table>
 
+  {mostrarModal && (
+    <ModalFormularioProducto onClose={() => setMostrarModal(false)} />
+  )}
 
-            return (
-              <tr key={prod.idFirebase}>
-                <td><img src={prod.imagen} alt={prod.nombre} width="50" /></td>
-                <td>{prod.nombre}</td>
-                <td>
-                  {esDescuentoValido && prod.precioOriginal ? (
-                    <>
-                      <span style={{ textDecoration: "line-through", color: "#999" }}>
-                        ${prod.precioOriginal.toFixed(2)}
-                      </span>
-                      <span style={{ color: "#d62828", marginLeft: "0.5rem" }}>
-                        ${precioConDescuento.toFixed(2)}
-                      </span>
-                    </>
-                  ) : (
-                    `$${prod.precio.toFixed(2)}`
-                  )}
-                </td>
-                <td>
-                  {esDescuentoValido ? (
-                    <span className="descuento-tag">
-                      {descuento.porcentaje}%
-                    </span>
-                  ) : (
-                    "Ninguno"
-                  )}
-                </td>
-                <td>
-                  {prod.stock}
-                  {prod.activo && prod.stock <= 5 && (
-                    <span style={{ color: "red", marginLeft: "0.5rem" }}>⚠️ Bajo stock</span>
-                  )}
-                </td>
-                <td>{prod.marca}</td>
-                <td>{prod.categoria}</td>
-                <td>{prod.activo ? "Sí" : "No"}</td>
-                <td>
-                  <button onClick={() => { setProductoEditar(prod); setMostrarEditar(true); }}>Modificar</button>
-                  <button onClick={() => toggleActivo(prod.idFirebase, prod.activo)}>
-                    {prod.activo ? "Deshabilitar" : "Habilitar"}
-                  </button>
-                  <button onClick={() => eliminarProducto(prod.idFirebase)}>Eliminar</button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-
-      {mostrarModal && (
-        <ModalFormularioProducto onClose={() => setMostrarModal(false)} />
-      )}
-
-      {mostrarEditar && productoEditar && (
-        <ModalEditarProducto
-          producto={productoEditar}
-          descuentos={descuentos}
-          onClose={() => {
-            setMostrarEditar(false);
-            setProductoEditar(null);
-          }}
-        />
-      )}
-    </div>
+  {mostrarEditar && productoEditar && (
+    <ModalEditarProducto
+      producto={productoEditar}
+      descuentos={descuentos}
+      onClose={() => {
+        setMostrarEditar(false);
+        setProductoEditar(null);
+      }}
+    />
+  )}
+</div>
   );
 };
 

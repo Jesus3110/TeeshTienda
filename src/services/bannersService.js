@@ -75,7 +75,7 @@ export const guardarBanner = async (bannerData, imagenFile, idExistente = null) 
 /**
  * Obtiene todos los banners activos ordenados
  */
-export const obtenerBanners = async () => {
+export const obtenerBanners = async (incluirInactivos = false) => {
   try {
     const db = getDatabase();
     const bannersRef = ref(db, 'banners');
@@ -85,13 +85,15 @@ export const obtenerBanners = async () => {
 
     return Object.entries(snapshot.val())
       .map(([id, value]) => ({ id, ...value }))
-      .filter(banner => banner.activo !== false)
+      .filter(b => incluirInactivos || b.activo !== false) // 👈 esto permite filtrar fuera
       .sort((a, b) => (a.orden || 0) - (b.orden || 0));
   } catch (error) {
     console.error("Error en obtenerBanners:", error);
     throw new Error("Error al obtener los banners");
   }
 };
+
+
 
 /**
  * Elimina un banner y su imagen asociada

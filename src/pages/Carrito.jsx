@@ -3,7 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { getDatabase, ref, onValue, set, remove, get } from "firebase/database";
 import ClienteLayout from "../components/ClienteLayout";
-
+import "../styles/carrito.css"; // Asegúrate de tener este archivo CSS
+import {
+  FaTrash,
+  FaShoppingCart,
+  FaCheck,
+  FaArrowLeft,
+  FaTimes,
+} from "react-icons/fa";
 
 function Carrito() {
   const [carrito, setCarrito] = useState([]);
@@ -112,85 +119,80 @@ function Carrito() {
 
   return (
     <ClienteLayout>
-    <div style={{ padding: "2rem" }}>
-      <h2>🛒 Carrito de Compras</h2>
-
-      {carrito.length === 0 ? (
-        <p>No hay productos en el carrito.</p>
-      ) : (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            marginTop: "1rem",
-          }}
-        >
-          <thead>
-            <tr>
-              <th>Producto</th>
-              <th>Precio</th>
-              <th>Cantidad</th>
-              <th>Subtotal</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {carrito.map((prod, index) => (
-              <tr key={index}>
-                <td>{prod.nombre}</td>
-                <td>${prod.precio}</td>
-                <td>
-                  <input
-                    type="number"
-                    min="1"
-                    value={prod.cantidad === "" ? "" : prod.cantidad}
-                    onChange={(e) => cambiarCantidad(index, e.target.value)}
-                    style={{ width: "60px" }}
-                  />
-                </td>
-                <td>
-                  $
-                  {!isNaN(prod.precio * prod.cantidad)
-                    ? (prod.precio * prod.cantidad).toFixed(2)
-                    : "0.00"}
-                </td>
-                <td>
-                  <button onClick={() => eliminarProducto(index)}>❌</button>
-                </td>
+      <div className="carrito-container">
+        <h2>
+          <FaShoppingCart style={{ marginRight: "0.5rem" }} /> Carrito de
+          Compras
+        </h2>
+        {carrito.length === 0 ? (
+          <p>No hay productos en el carrito.</p>
+        ) : (
+          <table className="carrito-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            </thead>
+            <tbody>
+              {carrito.map((prod, index) => (
+                <tr key={index}>
+                  <td>{prod.nombre}</td>
+                  <td>${prod.precio}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min="1"
+                      value={prod.cantidad === "" ? "" : prod.cantidad}
+                      onChange={(e) => cambiarCantidad(index, e.target.value)}
+                      className="carrito-cantidad-input"
+                    />
+                  </td>
+                  <td>
+                    $
+                    {!isNaN(prod.precio * prod.cantidad)
+                      ? (prod.precio * prod.cantidad).toFixed(2)
+                      : "0.00"}
+                  </td>
+                  <td>
+                    <button
+                      className="carrito-eliminar-btn"
+                      onClick={() => eliminarProducto(index)}
+                    >
+                      <FaTimes />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
-      {carrito.length > 0 && (
-        <>
-          <h3 style={{ marginTop: "1rem" }}>Total: ${total.toFixed(2)}</h3>
-          <button onClick={vaciarCarrito} style={{ marginTop: "1rem" }}>
-            🗑️ Vaciar carrito
-          </button>
-          <button
-            style={{
-              marginTop: "1rem",
-              marginLeft: "1rem",
-              background: "#2ecc71",
-              color: "#fff",
-              padding: "0.5rem 1rem",
-              border: "none",
-              borderRadius: "5px",
-            }}
-            onClick={confirmarCompra}
-          >
-            ✅ Confirmar compra
-          </button>
-        </>
-      )}
-
-      <br />
-      <button style={{ marginTop: "1rem" }} onClick={() => navigate("/")}>
-        ⬅️ Seguir comprando
+{carrito.length > 0 && (
+  <>
+    <h3 className="total-carrito">Total: ${total.toFixed(2)}</h3>
+    <div className="carrito-btns">
+      
+      <button className="btn-vaciar" onClick={vaciarCarrito} type="button">
+        <FaTrash style={{ marginRight: "0.5rem" }} /> Vaciar carrito
       </button>
+
+      <button className="btn-confirmar" onClick={confirmarCompra} type="button">
+        <FaCheck style={{ marginRight: "0.5rem" }} /> Confirmar compra
+      </button>
+
+      <button className="btn-continuar" onClick={() => navigate("/")} type="button">
+        <FaArrowLeft style={{ marginRight: "0.5rem" }} /> Seguir comprando
+      </button>
+
     </div>
+  </>
+)}
+
+      </div>
     </ClienteLayout>
   );
 }

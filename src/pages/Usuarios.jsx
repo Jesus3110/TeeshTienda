@@ -30,26 +30,25 @@ const Usuarios = () => {
   }, []);
 
   const usuariosFiltrados = usuarios.filter((user) => {
-  const coincideBusqueda =
-    user.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
-    user.correo?.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideBusqueda =
+      user.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      user.correo?.toLowerCase().includes(busqueda.toLowerCase());
 
-  const coincideRol =
-    filtroRol === "todos"
-      ? true
-      : filtroRol === "inhabilitados"
-      ? user.activo === false
-      : user.rol === filtroRol && user.activo;
+    const coincideRol =
+      filtroRol === "todos"
+        ? true
+        : filtroRol === "inhabilitados"
+        ? user.activo === false
+        : user.rol === filtroRol && user.activo;
 
-  return coincideBusqueda && coincideRol;
-});
+    return coincideBusqueda && coincideRol;
+  });
 
-
- const cambiarEstadoUsuario = async (id, nuevoEstado) => {
-  const db = getDatabase();
-  const userRef = ref(db, `usuarios/${id}`);
-  await update(userRef, { activo: nuevoEstado });
-};
+  const cambiarEstadoUsuario = async (id, nuevoEstado) => {
+    const db = getDatabase();
+    const userRef = ref(db, `usuarios/${id}`);
+    await update(userRef, { activo: nuevoEstado });
+  };
 
   return (
     <div className="usuarios-admin">
@@ -72,7 +71,6 @@ const Usuarios = () => {
           <option value="admin">Administrador</option>
           <option value="inhabilitados">Inhabilitados</option>
         </select>
-        
 
         <button onClick={() => setMostrarModalAgregar(true)}>
           ➕ Agregar administrador
@@ -156,7 +154,7 @@ const Usuarios = () => {
         <h2>Ubicación del usuario</h2>
         <iframe
           src={`https://www.google.com/maps?q=${encodeURIComponent(
-            direccionSeleccionada
+            `${direccionSeleccionada.calle} ${direccionSeleccionada.numero}, ${direccionSeleccionada.colonia}, ${direccionSeleccionada.cp}, ${direccionSeleccionada.ciudad}, ${direccionSeleccionada.estado}`
           )}&output=embed`}
           width="100%"
           height="400"
@@ -164,6 +162,7 @@ const Usuarios = () => {
           loading="lazy"
           allowFullScreen
         ></iframe>
+
         <button
           onClick={() => setModalAbierto(false)}
           className="btn-cerrar-maps"

@@ -1,12 +1,12 @@
 :root {
   --fondo: #FAF8F5;
-  --tarjeta: #1e1e1e;
-  --input-bg: #2b2b2b;
-  --input-text: #fefefe;
+  --tarjeta: #F5F5DC;
+  --input-bg: #fefefe;
+  --input-text: #000000;
   --borde: #444;
   --rojo: #D62828;
   --rojo-hover: #A4161A;
-  --gris: #999;
+  --gris: #606060;
 }
 
 /* Fondo completo */
@@ -32,7 +32,7 @@
 /* Título principal */
 .auth-title {
   text-align: center;
-  color: white;
+  color: rgb(0, 0, 0);
   font-size: 2rem;
   font-weight: bold;
   margin-bottom: 1.8rem;
@@ -144,7 +144,7 @@
 /* ✅ Etiquetas */
 .auth-label {
   display: block;
-  color: #cccccc;
+  color: #060606;
   margin-bottom: 0.2rem;
   font-size: 0.9rem;
   font-weight: 500;
@@ -160,4 +160,100 @@
   margin-bottom: 1rem;
   font-size: 0.95rem;
   text-align: left;
+}
+
+
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper .auth-input {
+  padding-right: 2.5rem; /* espacio para el ícono */
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ccc;
+}
+
+.toggle-password:hover {
+  color: #ff4d4d;
+}
+
+/* Agrupador general */
+.address-section {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Filas de dos columnas */
+.address-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Input individuales */
+.address-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+  box-sizing: border-box;
+}
+
+/* Asegura que un solo input también conserve estilos */
+.address-section input[type="text"],
+.address-section input[type="number"] {
+  width: 100%;
+}
+
+/* Estilo para el input de archivo */
+.auth-file-input {
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  background-color: white;
+  width: 100%;
+  box-sizing: border-box;
+}
+.auth-input.error {
+  border: 1px solid red;
+  background-color: #ffecec;
+}
+
+.password-requisitos {
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+  color: #d32f2f;
+  list-style: none;
+  padding-left: 0;
+}
+
+.requisito-ok {
+  color: green;
+}
+
+.requisito-incumplido {
+  color: #d32f2f;
+}
+
+
+@media (max-width: 600px) {
+  .address-row {
+    flex-direction: column;
+  }
 }

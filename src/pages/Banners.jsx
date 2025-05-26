@@ -13,30 +13,39 @@ function AdminBanners() {
   const [productos, setProductos] = useState([]);
   const [mostrarModalProductos, setMostrarModalProductos] = useState(false);
   const [productosFiltrados, setProductosFiltrados] = useState([]);
+  const [verDeshabilitados, setVerDeshabilitados] = useState(false);
+  
+
  
 
 
 
   // Cargar banners al iniciar
   useEffect(() => {
+  const unsubscribe = escucharProductos(setProductos);
+  return () => unsubscribe();
+}, []);
+
+useEffect(() => {
+  if (productos.length > 0) {
     cargarBanners();
-    const unsubscribeProductos = escucharProductos(setProductos);
-  return () => unsubscribeProductos();
-    
-  }, []);
+  }
+}, [productos]);
+
 
 const cargarBanners = async () => {
   setCargando(true);
   try {
-    const lista = await obtenerBanners();
+    const lista = await obtenerBanners(true); // Incluye inactivos
 
-    // Todos los descuentos aún usados por productos
+    // Descuentos vigentes (usados por productos)
     const descuentosVigentes = new Set(
       productos.map(p => p.descuentoAplicado).filter(Boolean)
     );
 
     const db = getDatabase();
 
+    // Limpia banners con descuento obsoleto
     for (const banner of lista) {
       const descuentoObsoleto =
         banner.descuentoId && !descuentosVigentes.has(banner.descuentoId);
@@ -52,9 +61,8 @@ const cargarBanners = async () => {
       }
     }
 
-    // Recarga la lista con banners limpios
-    const listaFinal = await obtenerBanners();
-    setBanners(listaFinal);
+    // Solo se necesita esta asignación
+    setBanners(lista);
   } catch (error) {
     console.error("Error limpiando banners:", error);
   } finally {
@@ -93,6 +101,10 @@ const verProductosConDescuento = (descuentoId) => {
     setBannerEditando(null);
     setMostrarModal(true);
   };
+const bannersFiltrados = banners.filter((b) => {
+  const esActivo = b.activo === undefined || b.activo === true;
+  return verDeshabilitados || esActivo;
+});
 
 return (
   <div className="container" style={{ padding: "2rem" }}>
@@ -118,6 +130,15 @@ return (
       >
         + Nuevo Banner
       </button>
+      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+  <input
+    type="checkbox"
+    checked={verDeshabilitados}
+    onChange={(e) => setVerDeshabilitados(e.target.checked)}
+  />
+  Ver deshabilitados
+</label>
+
     </div>
 
     {/* Lista de banners */}
@@ -139,7 +160,7 @@ return (
             </tr>
           </thead>
           <tbody>
-            {banners.map((banner) => {
+            {bannersFiltrados.map((banner) => {
               const productosAsociados = productos.filter(
                 (p) => p.descuentoAplicado === banner.descuentoId
               );

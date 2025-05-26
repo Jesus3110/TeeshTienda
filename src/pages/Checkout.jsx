@@ -4,6 +4,11 @@ import { getDatabase, ref, set, get, runTransaction } from "firebase/database";
 import { v4 as uuidv4 } from "uuid";
 import StripeButton from "../components/StripeButton";
 import { useNavigate } from "react-router-dom";
+import "../styles/checkout.css";
+import ClienteLayout from "../components/ClienteLayout";
+import { FaMoneyBillWave, FaTimesCircle, FaCreditCard } from "react-icons/fa";
+
+
 
 
 const calcularFechaEntregaPorPendientes = async () => {
@@ -24,15 +29,27 @@ const calcularFechaEntregaPorPendientes = async () => {
 };
 
 const Checkout = () => {
-  const MODO_PRUEBA = true; // 🧪 Cambiar a false para modo real
+  const MODO_PRUEBA = false; // 🧪 Cambiar a false para modo real
 
   const { usuario } = useContext(AuthContext);
   const [direccion, setDireccion] = useState("");
-  const [nuevaDireccion, setNuevaDireccion] = useState("");
   const [carrito, setCarrito] = useState([]);
   const [total, setTotal] = useState(0);
   const [nombreUsuario, setNombreUsuario] = useState("");
   const navigate = useNavigate();
+  const [direccionGuardada, setDireccionGuardada] = useState(false);
+  const [usarNuevaDireccion, setUsarNuevaDireccion] = useState(false);
+const [direccionForm, setDireccionForm] = useState({
+  calle: "",
+  numero: "",
+  colonia: "",
+  ciudad: "",
+  estado: "",
+  cp: "",
+});
+
+
+
 
   useEffect(() => {
     if (!usuario) return;
@@ -42,7 +59,14 @@ const Checkout = () => {
     get(refUser).then((snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
-        setDireccion(data.direccion || "");
+        // Si es objeto, formatea; si es string, deja tal cual
+if (typeof data.direccion === "object") {
+  const { calle, numero, colonia, ciudad, estado, cp } = data.direccion;
+  setDireccion(`${calle} ${numero}, ${colonia}, ${ciudad}, ${estado}, CP ${cp}`);
+} else {
+  setDireccion(data.direccion || "");
+}
+
         setNombreUsuario(data.nombre || "");
       }
     });
@@ -66,7 +90,12 @@ const Checkout = () => {
   }, [carrito]);
 
   const confirmarCompra = async (tipoPago) => {
-    const direccionFinal = nuevaDireccion || direccion;
+    const direccionFinal = usarNuevaDireccion
+  ? `${direccionForm.calle} ${direccionForm.numero}, ${direccionForm.colonia}, ${direccionForm.ciudad}, ${direccionForm.estado}, CP ${direccionForm.cp}`
+  : direccion;
+
+
+
     if (!direccionFinal) {
       alert("Debe especificar una dirección de envío.");
       return;
@@ -92,16 +121,18 @@ const Checkout = () => {
     }));
   
     await set(pedidoRef, {
-      usuario: usuario.uid,
-      nombre: nombreUsuario,
-      productos: productosProcesados,
-      direccion: direccionFinal,
-      metodoPago: tipoPago,
-      estado: "pendiente",
-      creadoEn: Date.now(),
-      total,
-      fechaEntrega, // 👈 se guarda en Firebase
-    });
+  usuario: usuario.uid,
+  nombre: nombreUsuario,
+  productos: productosProcesados,
+  direccion: direccionFinal,
+  metodoPago: tipoPago,
+  estado: "pendiente",
+  creadoEn: Date.now(),
+  total,
+  fechaEntrega,
+  usoDireccionTemporal: usarNuevaDireccion, // 🆕 Para saber si hay que limpiar luego
+});
+
   
     await actualizarDashboard(productosProcesados, total);
   
@@ -120,6 +151,25 @@ const Checkout = () => {
 }
 
   };
+
+const guardarNuevaDireccion = async () => {
+  const { calle, numero, colonia, ciudad, estado, cp } = direccionForm;
+
+  if (!calle || !numero || !colonia || !ciudad || !estado || !cp) {
+    alert("Todos los campos de dirección son obligatorios");
+    return;
+  }
+
+  const nueva = { calle, numero, colonia, ciudad, estado, cp };
+  const db = getDatabase();
+  const userRef = ref(db, `usuarios/${usuario.uid}/direccion`);
+  setDireccionForm(nueva);
+setDireccionGuardada(true);
+setUsarNuevaDireccion(false);
+
+};
+
+
   
 const actualizarDashboard = async (carrito, total) => {
   const db = getDatabase();
@@ -178,77 +228,126 @@ for (const prod of carrito) {
 
 };
 
-  
-
   return (
-    <div style={{ padding: "2rem", maxWidth: "600px", margin: "auto" }}>
-      <h2>Confirmar Compra</h2>
+    <ClienteLayout>
+  <div className="checkout-container">
+  <h2>Confirmar Compra</h2>
 
-      <div style={{ marginBottom: "1rem" }}>
-        <h4>Dirección de Envío</h4>
+  <div className="checkout-direccion">
+    <h4>Dirección de Envío</h4>
+    <p>
+      <strong>Guardada:</strong>{" "}
+      {direccion || "No hay dirección guardada."}
+    </p>
+
+    <button
+      className="btn-toggle-direccion"
+      onClick={() => setUsarNuevaDireccion(!usarNuevaDireccion)}
+    >
+      {usarNuevaDireccion ? "✖️ Cancelar nueva dirección" : "📍 Usar otra dirección"}
+    </button>
+
+    {usarNuevaDireccion && (
+      <>
+        <div className="address-section">
+          <div className="address-row">
+            <input
+              type="text"
+              placeholder="Calle"
+              value={direccionForm.calle}
+              onChange={(e) => setDireccionForm({ ...direccionForm, calle: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Número"
+              value={direccionForm.numero}
+              onChange={(e) => setDireccionForm({ ...direccionForm, numero: e.target.value })}
+            />
+          </div>
+          <input
+            type="text"
+            placeholder="Colonia"
+            value={direccionForm.colonia}
+            onChange={(e) => setDireccionForm({ ...direccionForm, colonia: e.target.value })}
+          />
+          <div className="address-row">
+            <input
+              type="text"
+              placeholder="Ciudad"
+              value={direccionForm.ciudad}
+              onChange={(e) => setDireccionForm({ ...direccionForm, ciudad: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Estado"
+              value={direccionForm.estado}
+              onChange={(e) => setDireccionForm({ ...direccionForm, estado: e.target.value })}
+            />
+          </div>
+          <input
+            type="text"
+            placeholder="Código Postal"
+            value={direccionForm.cp}
+            onChange={(e) => setDireccionForm({ ...direccionForm, cp: e.target.value })}
+          />
+        </div>
+
+        <button
+          className="btn-guardar-direccion"
+          onClick={guardarNuevaDireccion}
+        >
+          💾 Guardar nueva dirección
+        </button>
         <p>
-          <strong>Guardada:</strong> {direccion || "No hay dirección guardada."}
-        </p>
-        <textarea
-          placeholder="Usar otra dirección (opcional)"
-          value={nuevaDireccion}
-          onChange={(e) => setNuevaDireccion(e.target.value)}
-          rows={3}
-          style={{ width: "100%", marginTop: "0.5rem" }}
-        />
-      </div>
+  <strong>Se enviará a:</strong> {usarNuevaDireccion
+    ? `${direccionForm.calle} ${direccionForm.numero}, ${direccionForm.colonia}, ${direccionForm.ciudad}, ${direccionForm.estado}, CP ${direccionForm.cp}`
+    : direccion}
+</p>
 
-      <h4>Total a pagar: ${total.toFixed(2)}</h4>
+      </>
+    )}
 
-      <div style={{ marginTop: "1rem" }}>
-        <button
-          disabled={total <= 0}
-          onClick={() => confirmarCompra("efectivo")}
-          style={{
-            marginRight: "1rem",
-            background: "#3498db",
-            color: "#fff",
-            padding: "0.5rem 1rem",
-            border: "none",
-            borderRadius: "5px",
-            opacity: total <= 0 ? 0.6 : 1,
-            cursor: total <= 0 ? "not-allowed" : "pointer",
-          }}
-        >
-          💵 Pagar en efectivo
-        </button>
-      </div>
+    {direccionGuardada && (
+      <p className="mensaje-exito">✅ Dirección guardada exitosamente</p>
+    )}
+  </div>
 
-      <h4 style={{ marginTop: "2rem" }}>O pagar con tarjeta:</h4>
-      <StripeButton
-        total={total}
-        carrito={carrito}
-        usuario={usuario}
-        confirmar={() => {
-          if (MODO_PRUEBA) {
-            alert("🧪 Modo prueba: simulando pago con tarjeta...");
-            confirmarCompra("stripe (prueba)");
-          } else {
-            confirmarCompra("stripe");
-          }
-        }}
-      />
+  <p className="checkout-total">Total a pagar: ${total.toFixed(2)}</p>
 
-      <div style={{ marginTop: "2rem" }}>
-        <button
-          onClick={() => navigate("/carrito")}
-          style={{
-            backgroundColor: "#e74c3c",
-            color: "#fff",
-            padding: "0.5rem 1rem",
-            border: "none",
-            borderRadius: "5px",
-          }}
-        >
-          ❌ Cancelar compra
-        </button>
-      </div>
-    </div>
+  <div className="checkout-btns">
+    <button
+      className="checkout-btn efectivo"
+      onClick={() => confirmarCompra("efectivo")}
+      disabled={total <= 0}
+    >
+      <FaMoneyBillWave /> Pagar en efectivo
+    </button>
+
+    <h4>O pagar con tarjeta:</h4>
+
+<StripeButton
+  total={total}
+  carrito={carrito}
+  usuario={usuario}
+  modoPrueba={MODO_PRUEBA}
+  confirmar={() => {
+    confirmarCompra(MODO_PRUEBA ? "stripe (prueba)" : "stripe");
+  }}
+/>
+
+
+
+    <button
+      className="checkout-btn cancelar"
+      onClick={() => navigate("/carrito")}
+    >
+      <FaTimesCircle /> Cancelar compra
+    </button>
+  </div>
+</div>
+
+
+</ClienteLayout>
   );
 };
 

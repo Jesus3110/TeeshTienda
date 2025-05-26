@@ -10,6 +10,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import "../styles/login.css";
 import { AuthContext } from "../context/AuthContext"; // ✅ Importa el contexto
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 function Login() {
   const { setUsuario, setRol } = useContext(AuthContext); // ✅ Usa el contexto
@@ -18,7 +19,10 @@ function Login() {
   const [modoRegistro, setModoRegistro] = useState(false);
   const [exito, setExito] = useState(false);
   const [error, setError] = useState("");
+  const [verPassword, setVerPassword] = useState(false);
   const [modalInhabilitado, setModalInhabilitado] = useState(false);
+  const [confirmPass, setConfirmPass] = useState("");
+  const [verConfirmPass, setVerConfirmPass] = useState(false);
 
   const [datos, setDatos] = useState({
     nombre: "",
@@ -52,21 +56,28 @@ function Login() {
     const db = getDatabase();
     const userRef = ref(db, `usuarios/${userId}`);
 
-    const direccion = datos.calle
-      ? `${datos.calle} ${datos.numero}, ${datos.colonia}, ${datos.ciudad}, ${datos.estado}, CP ${datos.cp}`
-      : "Dirección no proporcionada";
+   const direccion = {
+  calle: datos.calle || "",
+  numero: datos.numero || "",
+  colonia: datos.colonia || "",
+  ciudad: datos.ciudad || "",
+  estado: datos.estado || "",
+  cp: datos.cp || ""
+};
 
-    await set(userRef, {
-      nombre: nombre || datos.nombre || "Usuario",
-      correo: email,
-      telefono: datos.telefono || "",
-      direccion,
-      imagen: imagenURL,
-      rol: "cliente",
-      activo: true,
-      password: pass,
-      primerInicio: false,
-    });
+
+   await set(userRef, {
+  nombre: nombre || datos.nombre || "Usuario",
+  correo: email,
+  telefono: datos.telefono || "",
+  direccion, // ← ahora es un objeto
+  imagen: imagenURL,
+  rol: "cliente",
+  activo: true,
+  password: pass,
+  primerInicio: false,
+});
+
   };
 
   const verificarRolYRedirigir = async (userId) => {
@@ -90,10 +101,37 @@ function Login() {
     }
   };
 
+  const validarPassword = (password) => {
+    const requisitos = [
+      { test: /.{8,}/, msg: "Mínimo 8 caracteres" },
+      { test: /[A-Z]/, msg: "Una letra mayúscula" },
+      { test: /[a-z]/, msg: "Una letra minúscula" },
+      { test: /[0-9]/, msg: "Un número" },
+      { test: /[^A-Za-z0-9]/, msg: "Un carácter especial" },
+    ];
+
+    const errores = requisitos
+      .filter((r) => !r.test.test(password))
+      .map((r) => r.msg);
+    return errores;
+  };
+
   const registrar = async () => {
     try {
       setError("");
+
       if (!datos.nombre) throw new Error("El nombre es requerido");
+
+      const erroresPassword = validarPassword(pass);
+      if (erroresPassword.length > 0) {
+        throw new Error(
+          "La contraseña no cumple con los requisitos:\n" +
+            erroresPassword.join(", ")
+        );
+      }
+      if (pass !== confirmPass) {
+        throw new Error("Las contraseñas no coinciden");
+      }
 
       const db = getDatabase();
       const userId = uuidv4();
@@ -101,7 +139,10 @@ function Login() {
 
       if (datos.imagen) {
         const storage = getStorage();
-        const storageRef = sRef(storage, `usuarios/${userId}_${datos.imagen.name}`);
+        const storageRef = sRef(
+          storage,
+          `usuarios/${userId}_${datos.imagen.name}`
+        );
         await uploadBytes(storageRef, datos.imagen);
         urlImagen = await getDownloadURL(storageRef);
       }
@@ -111,46 +152,45 @@ function Login() {
       setTimeout(() => verificarRolYRedirigir(userId), 2000);
     } catch (err) {
       console.error("Error al registrar:", err);
-      setError("Hubo un error al registrar el usuario");
+      setError(err.message || "Hubo un error al registrar el usuario");
     }
   };
 
-const ingresar = async () => {
-  const db = getDatabase();
-  const usuariosRef = ref(db, "usuarios");
-  const snapshot = await get(usuariosRef);
+  const ingresar = async () => {
+    const db = getDatabase();
+    const usuariosRef = ref(db, "usuarios");
+    const snapshot = await get(usuariosRef);
 
-  if (snapshot.exists()) {
-    const usuarios = Object.entries(snapshot.val()).map(([id, u]) => ({
-      id,
-      ...u,
-    }));
+    if (snapshot.exists()) {
+      const usuarios = Object.entries(snapshot.val()).map(([id, u]) => ({
+        id,
+        ...u,
+      }));
 
-    const encontrado = usuarios.find(
-      (u) => u.correo === email && u.password === pass
-    );
+      const encontrado = usuarios.find(
+        (u) => u.correo === email && u.password === pass
+      );
 
-    // 🚫 Si existe pero está inhabilitado
-if (encontrado && !encontrado.activo) {
-  setModalInhabilitado(true); // Abre el modal
-  return;
-}
+      // 🚫 Si existe pero está inhabilitado
+      if (encontrado && !encontrado.activo) {
+        setModalInhabilitado(true); // Abre el modal
+        return;
+      }
 
-    // ✅ Si está activo y coincide
-    if (encontrado) {
-      localStorage.setItem("adminId", encontrado.id);
-      setUsuario({ uid: encontrado.id, ...encontrado });
-      setRol(encontrado.rol || null);
+      // ✅ Si está activo y coincide
+      if (encontrado) {
+        localStorage.setItem("adminId", encontrado.id);
+        setUsuario({ uid: encontrado.id, ...encontrado });
+        setRol(encontrado.rol || null);
 
-      return encontrado.primerInicio
-        ? navigate(`/completar-perfil/${encontrado.id}`)
-        : navigate(encontrado.rol === "admin" ? "/admin" : "/");
+        return encontrado.primerInicio
+          ? navigate(`/completar-perfil/${encontrado.id}`)
+          : navigate(encontrado.rol === "admin" ? "/admin" : "/");
+      }
     }
-  }
 
-  setError("Correo o contraseña incorrectos");
-};
-
+    setError("Correo o contraseña incorrectos");
+  };
 
   return (
     <div className="auth-container">
@@ -162,7 +202,6 @@ if (encontrado && !encontrado.activo) {
           </div>
         </div>
       )}
-     
 
       <div className="auth-card">
         <h2 className="auth-title">
@@ -172,30 +211,74 @@ if (encontrado && !encontrado.activo) {
         {error && <div className="auth-error">{error}</div>}
 
         <div className="auth-form-group">
-          <label className="auth-label">Correo electrónico</label>
           <input
             className="auth-input"
-            placeholder="tu@correo.com"
+            placeholder="Correo"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
-
         <div className="auth-form-group">
-          <label className="auth-label">Contraseña</label>
-          <input
-            className="auth-input"
-            placeholder="••••••••"
-            type="password"
-            value={pass}
-            onChange={(e) => setPass(e.target.value)}
-            required
-          />
+          <div className="password-wrapper">
+            <input
+              className="auth-input"
+              type={verPassword ? "text" : "password"}
+              placeholder="Contraseña"
+              value={pass}
+              onChange={(e) => setPass(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="toggle-password"
+              onClick={() => setVerPassword(!verPassword)}
+            >
+              {verPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+            </button>
+          </div>
         </div>
 
         {modoRegistro && (
           <>
+            <ul className="password-requisitos">
+              {validarPassword(pass).map((msg, i) => (
+                <li key={i} className="requisito-incumplido">
+                  ❌ {msg}
+                </li>
+              ))}
+              {validarPassword(pass).length === 0 && (
+                <li className="requisito-ok">✅ Contraseña válida</li>
+              )}
+            </ul>
+
+            <div className="auth-form-group">
+              <label className="auth-label">Confirmar Contraseña</label>
+              <div className="password-wrapper">
+                <input
+                  className={`auth-input ${
+                    confirmPass && confirmPass !== pass ? "error" : ""
+                  }`}
+                  type={verConfirmPass ? "text" : "password"}
+                  placeholder="Confirmar contraseña"
+                  value={confirmPass}
+                  onChange={(e) => setConfirmPass(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="toggle-password"
+                  onClick={() => setVerConfirmPass(!verConfirmPass)}
+                >
+                  {verConfirmPass ? (
+                    <FiEyeOff size={20} />
+                  ) : (
+                    <FiEye size={20} />
+                  )}
+                </button>
+              </div>  
+            </div>
+
             <div className="auth-form-group">
               <input
                 name="nombre"
@@ -295,22 +378,23 @@ if (encontrado && !encontrado.activo) {
         </p>
       </div>
       {modalInhabilitado && (
-  <div className="modal-backdrop">
-    <div className="modal-form">
-      <h3>🚫 Cuenta inhabilitada</h3>
-      <p>Tu cuenta ha sido desactivada por un administrador.</p>
-      <p>Si crees que se trata de un error, por favor contacta con soporte:</p>
-      <p style={{ fontWeight: "bold" }}>📧 soporte@mystore.com</p>
-      <button
-        onClick={() => setModalInhabilitado(false)}
-        className="auth-submit-btn"
-      >
-        Cerrar
-      </button>
-    </div>
-  </div>
-)}
-
+        <div className="modal-backdrop">
+          <div className="modal-form">
+            <h3>🚫 Cuenta inhabilitada</h3>
+            <p>Tu cuenta ha sido desactivada por un administrador.</p>
+            <p>
+              Si crees que se trata de un error, por favor contacta con soporte:
+            </p>
+            <p style={{ fontWeight: "bold" }}>📧 soporte@mystore.com</p>
+            <button
+              onClick={() => setModalInhabilitado(false)}
+              className="auth-submit-btn"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

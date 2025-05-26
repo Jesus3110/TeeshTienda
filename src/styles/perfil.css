@@ -184,3 +184,65 @@
     background-color: #08306b;
   }
   
+  .password-requisitos {
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  color: #d32f2f;
+  list-style: none;
+  padding-left: 0;
+}
+
+.requisito-ok {
+  color: green;
+}
+
+.auth-error {
+  font-size: 0.9rem;
+  color: #d32f2f;
+  margin-top: 0.25rem;
+}
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 0.75rem 2.75rem 0.75rem 1rem; /* espacio a la derecha para el ícono */
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+/* Botón del ojo */
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: auto;
+  width: auto;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #003366;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.toggle-password svg {
+  width: 20px;
+  height: 20px;
+}
+
+.toggle-password:hover {
+  color: #007bff;
+}
