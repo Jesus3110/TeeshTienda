@@ -10,10 +10,12 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.use(cors({
   origin: [
-    "http://localhost:5173",             // Para desarrollo local
-    "https://teesh-tienda.vercel.app"    // ⚠️ Tu frontend en producción
+    "http://localhost:5173",
+    "https://teesh-tienda.vercel.app",
+    "https://teesh-tienda-6jj2x4i45-jesus3110s-projects.vercel.app"  // ← Este es el deploy temporal de Vercel
   ]
 }));
+
 
 app.use(express.json());
 
