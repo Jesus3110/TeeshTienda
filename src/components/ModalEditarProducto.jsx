@@ -9,6 +9,17 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import "../styles/modal.css";
 
+function calcularPrecioConComision(precioNetoDeseado) {
+  const porcentajeStripe = 0.036;
+  const fijoStripe = 3.0;
+  const iva = 0.16;
+
+  const base = (precioNetoDeseado + fijoStripe) / (1 - porcentajeStripe);
+  const ivaTotal = (base - precioNetoDeseado) * iva;
+
+  return parseFloat((base + ivaTotal).toFixed(2));
+}
+
 const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
   const [formData, setFormData] = useState({ ...producto });
   const [nuevaImagen, setNuevaImagen] = useState(null);
@@ -98,24 +109,29 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
     if (name === "imagen" && files.length > 0) {
       setNuevaImagen(files[0]);
     } else if (name === "precio") {
-      // Permitimos borrar el campo
-      const precio = value === "" ? "" : parseFloat(value);
+      const precioDeseado = value === "" ? "" : parseFloat(value);
 
       if (aplicarDescuento) {
+        const precioBruto = calcularPrecioConComision(precioDeseado);
+
         setFormData((prev) => ({
           ...prev,
-          precioOriginal: precio,
+          precioOriginal: precioBruto,
         }));
 
-        if (descuentoSeleccionado && precio !== "") {
+        if (descuentoSeleccionado && precioDeseado !== "") {
           setPrecioConDescuento(
-            calcularPrecioConDescuento(precio, descuentoSeleccionado.porcentaje)
+            calcularPrecioConDescuento(
+              precioBruto,
+              descuentoSeleccionado.porcentaje
+            )
           );
         }
       } else {
+        const precioBruto = calcularPrecioConComision(precioDeseado);
         setFormData((prev) => ({
           ...prev,
-          precio: precio,
+          precio: precioBruto,
         }));
       }
     } else {
@@ -183,9 +199,9 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
           ? descuentoSeleccionado.id
           : null;
       const precioFinal =
-        aplicarDescuento && descuentoSeleccionado
-          ? precioConDescuento
-          : parseFloat(formData.precio);
+  aplicarDescuento && descuentoSeleccionado
+    ? precioConDescuento
+    : parseFloat(formData.precio);
 
       await update(productoRef, {
         ...formData,

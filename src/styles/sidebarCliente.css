@@ -64,6 +64,19 @@
   scroll-behavior: smooth;
 }
 
+/* Ocultar en pantallas pequeñas */
+@media (max-width: 768px) {
+  .sidebar-cliente {
+    display: none;
+  }
+}
 
+/* Ajustar el contenido cuando no hay sidebar */
+.cliente-layout {
+  display: flex;
+}
 
-
+.contenido-cliente {
+  flex: 1;
+  padding: 1rem;
+}
