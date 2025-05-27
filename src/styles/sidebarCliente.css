@@ -64,19 +64,58 @@
   scroll-behavior: smooth;
 }
 
-/* Ocultar en pantallas pequeñas */
-@media (max-width: 768px) {
-  .sidebar-cliente {
-    display: none;
-  }
-}
-
-/* Ajustar el contenido cuando no hay sidebar */
 .cliente-layout {
   display: flex;
+  flex-direction: row;
+  position: relative;
+}
+
+.sidebar-cliente {
+  width: 220px;
+  background-color: #fff;
+  padding: 1rem;
+  border-right: 1px solid #ddd;
 }
 
 .contenido-cliente {
   flex: 1;
   padding: 1rem;
+}
+
+/* Botón hamburguesa */
+.btn-hamburguesa {
+  display: none;
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: none;
+  border: none;
+  z-index: 1000;
+  cursor: pointer;
+}
+
+/* Estilos móviles */
+@media (max-width: 768px) {
+  .sidebar-cliente {
+    display: none;
+    position: fixed;
+    height: 100%;
+    z-index: 999;
+    top: 0;
+    left: 0;
+    background: white;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+  }
+
+  .sidebar-cliente.mostrar {
+    display: block;
+  }
+
+  .btn-hamburguesa {
+    display: block;
+  }
+
+  .contenido-cliente {
+    padding-top: 3rem;
+  }
 }
