@@ -22,6 +22,7 @@ import CompletarPerfil from "./pages/CompletarPerfil";
 import RutaProtegidaPorRol from "./router/RutaProtegidaPorRol";
 import Ingresos from "./pages/Ingresos";
 import RutaProtegidaCliente from "./router/RutaProtegidaCliente";
+import VerificarCorreo from "./pages/VerificarCorreo";
 
 function App() {
   const location = useLocation();
@@ -41,6 +42,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/producto/:id" element={<Producto />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/verificar-correo/:uid" element={<VerificarCorreo />} />
+
 
         <Route
           path="/carrito"

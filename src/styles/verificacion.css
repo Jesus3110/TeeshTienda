@@ -1,0 +1,66 @@
+.verificacion-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f6f8fa;
+  padding: 2rem;
+}
+
+.verificacion-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.verificacion-card h2 {
+  margin-bottom: 1.5rem;
+  color: #1a1a1a;
+}
+
+.codigo-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #dcdcdc;
+  border-radius: 10px;
+  font-size: 16px;
+  margin-bottom: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.codigo-input:focus {
+  outline: none;
+  border-color: #f44336;
+}
+
+.btn-verificar {
+  background-color: #f44336;
+  color: #fff;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-verificar:hover {
+  background-color: #f44336;
+}
+
+.success-msg {
+  color: #28a745;
+  font-weight: bold;
+  margin-top: 1rem;
+}
+
+.error-msg {
+  color: #dc3545;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}

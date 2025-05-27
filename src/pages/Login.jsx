@@ -12,6 +12,9 @@ import "../styles/login.css";
 import { AuthContext } from "../context/AuthContext"; // ✅ Importa el contexto
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import bcrypt from "bcryptjs"; // al inicio del archivo
+import emailjs from "@emailjs/browser";
+
+
 
 function Login() {
   const { setUsuario, setRol } = useContext(AuthContext); // ✅ Usa el contexto
@@ -117,45 +120,101 @@ await set(userRef, {
     return errores;
   };
 
-  const registrar = async () => {
-    try {
-      setError("");
+  const validarCorreo = (correo) => {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(correo);
+};
 
-      if (!datos.nombre) throw new Error("El nombre es requerido");
+const validarTelefono = (telefono) => {
+  const regex = /^[0-9]{10,}$/;
+  return regex.test(telefono);
+};
 
-      const erroresPassword = validarPassword(pass);
-      if (erroresPassword.length > 0) {
-        throw new Error(
-          "La contraseña no cumple con los requisitos:\n" +
-            erroresPassword.join(", ")
-        );
-      }
-      if (pass !== confirmPass) {
-        throw new Error("Las contraseñas no coinciden");
-      }
 
-      const db = getDatabase();
-      const userId = uuidv4();
-      let urlImagen = "/img/default-user.png";
+const generarCodigo = () => Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
 
-      if (datos.imagen) {
-        const storage = getStorage();
-        const storageRef = sRef(
-          storage,
-          `usuarios/${userId}_${datos.imagen.name}`
-        );
-        await uploadBytes(storageRef, datos.imagen);
-        urlImagen = await getDownloadURL(storageRef);
-      }
+const registrar = async () => {
+  try {
+    setError("");
 
-      await guardarUsuarioEnDB(userId, email, datos.nombre, urlImagen);
-      setExito(true);
-      setTimeout(() => verificarRolYRedirigir(userId), 2000);
-    } catch (err) {
-      console.error("Error al registrar:", err);
-      setError(err.message || "Hubo un error al registrar el usuario");
+    if (!datos.nombre) throw new Error("El nombre es requerido");
+
+    if (!validarCorreo(email)) {
+      throw new Error("El correo no tiene un formato válido");
     }
-  };
+
+    if (!validarTelefono(datos.telefono)) {
+      throw new Error("El número de teléfono debe tener al menos 10 dígitos numéricos");
+    }
+
+    const erroresPassword = validarPassword(pass);
+    if (erroresPassword.length > 0) {
+      throw new Error(
+        "La contraseña no cumple con los requisitos:\n" +
+        erroresPassword.join(", ")
+      );
+    }
+
+    if (pass !== confirmPass) {
+      throw new Error("Las contraseñas no coinciden");
+    }
+
+    const db = getDatabase();
+    const userId = uuidv4();
+    const codigoCorreo = generarCodigo();
+    let urlImagen = "/img/default-user.png";
+
+    if (datos.imagen) {
+      const storage = getStorage();
+      const storageRef = sRef(storage, `usuarios/${userId}_${datos.imagen.name}`);
+      await uploadBytes(storageRef, datos.imagen);
+      urlImagen = await getDownloadURL(storageRef);
+    }
+
+    await set(ref(db, `usuarios/${userId}`), {
+      nombre: datos.nombre,
+      correo: email,
+      telefono: datos.telefono,
+      direccion: {
+        calle: datos.calle,
+        numero: datos.numero,
+        colonia: datos.colonia,
+        ciudad: datos.ciudad,
+        estado: datos.estado,
+        cp: datos.cp
+      },
+      imagen: urlImagen,
+      rol: "cliente",
+      activo: true,
+      password: await bcrypt.hash(pass, 10),
+      verificadoCorreo: false,
+      codigoCorreo: codigoCorreo,
+      primerInicio: false,
+    });
+
+    // ✅ Enviar correo con el código
+    await emailjs.send(
+  import.meta.env.VITE_EMAILJS_VERIF_SERVICE_ID,
+  import.meta.env.VITE_EMAILJS_VERIF_TEMPLATE_ID,
+  {
+    to_email: email,
+    nombre: datos.nombre,
+    codigo: codigoCorreo,
+  },
+  import.meta.env.VITE_EMAILJS_VERIF_PUBLIC_KEY
+);
+
+
+    // Aquí podrías redirigir a una vista para validar el código manualmente
+    setExito(true);
+setTimeout(() => navigate(`/verificar-correo/${userId}`), 2000);
+
+
+  } catch (err) {
+    console.error("Error al registrar:", err);
+    setError(err.message || "Hubo un error al registrar el usuario");
+  }
+};
 
   const ingresar = async () => {
     const db = getDatabase();
@@ -183,6 +242,13 @@ if (encontrado) {
     return;
   }
 
+  // 👇 AGREGA ESTA VERIFICACIÓN ANTES DE CONTINUAR
+  if (!encontrado.verificadoCorreo) {
+    setError("Debes verificar tu correo antes de iniciar sesión.");
+    return;
+  }
+
+  // Si todo está bien, continuar con el login
   localStorage.setItem("adminId", encontrado.id);
   setUsuario({ uid: encontrado.id, ...encontrado });
   setRol(encontrado.rol || null);
@@ -191,6 +257,7 @@ if (encontrado) {
     ? navigate(`/completar-perfil/${encontrado.id}`)
     : navigate(encontrado.rol === "admin" ? "/admin" : "/");
 }
+
 
 
       // 🚫 Si existe pero está inhabilitado
