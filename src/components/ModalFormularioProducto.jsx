@@ -4,6 +4,19 @@ import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "firebase/s
 import { v4 as uuidv4 } from "uuid";
 import "../styles/modal.css";
 
+function calcularPrecioConComision(precioNetoDeseado) {
+  const porcentajeStripe = 0.036;
+  const fijoStripe = 3.00;
+  const iva = 0.16;
+
+  const base = (precioNetoDeseado + fijoStripe) / (1 - porcentajeStripe);
+  const ivaTotal = (base - precioNetoDeseado) * iva;
+  const totalFinal = base + ivaTotal;
+
+  return parseFloat(totalFinal.toFixed(2));
+}
+
+
 const ModalFormularioProducto = ({ onClose }) => {
   const [categorias, setCategorias] = useState([]);
   const [descuentosDisponibles, setDescuentosDisponibles] = useState([]);
@@ -68,17 +81,18 @@ const ModalFormularioProducto = ({ onClose }) => {
     const { name, value, files } = e.target;
     if (name === "imagen") {
       setProducto((prev) => ({ ...prev, imagen: files[0] }));
-    } else if (name === "precio") {
-      const precio = parseFloat(value);
-      setProducto((prev) => ({ 
-        ...prev, 
-        precio, 
-        precioOriginal: precio 
-      }));
-      if (descuentoSeleccionado) {
-        setPrecioConDescuento(calcularPrecioConDescuento(precio, descuentoSeleccionado.porcentaje));
-      }
-    } else {
+    }  else if (name === "precio") {
+  const precioDeseado = parseFloat(value);
+  const precioBruto = calcularPrecioConComision(precioDeseado);
+  setProducto((prev) => ({ 
+    ...prev, 
+    precio: precioBruto, 
+    precioOriginal: precioBruto 
+  }));
+  if (descuentoSeleccionado) {
+    setPrecioConDescuento(calcularPrecioConDescuento(precioBruto, descuentoSeleccionado.porcentaje));
+  }
+} else {
       setProducto((prev) => ({ ...prev, [name]: value }));
     }
   };
@@ -133,7 +147,8 @@ const ModalFormularioProducto = ({ onClose }) => {
       }
 
       const precioFinal = aplicarDescuento && descuentoSeleccionado ? 
-        precioConDescuento : parseFloat(producto.precio);
+  precioConDescuento : parseFloat(producto.precio);
+
 
       const nuevoProducto = {
         id: nuevoID,
@@ -208,7 +223,7 @@ const ModalFormularioProducto = ({ onClose }) => {
               </div>
 
               <div className="form-group">
-                <label>Precio:</label>
+                <label>Precio deseado (lo que tú quieres ganar):</label>
                 <input
                   name="precio"
                   type="number"
