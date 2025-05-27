@@ -1,3 +1,4 @@
+// backend/index.js
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -7,35 +8,29 @@ dotenv.config();
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Enhanced CORS configuration
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://teesh-tienda.vercel.app",
-  "https://teesh-tienda.vercel.app/" // Both with and without slash
-];
+const cors = require("cors");
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      "http://localhost:5173",
+      "https://teesh-tienda.vercel.app"
+    ];
+
     if (
-      allowedOrigins.some(allowed => origin === allowed) ||
+      !origin ||
+      allowedOrigins.includes(origin) ||
       origin.endsWith(".vercel.app")
     ) {
-      return callback(null, true);
+      callback(null, true);
+    } else {
+      console.error("❌ CORS bloqueado:", origin);
+      callback(new Error("Not allowed by CORS"));
     }
-    
-    console.error("❌ CORS bloqueado:", origin);
-    return callback(new Error("Not allowed by CORS"));
-  },
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
-  credentials: true
+  }
 }));
 
-// Explicitly handle OPTIONS requests
-app.options('*', cors());
+
 
 app.use(express.json());
 
@@ -44,7 +39,7 @@ app.post("/create-payment-intent", async (req, res) => {
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount),
+      amount,
       currency: "mxn",
       payment_method_types: ["card"],
     });
