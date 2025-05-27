@@ -37,6 +37,9 @@ app.use(express.json());
 app.post("/create-payment-intent", async (req, res) => {
   const { amount } = req.body;
 
+  console.log("📦 Monto recibido:", amount);
+  console.log("🔑 Clave Stripe:", process.env.STRIPE_SECRET_KEY ? "✔️ Cargada" : "❌ No cargada");
+
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
@@ -52,6 +55,7 @@ app.post("/create-payment-intent", async (req, res) => {
     res.status(500).send({ error: err.message });
   }
 });
+
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Servidor en http://localhost:${PORT}`));

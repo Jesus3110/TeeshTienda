@@ -25,6 +25,7 @@ const CheckoutForm = ({ total, confirmar }) => {
     })
       .then(res => res.json())
       .then(data => {
+        console.log("🧾 clientSecret recibido:", data);
         if (data.clientSecret) {
           setClientSecret(data.clientSecret);
         } else {
