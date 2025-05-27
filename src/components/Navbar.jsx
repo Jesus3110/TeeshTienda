@@ -71,11 +71,6 @@ function Navbar() {
     return descuentoEncontrado;
   };
 
-  const cerrarSesion = () => {
-    localStorage.removeItem("adminId");
-    window.location.href = "/login";
-  };
-
   const handleCategoriaClick = (categoria) => {
     setCategoriaSeleccionada(categoria);
   };
@@ -209,22 +204,13 @@ function Navbar() {
       {categoriaSeleccionada && (
         <ModalCategoria
           categoria={categoriaSeleccionada}
-          productos={productos
-            .filter(
-              (p) =>
-                p.categoriaId === categoriaSeleccionada.idFirebase ||
+          productos={productos.filter(
+            (p) =>
+              (p.categoriaId === categoriaSeleccionada.idFirebase ||
                 p.categoria?.toLowerCase() ===
-                  categoriaSeleccionada.nombre.toLowerCase()
-            )
-            .map((producto) => ({
-              idFirebase: producto.idFirebase,
-              nombre: producto.nombre,
-              imagen: producto.imagen,
-              precio: producto.precioOriginal || producto.precio,
-              descuentoAplicado: producto.descuentoAplicado || null, // <-- explícito aquí
-              categoriaId: producto.categoriaId,
-              descripcion: producto.descripcion,
-            }))}
+                  categoriaSeleccionada.nombre.toLowerCase()) &&
+              p.activo // asegura que esté habilitado
+          )}
           descuentos={descuentos}
           onClose={() => setCategoriaSeleccionada(null)}
           onAddToCart={handleAddToCart}
