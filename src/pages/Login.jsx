@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 import "../styles/login.css";
 import { AuthContext } from "../context/AuthContext"; // ✅ Importa el contexto
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import bcrypt from "bcryptjs"; // al inicio del archivo
 
 function Login() {
   const { setUsuario, setRol } = useContext(AuthContext); // ✅ Usa el contexto
@@ -66,15 +67,15 @@ function Login() {
 };
 
 
-   await set(userRef, {
+await set(userRef, {
   nombre: nombre || datos.nombre || "Usuario",
   correo: email,
   telefono: datos.telefono || "",
-  direccion, // ← ahora es un objeto
+  direccion,
   imagen: imagenURL,
   rol: "cliente",
   activo: true,
-  password: pass,
+  password: await bcrypt.hash(pass, 10), // ← encripta aquí
   primerInicio: false,
 });
 
@@ -167,9 +168,30 @@ function Login() {
         ...u,
       }));
 
-      const encontrado = usuarios.find(
-        (u) => u.correo === email && u.password === pass
-      );
+      const encontrado = usuarios.find((u) => u.correo === email);
+
+if (encontrado) {
+  const passwordValida = await bcrypt.compare(pass, encontrado.password);
+
+  if (!passwordValida) {
+    setError("Correo o contraseña incorrectos");
+    return;
+  }
+
+  if (!encontrado.activo) {
+    setModalInhabilitado(true);
+    return;
+  }
+
+  localStorage.setItem("adminId", encontrado.id);
+  setUsuario({ uid: encontrado.id, ...encontrado });
+  setRol(encontrado.rol || null);
+
+  return encontrado.primerInicio
+    ? navigate(`/completar-perfil/${encontrado.id}`)
+    : navigate(encontrado.rol === "admin" ? "/admin" : "/");
+}
+
 
       // 🚫 Si existe pero está inhabilitado
       if (encontrado && !encontrado.activo) {

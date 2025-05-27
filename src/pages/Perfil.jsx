@@ -11,6 +11,8 @@ import {
 } from "firebase/storage";
 import "../styles/perfil.css";
 import Modal from "react-modal";
+import bcrypt from "bcryptjs";
+
 
 const Perfil = () => {
   const { usuario } = useContext(AuthContext);
@@ -125,7 +127,7 @@ delete datosActualizados.cp;
     alert("❌ Las contraseñas no coinciden");
     return;
   }
-  datosActualizados.password = formData.nuevaPass;
+  datosActualizados.password = await bcrypt.hash(formData.nuevaPass, 10);
 }
 
 
@@ -140,9 +142,20 @@ delete datosActualizados.cp;
   }
 
   await update(perfilRef, datosActualizados);
-  setPerfil(datosActualizados);
+   setPerfil(datosActualizados);
   setEditando(false);
   setNuevaImagen(null);
+  // Vuelve a cargar el usuario desde Firebase
+const snapshotActualizado = await get(perfilRef);
+if (snapshotActualizado.exists()) {
+  const datosActualizadosCompletos = snapshotActualizado.val();
+  localStorage.setItem("adminId", usuario.uid);
+  setPerfil(datosActualizadosCompletos);
+  // Actualiza también en el contexto si usas AuthContext:
+  setUsuario({ uid: usuario.uid, ...datosActualizadosCompletos });
+}
+
+ 
 };
 
 
