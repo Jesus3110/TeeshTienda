@@ -8,8 +8,6 @@ dotenv.config();
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-const cors = require("cors");
-
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
