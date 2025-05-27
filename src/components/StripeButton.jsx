@@ -14,6 +14,7 @@ const CheckoutForm = ({ total, confirmar }) => {
   const elements = useElements();
   const [clientSecret, setClientSecret] = useState(null);
   const [cargando, setCargando] = useState(false);
+  const [modalError, setModalError] = useState("");
 
   useEffect(() => {
     if (total <= 0) return;
@@ -25,16 +26,17 @@ const CheckoutForm = ({ total, confirmar }) => {
     })
       .then(res => res.json())
       .then(data => {
-        console.log("🧾 clientSecret recibido:", data);
-        if (data.clientSecret) {
+        if (data.error) {
+          setModalError(data.error); // ⛔ mostrar modal si backend responde error
+        } else if (data.clientSecret) {
           setClientSecret(data.clientSecret);
         } else {
-          alert("❌ No se pudo obtener clientSecret");
+          setModalError("❌ No se pudo obtener clientSecret.");
         }
       })
       .catch(err => {
         console.error("❌ Error en la petición:", err);
-        alert("Error conectando con el servidor de pagos");
+        setModalError("Error conectando con el servidor de pagos.");
       });
   }, [total]);
 
@@ -52,7 +54,7 @@ const CheckoutForm = ({ total, confirmar }) => {
 
     if (result.error) {
       console.error(result.error);
-      alert("❌ Error en el pago: " + result.error.message);
+      setModalError("❌ Error en el pago: " + result.error.message);
     } else if (result.paymentIntent.status === "succeeded") {
       alert("✅ Pago aprobado por Stripe");
       confirmar();
@@ -62,25 +64,60 @@ const CheckoutForm = ({ total, confirmar }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <CardElement options={{ hidePostalCode: true }} />
-      <button
-        type="submit"
-        disabled={!stripe || !clientSecret || total <= 0 || cargando}
-        style={{
-          marginTop: "1rem",
-          background: "#27ae60",
-          color: "#fff",
-          padding: "0.5rem 1rem",
-          border: "none",
-          borderRadius: "5px",
-          opacity: !clientSecret || cargando ? 0.6 : 1,
-          cursor: !clientSecret || cargando ? "not-allowed" : "pointer"
-        }}
-      >
-        💳 {cargando ? "Procesando..." : "Pagar con tarjeta (Stripe)"}
-      </button>
-    </form>
+    <>
+      {modalError && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: "#fff",
+            padding: "2rem",
+            borderRadius: "10px",
+            maxWidth: "400px",
+            textAlign: "center",
+            boxShadow: "0 0 10px rgba(0,0,0,0.3)"
+          }}>
+            <p style={{ marginBottom: "1rem", fontWeight: "bold", color: "#e74c3c" }}>{modalError}</p>
+            <button onClick={() => setModalError("")} style={{
+              background: "#e74c3c",
+              color: "#fff",
+              border: "none",
+              padding: "0.5rem 1rem",
+              borderRadius: "5px",
+              cursor: "pointer"
+            }}>
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <CardElement options={{ hidePostalCode: true }} />
+        <button
+          type="submit"
+          disabled={!stripe || !clientSecret || total <= 0 || cargando}
+          style={{
+            marginTop: "1rem",
+            background: "#27ae60",
+            color: "#fff",
+            padding: "0.5rem 1rem",
+            border: "none",
+            borderRadius: "5px",
+            opacity: !clientSecret || cargando ? 0.6 : 1,
+            cursor: !clientSecret || cargando ? "not-allowed" : "pointer"
+          }}
+        >
+          💳 {cargando ? "Procesando..." : "Pagar con tarjeta (Stripe)"}
+        </button>
+      </form>
+    </>
   );
 };
 
