@@ -13,20 +13,22 @@ import Productos from "./pages/Productos";
 import Pedidos from "./pages/Pedidos";
 import Categorias from "./pages/Categorias";
 import Usuarios from "./pages/Usuarios";
-import Checkout from "./pages/Checkout"; 
-import Banners from "./pages/Banners"; 
-import Descuentos from "./pages/Descuentos"; 
+import Checkout from "./pages/Checkout";
+import Banners from "./pages/Banners";
+import Descuentos from "./pages/Descuentos";
 import Historial from "./pages/HistorialPedidos";
-import Perfil from "./pages/Perfil"; 
+import Perfil from "./pages/Perfil";
 import CompletarPerfil from "./pages/CompletarPerfil";
 import RutaProtegidaPorRol from "./router/RutaProtegidaPorRol";
 import Ingresos from "./pages/Ingresos";
+import RutaProtegidaCliente from "./router/RutaProtegidaCliente";
 
 function App() {
   const location = useLocation();
   const { usuario, rol } = useContext(AuthContext);
 
- const ocultarNavbar = location.pathname.startsWith("/admin") || (usuario && rol === "cliente");
+  const ocultarNavbar =
+    location.pathname.startsWith("/admin") || (usuario && rol === "cliente");
 
   return (
     <>
@@ -34,15 +36,52 @@ function App() {
 
       <Routes>
         {/* Rutas públicas */}
+
+        <Route path="/completar-perfil/:id" element={<CompletarPerfil />} />
         <Route path="/" element={<Home />} />
         <Route path="/producto/:id" element={<Producto />} />
-        <Route path="/carrito" element={<Carrito />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/completar-perfil/:id" element={<CompletarPerfil />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/pedidos" element={<Pedidos />} />
-        <Route path="/historial" element={<Historial />} />
-        <Route path="/perfil" element={<Perfil />} />
+
+        <Route
+          path="/carrito"
+          element={
+            <RutaProtegidaCliente>
+              <Carrito />
+            </RutaProtegidaCliente>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <RutaProtegidaCliente>
+              <Checkout />
+            </RutaProtegidaCliente>
+          }
+        />
+        <Route
+          path="/pedidos"
+          element={
+            <RutaProtegidaCliente>
+              <Pedidos />
+            </RutaProtegidaCliente>
+          }
+        />
+        <Route
+          path="/historial"
+          element={
+            <RutaProtegidaCliente>
+              <Historial />
+            </RutaProtegidaCliente>
+          }
+        />
+        <Route
+          path="/perfil"
+          element={
+            <RutaProtegidaCliente>
+              <Perfil />
+            </RutaProtegidaCliente>
+          }
+        />
 
         <Route
           path="/admin"
