@@ -173,15 +173,6 @@
   padding-right: 2.5rem; /* espacio para el ícono */
 }
 
-.toggle-password {
-  position: absolute;
-  right: 12px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: #ccc;
-}
-
 .toggle-password:hover {
   color: #ff4d4d;
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { getDatabase, ref, onValue } from "firebase/database";
 import {
   LineChart,
@@ -16,8 +16,13 @@ import Calendar from "react-calendar";
 import Toast from "../components/Toast";
 import "../styles/dashboard.css";
 import "react-calendar/dist/Calendar.css";
+import { AuthContext } from "../context/AuthContext";
 
 const AdminPanel = () => {
+
+const { usuario } = useContext(AuthContext);
+
+
   const [toastVisible, setToastVisible] = useState(false);
   const [date, setDate] = useState(new Date());
   const [modalOpen, setModalOpen] = useState(false);
@@ -30,6 +35,7 @@ const AdminPanel = () => {
   const [estadoPedidosSemana, setEstadoPedidosSemana] = useState([]);
   const [modalMapaAbierto, setModalMapaAbierto] = useState(false);
   const [pedidoActivo, setPedidoActivo] = useState(null);
+  
 
   const COLORS = [
     "#FF9AA2", // Rosa más fuerte
@@ -88,6 +94,7 @@ const AdminPanel = () => {
 
       setEntregas(nuevasEntregas);
     });
+
 
     // Productos más vendidos
     const productosRef = ref(db, "dashboard/productosVendidos");
@@ -210,6 +217,8 @@ onValue(ingresosPorMesRef, (snapshot) => {
     setInfoEntrega("");
   };
 
+  
+
   return (
     <div className="dashboard">
       <main className="main-content">
@@ -295,37 +304,38 @@ onValue(ingresosPorMesRef, (snapshot) => {
           </div>
 
           {/* Ingresos por mes */}
-          <div className="chart-card">
-            <h2>Ingresos por Mes</h2>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={ingresosData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                <XAxis dataKey="name" stroke="#ccc" />
-                <YAxis stroke="#ccc" />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="ingresos"
-                  stroke="#3498db" // Azul moderno
-                  strokeWidth={3}
-                  dot={{ r: 5, fill: "#fff" }}
-                  activeDot={{ r: 8 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          {usuario?.privilegios === "god" && (
+  <div className="chart-card">
+    <h2>Ingresos por Mes</h2>
+    <ResponsiveContainer width="100%" height={250}>
+      <LineChart data={ingresosData}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+        <XAxis dataKey="name" stroke="#ccc" />
+        <YAxis stroke="#ccc" />
+        <Tooltip />
+        <Line
+          type="monotone"
+          dataKey="ingresos"
+          stroke="#3498db"
+          strokeWidth={3}
+          dot={{ r: 5, fill: "#fff" }}
+          activeDot={{ r: 8 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+    <p
+      style={{
+        marginTop: "1rem",
+        fontWeight: "bold",
+        textAlign: "center",
+        fontSize: "1.1rem",
+      }}
+    >
+      Total acumulado: ${ingresosTotales.toLocaleString()}
+    </p>
+  </div>
+)}
 
-            {/* Total debajo */}
-            <p
-              style={{
-                marginTop: "1rem",
-                fontWeight: "bold",
-                textAlign: "center",
-                fontSize: "1.1rem",
-              }}
-            >
-              Total acumulado: ${ingresosTotales.toLocaleString()}
-            </p>
-          </div>
 
           {/* Calendario de entregas */}
           <div className="chart-card">

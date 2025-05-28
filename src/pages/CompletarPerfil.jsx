@@ -11,10 +11,11 @@ import { v4 as uuidv4 } from "uuid";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import bcrypt from "bcryptjs";
+import "../styles/completarperfil.css";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const CompletarPerfil = () => {
   const { setUsuario } = useContext(AuthContext);
-
   const { id } = useParams();
   const navigate = useNavigate();
   const [datos, setDatos] = useState({
@@ -27,11 +28,21 @@ const CompletarPerfil = () => {
     estado: "",
     cp: "",
     nuevaPass: "",
+    confirmarPass: "",
     imagen: null,
   });
-
   const [error, setError] = useState("");
   const [exito, setExito] = useState(false);
+  const [mostrarPass, setMostrarPass] = useState(false);
+  const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
+
+  const requisitos = {
+    longitud: datos.nuevaPass.length >= 8,
+    mayuscula: /[A-Z]/.test(datos.nuevaPass),
+    minuscula: /[a-z]/.test(datos.nuevaPass),
+    numero: /[0-9]/.test(datos.nuevaPass),
+    especial: /[^A-Za-z0-9]/.test(datos.nuevaPass),
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,6 +70,12 @@ const CompletarPerfil = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (datos.nuevaPass && datos.nuevaPass !== datos.confirmarPass) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
     try {
       const db = getDatabase();
       let imagenURL = "/img/user-default.png";
@@ -73,7 +90,15 @@ const CompletarPerfil = () => {
         imagenURL = await getDownloadURL(storageRef);
       }
 
-      const direccion = `${datos.calle} ${datos.numero}, ${datos.colonia}, ${datos.ciudad}, ${datos.estado}, CP ${datos.cp}`;
+      const direccion = {
+  calle: datos.calle,
+  numero: datos.numero,
+  colonia: datos.colonia,
+  ciudad: datos.ciudad,
+  estado: datos.estado,
+  cp: datos.cp,
+};
+
 
       let hashedPassword = null;
       if (datos.nuevaPass) {
@@ -85,11 +110,10 @@ const CompletarPerfil = () => {
         telefono: datos.telefono,
         direccion,
         imagen: imagenURL,
-        ...(hashedPassword && { password: hashedPassword }), // Solo se agrega si hay nueva contraseña
+        ...(hashedPassword && { password: hashedPassword }),
         primerInicio: false,
       });
 
-      // ✅ Actualiza contexto y localStorage
       const userSnap = await get(ref(db, `usuarios/${id}`));
       if (userSnap.exists()) {
         const userData = userSnap.val();
@@ -104,6 +128,9 @@ const CompletarPerfil = () => {
       setError("Error al actualizar el perfil.");
     }
   };
+
+  const coincideConfirmacion =
+    datos.nuevaPass && datos.nuevaPass === datos.confirmarPass;
 
   return (
     <div className="auth-container">
@@ -129,8 +156,10 @@ const CompletarPerfil = () => {
             value={datos.telefono}
             onChange={handleChange}
           />
-          <input name="calle" placeholder="Calle" onChange={handleChange} />
-          <input name="numero" placeholder="Número" onChange={handleChange} />
+          <div className="row">
+            <input name="calle" placeholder="Calle" onChange={handleChange} />
+            <input name="numero" placeholder="Número" onChange={handleChange} />
+          </div>
           <input name="colonia" placeholder="Colonia" onChange={handleChange} />
           <input name="ciudad" placeholder="Ciudad" onChange={handleChange} />
           <input name="estado" placeholder="Estado" onChange={handleChange} />
@@ -139,12 +168,84 @@ const CompletarPerfil = () => {
             placeholder="Código Postal"
             onChange={handleChange}
           />
-          <input
-            name="nuevaPass"
-            placeholder="Nueva Contraseña"
-            onChange={handleChange}
-            type="password"
-          />
+
+          <div style={{ position: "relative" }}>
+            <input
+              type={mostrarPass ? "text" : "password"}
+              name="nuevaPass"
+              placeholder="Nueva Contraseña"
+              onChange={handleChange}
+              value={datos.nuevaPass}
+              className={
+                datos.nuevaPass
+                  ? Object.values(requisitos).every(Boolean)
+                    ? "valid"
+                    : "invalid"
+                  : ""
+              }
+            />
+
+            <span
+              onClick={() => setMostrarPass(!mostrarPass)}
+              style={{
+                position: "absolute",
+                right: 10,
+                top: "30%",
+                cursor: "pointer",
+              }}
+              className="toggle-password"
+            >
+              {mostrarPass ? <FiEyeOff /> : <FiEye />}
+            </span>
+          </div>
+
+          <div className="password-rules">
+            <span className={requisitos.longitud ? "valid" : ""}>
+              Mínimo 8 caracteres
+            </span>
+            <span className={requisitos.mayuscula ? "valid" : ""}>
+              Una letra mayúscula
+            </span>
+            <span className={requisitos.minuscula ? "valid" : ""}>
+              Una letra minúscula
+            </span>
+            <span className={requisitos.numero ? "valid" : ""}>Un número</span>
+            <span className={requisitos.especial ? "valid" : ""}>
+              Un carácter especial
+            </span>
+          </div>
+
+          <label>Confirmar Contraseña</label>
+          <div style={{ position: "relative" }}>
+            <input
+              type={mostrarConfirmar ? "text" : "password"}
+              name="confirmarPass"
+              placeholder="Confirmar contraseña"
+              value={datos.confirmarPass}
+              onChange={handleChange}
+              className={
+                datos.confirmarPass
+                  ? coincideConfirmacion
+                    ? "valid"
+                    : "invalid"
+                  : ""
+              }
+            />
+            <span
+              onClick={() => setMostrarConfirmar(!mostrarConfirmar)}
+              style={{
+                position: "absolute",
+                right: 10,
+                top: "30%",
+                cursor: "pointer",
+              }}
+              className="toggle-password"
+            >
+              {mostrarConfirmar ? <FiEyeOff /> : <FiEye />}
+            </span>
+          </div>
+
+          <label>Foto de perfil (opcional)</label>
           <input
             name="imagen"
             type="file"
@@ -152,7 +253,7 @@ const CompletarPerfil = () => {
             onChange={handleChange}
           />
 
-          <button type="submit">Guardar</button>
+          <button className="guardabtn" type="submit">Guardar</button>
         </form>
       </div>
     </div>
