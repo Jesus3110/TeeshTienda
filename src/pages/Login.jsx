@@ -216,22 +216,28 @@ setTimeout(() => navigate(`/verificar-correo/${userId}`), 2000);
   }
 };
 
-  const ingresar = async () => {
-    const db = getDatabase();
-    const usuariosRef = ref(db, "usuarios");
-    const snapshot = await get(usuariosRef);
+const ingresar = async () => {
+  const db = getDatabase();
+  const usuariosRef = ref(db, "usuarios");
+  const snapshot = await get(usuariosRef);
 
-    if (snapshot.exists()) {
-      const usuarios = Object.entries(snapshot.val()).map(([id, u]) => ({
-        id,
-        ...u,
-      }));
+  if (!snapshot.exists()) {
+    setError("Correo o contraseña incorrectos");
+    return;
+  }
 
-      const encontrado = usuarios.find((u) => u.correo === email);
+  const usuarios = Object.entries(snapshot.val()).map(([id, u]) => ({
+    id,
+    ...u,
+  }));
 
-if (encontrado) {
+  const encontrado = usuarios.find((u) => u.correo === email);
+  if (!encontrado) {
+    setError("Correo o contraseña incorrectos");
+    return;
+  }
+
   const passwordValida = await bcrypt.compare(pass, encontrado.password);
-
   if (!passwordValida) {
     setError("Correo o contraseña incorrectos");
     return;
@@ -242,13 +248,12 @@ if (encontrado) {
     return;
   }
 
-  // 👇 AGREGA ESTA VERIFICACIÓN ANTES DE CONTINUAR
   if (!encontrado.verificadoCorreo) {
     setError("Debes verificar tu correo antes de iniciar sesión.");
     return;
   }
 
-  // Si todo está bien, continuar con el login
+  // ✅ LOGIN exitoso
   localStorage.setItem("adminId", encontrado.id);
   setUsuario({ uid: encontrado.id, ...encontrado });
   setRol(encontrado.rol || null);
@@ -256,30 +261,7 @@ if (encontrado) {
   return encontrado.primerInicio
     ? navigate(`/completar-perfil/${encontrado.id}`)
     : navigate(encontrado.rol === "admin" ? "/admin" : "/");
-}
-
-
-
-      // 🚫 Si existe pero está inhabilitado
-      if (encontrado && !encontrado.activo) {
-        setModalInhabilitado(true); // Abre el modal
-        return;
-      }
-
-      // ✅ Si está activo y coincide
-      if (encontrado) {
-        localStorage.setItem("adminId", encontrado.id);
-        setUsuario({ uid: encontrado.id, ...encontrado });
-        setRol(encontrado.rol || null);
-
-        return encontrado.primerInicio
-          ? navigate(`/completar-perfil/${encontrado.id}`)
-          : navigate(encontrado.rol === "admin" ? "/admin" : "/");
-      }
-    }
-
-    setError("Correo o contraseña incorrectos");
-  };
+};
 
   return (
     <div className="auth-container">
