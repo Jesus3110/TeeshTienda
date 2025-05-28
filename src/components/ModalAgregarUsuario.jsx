@@ -21,7 +21,7 @@ const generarCorreo = () => {
     str.toLowerCase().replace(/\s+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const nombreLimpio = limpio(nombre);
   const apellidoLimpio = limpio(apellido);
-  return `${nombreLimpio}.${apellidoLimpio}@adminm&jshop.com`;
+  return `${nombreLimpio}.${apellidoLimpio}@adminmjshop.com`;
 };
 
 
