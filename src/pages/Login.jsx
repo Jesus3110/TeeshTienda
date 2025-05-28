@@ -248,10 +248,11 @@ const ingresar = async () => {
     return;
   }
 
-  if (!encontrado.verificadoCorreo) {
-    setError("Debes verificar tu correo antes de iniciar sesión.");
-    return;
-  }
+ if (!encontrado.verificadoCorreo && encontrado.rol !== "admin") {
+  setError("Debes verificar tu correo antes de iniciar sesión.");
+  return;
+}
+
 
   // ✅ LOGIN exitoso
   localStorage.setItem("adminId", encontrado.id);
