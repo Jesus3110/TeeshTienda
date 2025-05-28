@@ -3,6 +3,8 @@ import { getDatabase, ref, set } from "firebase/database";
 import { v4 as uuidv4 } from "uuid";
 import { enviarCorreoAdmin } from "../utils/emailService"; // <- Asegúrate de implementar esto
 import "../styles/modal.css";
+import bcrypt from "bcryptjs"; // 👈 Importar bcryptjs
+
 
 const ModalAgregarUsuario = ({ onClose }) => {
   const [correoDestino, setCorreoDestino] = useState("");
@@ -32,7 +34,9 @@ const generarCorreo = () => {
     if (!correoDestino) return setError("Debes ingresar un correo destino");
 
     const correo = generarCorreo();
-    const password = generarPassword();
+    const rawPassword = generarPassword();
+const hashedPassword = await bcrypt.hash(rawPassword, 10); // 10 es el "salt rounds"
+
 
     setSubiendo(true);
     try {
@@ -40,7 +44,7 @@ const generarCorreo = () => {
       const newRef = ref(db, `usuarios/${uuidv4()}`);
       await set(newRef, {
   correo,
-  password,
+  password : hashedPassword,
   rol: "admin",
   privilegios: nivel,
   primerInicio: true,
@@ -53,7 +57,7 @@ const generarCorreo = () => {
       await enviarCorreoAdmin(
   correoDestino,       // a quién se lo mandas (no se usa en plantilla)
   correo,              // correo generado para el nuevo admin
-  password,            // contraseña generada
+  rawPassword,            // contraseña generada
   `${nombre} ${apellido}` // nombre completo
 );
 
