@@ -1,21 +1,26 @@
 :root {
-  --primary: #1a1a1a;
-  --secondary: #f5f5f5;
-  --accent: #e63946;
-  --text: #333333;
-  --background: #ffffff;
+  --rojo: #D72638;
+  --rojo-hover: #b81f2c;
+  --negro: #191919;
+  --verde-oscuro: #062828;
+  --fondo: #FAF8F5;
 }
 
+
+
+/* Contenedor tipo píldora */
 .navbar-cliente {
-  background-color: var(--primary);
-  padding: 1rem 2rem;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 0.8rem 2rem;
+  background-color: white;
+  border-radius: 999px;
+  margin: 1rem auto;
+  max-width: 95%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  position: relative;
+  z-index: 99;
 }
 
 .logo-y-menu {
@@ -25,10 +30,11 @@
 }
 
 .logo-navbar span {
-  color: var(--background);
-  font-size: 1.5rem;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: var(--rojo);
+  font-family: 'Playfair Display', serif;
+  text-decoration: none;
 }
 
 .menu-principal {
@@ -37,49 +43,252 @@
   align-items: center;
 }
 
+.menu-principal a,
 .categoria-btn,
 .ver-mas-btn {
-  color: var(--background);
+  color: var(--negro);
   text-decoration: none;
-  font-size: 0.9rem;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  border: none;
-  background: none;
-  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
 }
 
+.menu-principal a:hover,
 .categoria-btn:hover,
 .ver-mas-btn:hover {
-  background-color: rgba(255,255,255,0.1);
+  color: var(--rojo);
+  background-color: rgba(215, 38, 56, 0.1);
 }
 
 .menu-usuario {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .menu-usuario a {
-  color: var(--background);
   font-size: 1.2rem;
+  color: var(--negro);
+}
+
+/* Icono hamburguesa */
+.hamburguesa {
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: var(--negro);
+  display: none;
+}
+
+/* Menú desplegable responsive */
+.menu-cliente {
+  list-style: none;
+  padding: 1rem;
+  background-color: white;
+  position: absolute;
+  top: 70px;
+  right: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  border: 1px solid #eee;
+}
+
+.menu-cliente li {
+  margin: 0.8rem 0;
+}
+
+.menu-cliente a,
+.menu-cliente button {
+  background: none;
+  border: none;
+  text-align: left;
+  display: block;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: var(--negro);
+  width: 100%;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.menu-cliente a:hover,
+.menu-cliente button:hover {
+  color: var(--rojo);
+  background-color: rgba(215, 38, 56, 0.1);
+}
+
+/* Modal de categorías */
+.modal-categorias-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-categorias {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 80%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.cerrar-modal {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.categorias-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.categoria-modal-btn {
+  background-color: var(--fondo);
+  border: none;
+  padding: 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.categoria-modal-btn:hover {
+  background-color: var(--verde-oscuro);
+  color: white;
 }
 
 .hamburguesa {
-  display: none;
-  color: var(--background);
+  width: 32px;
+  height: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
   background: none;
   border: none;
-  cursor: pointer;
-  padding: 0.5rem;
+  padding: 0;
+  z-index: 101;
 }
 
+.hamburguesa .linea {
+  width: 100%;
+  height: 4px;
+  background-color: var(--negro);
+  border-radius: 4px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Animación del ícono al abrir */
+.hamburguesa.abierta .linea:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburguesa.abierta .linea:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburguesa.abierta .linea:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Menú desplegable con transición */
+.menu-cliente {
+  position: absolute;
+  top: 75px;
+  right: 2rem;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  transform: scale(0.95);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.menu-cliente.abierto {
+  transform: scale(1);
+  opacity: 1;
+  visibility: visible;
+}
+
+.link-icono {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--negro);
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.link-icono:hover {
+  color: var(--rojo);
+  background-color: rgba(215, 38, 56, 0.1);
+}
+
+.btn-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.4rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background-color: rgba(0, 0, 0, 0.03);
+  color: #191919;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.btn-login:hover {
+  background-color: rgba(0, 0, 0, 0.07);
+}
+
+
+.card-login-wrapper {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 16px;
+  overflow: hidden; /* 🔥 esto lo soluciona */
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  display: flex;
+  justify-content: center;
+}
+
+
+/* Responsive para móvil */
 @media (max-width: 768px) {
   .menu-principal {
     display: none;
   }
-  
   .hamburguesa {
     display: block;
   }
