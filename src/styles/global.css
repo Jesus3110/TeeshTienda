@@ -1,66 +1,48 @@
-body {
-  font-family: 'Segoe UI', sans-serif;
+:root {
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --primary: #1a1a1a;
+  --secondary: #f5f5f5;
+  --accent: #e63946;
+  --text: #333333;
+  --background: #ffffff;
+}
+
+* {
   margin: 0;
   padding: 0;
-  background: #f4f4f4;
-  color: #333;
+  box-sizing: border-box;
 }
 
-.navbar {
-  background: #111;
-  color: white;
-  padding: 1rem;
+body {
+  font-family: var(--font-primary);
+  color: var(--text);
+  line-height: 1.5;
+  background-color: var(--background);
 }
 
-.nav-links {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
 }
 
-.nav-links a,
-.nav-links button {
-  color: white;
-  text-decoration: none;
-  background: none;
-  border: none;
+button {
+  font-family: var(--font-primary);
   cursor: pointer;
-  font-weight: bold;
 }
 
-.nav-links a:hover,
-.nav-links button:hover {
-  text-decoration: underline;
+img {
+  max-width: 100%;
+  height: auto;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
-  max-width: 300px;
-  margin: 2rem auto;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
 }
 
-form input {
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-form button {
-  background-color: #111;
-  color: white;
-  border: none;
-  padding: 0.5rem;
-  cursor: pointer;
-  font-weight: bold;
-  border-radius: 4px;
-}
-
-form button:hover {
-  background-color: #333;
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
 }
