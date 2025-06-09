@@ -156,7 +156,9 @@ function Navbar() {
         <ul className={`menu-cliente ${menuAbierto ? "abierto" : ""}`}>
           {!usuario && (
             <li>
-              <div className="card-login-wrapper">
+              <div
+                className="card-login-wrapper"
+              >
                 <Link
                   to="/login"
                   className="btn-login"
