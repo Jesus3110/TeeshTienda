@@ -95,10 +95,16 @@ await set(userRef, {
       setUsuario({ uid: userId, ...data });
       setRol(data.rol || null);
 
-      if (data.rol === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/");
+      // Redirigir según el rol
+      switch (data.rol) {
+        case "admin":
+          navigate("/admin");
+          break;
+        case "asistente":
+          navigate("/asistente");
+          break;
+        default:
+          navigate("/");
       }
     } else {
       setError("Usuario no encontrado");
@@ -248,20 +254,32 @@ const ingresar = async () => {
     return;
   }
 
- if (!encontrado.verificadoCorreo && encontrado.rol !== "admin") {
-  setError("Debes verificar tu correo antes de iniciar sesión.");
-  return;
-}
+  // Verificación de correo solo para clientes
+  if (!encontrado.verificadoCorreo && encontrado.rol === "cliente") {
+    setError("Debes verificar tu correo antes de iniciar sesión.");
+    return;
+  }
 
-
-  // ✅ LOGIN exitoso
+  // LOGIN exitoso
   localStorage.setItem("adminId", encontrado.id);
   setUsuario({ uid: encontrado.id, ...encontrado });
   setRol(encontrado.rol || null);
 
-  return encontrado.primerInicio
-    ? navigate(`/completar-perfil/${encontrado.id}`)
-    : navigate(encontrado.rol === "admin" ? "/admin" : "/");
+  // Redirección según rol y estado de primer inicio
+  if (encontrado.primerInicio) {
+    navigate(`/completar-perfil/${encontrado.id}`);
+  } else {
+    switch (encontrado.rol) {
+      case "admin":
+        navigate("/admin");
+        break;
+      case "asistente":
+        navigate("/asistente");
+        break;
+      default:
+        navigate("/");
+    }
+  }
 };
 
   return (

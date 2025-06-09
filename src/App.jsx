@@ -1,12 +1,14 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AuthContext } from "./context/AuthContext";
+import { getDatabase, ref, onValue } from "firebase/database";
 import Home from "./pages/Home";
 import Producto from "./pages/Producto";
 import Carrito from "./pages/Carrito";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import RutaAdmin from "./router/RutaAdmin";
+import RutaAsistente from "./router/RutaAsistente";
 import AdminLayout from "./components/AdminLayout";
 import AdminPanel from "./pages/AdminPanel";
 import Productos from "./pages/Productos";
@@ -23,28 +25,72 @@ import RutaProtegidaPorRol from "./router/RutaProtegidaPorRol";
 import Ingresos from "./pages/Ingresos";
 import RutaProtegidaCliente from "./router/RutaProtegidaCliente";
 import VerificarCorreo from "./pages/VerificarCorreo";
+import Assistant from "./pages/Assistant";
+import "./styles/notifications.css";
 
 function App() {
   const location = useLocation();
   const { usuario, rol } = useContext(AuthContext);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   const ocultarNavbar =
-    location.pathname.startsWith("/admin") || (usuario && rol === "cliente");
+    location.pathname.startsWith("/admin") || 
+    location.pathname.startsWith("/asistente") || 
+    (usuario && rol === "cliente");
+
+  useEffect(() => {
+    if (usuario && rol === "asistente") {
+      const db = getDatabase();
+      const chatsRef = ref(db, 'chats');
+
+      const unsubscribe = onValue(chatsRef, (snapshot) => {
+        const chatsData = snapshot.val();
+        if (!chatsData) return;
+
+        Object.entries(chatsData).forEach(([chatId, chat]) => {
+          if (chat.needsAssistant && !notifications.includes(chatId)) {
+            setNotificationMessage("¡Nuevo cliente necesita ayuda!");
+            setShowNotification(true);
+            
+            const audio = new Audio('/notification-sound.mp3');
+            audio.play().catch(e => console.log('Error reproduciendo sonido:', e));
+
+            setNotifications(prev => [...prev, chatId]);
+
+            setTimeout(() => {
+              setShowNotification(false);
+            }, 5000);
+          }
+        });
+      });
+
+      return () => unsubscribe();
+    }
+  }, [usuario, rol]);
 
   return (
     <>
       {!ocultarNavbar && <Navbar />}
 
+      {showNotification && (
+        <div className="notification-popup">
+          <div className="notification-content">
+            {notificationMessage}
+          </div>
+        </div>
+      )}
+
       <Routes>
         {/* Rutas públicas */}
-
         <Route path="/completar-perfil/:id" element={<CompletarPerfil />} />
         <Route path="/" element={<Home />} />
         <Route path="/producto/:id" element={<Producto />} />
         <Route path="/login" element={<Login />} />
         <Route path="/verificar-correo/:uid" element={<VerificarCorreo />} />
 
-
+        {/* Rutas de cliente */}
         <Route
           path="/carrito"
           element={
@@ -86,6 +132,21 @@ function App() {
           }
         />
 
+        {/* Rutas de asistente */}
+        <Route
+          path="/asistente/*"
+          element={
+            <RutaAsistente>
+              <Routes>
+                <Route index element={<Assistant />} />
+                <Route path="perfil" element={<Perfil />} />
+                <Route path="chats" element={<Assistant />} />
+              </Routes>
+            </RutaAsistente>
+          }
+        />
+
+        {/* Rutas de admin */}
         <Route
           path="/admin"
           element={

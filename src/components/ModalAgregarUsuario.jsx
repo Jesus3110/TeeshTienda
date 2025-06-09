@@ -14,6 +14,7 @@ const ModalAgregarUsuario = ({ onClose }) => {
   const [error, setError] = useState("");
   const [nombre, setNombre] = useState("");
 const [apellido, setApellido] = useState("");
+const [rol, setRol] = useState("admin");
 
 
 const generarCorreo = () => {
@@ -21,7 +22,8 @@ const generarCorreo = () => {
     str.toLowerCase().replace(/\s+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const nombreLimpio = limpio(nombre);
   const apellidoLimpio = limpio(apellido);
-  return `${nombreLimpio}.${apellidoLimpio}@adminmjshop.com`;
+  const dominio = rol === "admin" ? "adminmjshop.com" : "asistente.mjshop.com";
+  return `${nombreLimpio}.${apellidoLimpio}@${dominio}`;
 };
 
 
@@ -45,8 +47,8 @@ const hashedPassword = await bcrypt.hash(rawPassword, 10); // 10 es el "salt rou
       await set(newRef, {
   correo,
   password : hashedPassword,
-  rol: "admin",
-  privilegios: nivel,
+  rol: rol,
+  privilegios: rol === "admin" ? nivel : "asistente",
   primerInicio: true,
   activo: true,
   nombre,
@@ -65,7 +67,7 @@ const hashedPassword = await bcrypt.hash(rawPassword, 10); // 10 es el "salt rou
 
       setExito(true);
     } catch (err) {
-      setError("Error al crear administrador");
+      setError(`Error al crear ${rol}`);
       console.error(err);
     } finally {
       setSubiendo(false);
@@ -77,12 +79,12 @@ const hashedPassword = await bcrypt.hash(rawPassword, 10); // 10 es el "salt rou
       <div className="modal-form">
         {exito ? (
           <>
-            <h3>✅ Admin creado y correo enviado</h3>
+            <h3>✅ {rol === "admin" ? "Admin" : "Asistente"} creado y correo enviado</h3>
             <button onClick={onClose}>Aceptar</button>
           </>
         ) : (
           <form onSubmit={handleSubmit}>
-            <h2>Crear nuevo Administrador</h2>
+            <h2>Crear nuevo {rol === "admin" ? "Administrador" : "Asistente"}</h2>
             <input
               name="nombre"
               placeholder="Nombre"
@@ -103,12 +105,22 @@ const hashedPassword = await bcrypt.hash(rawPassword, 10); // 10 es el "salt rou
               type="email"
             />
 
-            <label>Privilegios:</label>
-            <select value={nivel} onChange={(e) => setNivel(e.target.value)}>
-              <option value="god">Admin God (acceso total)</option>
-              <option value="premium">Admin Premium (sin ingresos)</option>
-              <option value="estandar">Admin Estándar (limitado)</option>
+            <label>Tipo de usuario:</label>
+            <select value={rol} onChange={(e) => setRol(e.target.value)}>
+              <option value="admin">Administrador</option>
+              <option value="asistente">Asistente de atención al cliente</option>
             </select>
+
+            {rol === "admin" && (
+              <>
+                <label>Privilegios:</label>
+                <select value={nivel} onChange={(e) => setNivel(e.target.value)}>
+                  <option value="god">Admin God (acceso total)</option>
+                  <option value="premium">Admin Premium (sin ingresos)</option>
+                  <option value="estandar">Admin Estándar (limitado)</option>
+                </select>
+              </>
+            )}
 
             <button type="submit" disabled={subiendo}>
               {subiendo ? "Creando..." : "Registrar"}

@@ -12,6 +12,7 @@ import ModalProducto from "../components/ModalProducto";
 import ModalCategoria from "../components/ModalCategoria";
 import ProductosDestacados from "../components/ProductosDestacados";
 import ClienteLayout from "../components/ClienteLayout";
+import ChatBot from "../components/ChatBot";
 
 
 function Home() {
@@ -364,9 +365,13 @@ return (
     {usuario && rol === "cliente" ? (
       <ClienteLayout>
         {renderContenido()}
+        <ChatBot />
       </ClienteLayout>
     ) : (
-      renderContenido()
+      <>
+        {renderContenido()}
+        <ChatBot />
+      </>
     )}
   </>
 );

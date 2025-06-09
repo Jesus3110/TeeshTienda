@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import ClienteLayout from "../components/ClienteLayout";
+import AssistantLayout from "../components/AssistantLayout";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { getDatabase, ref, get, update } from "firebase/database";
 import {
@@ -13,29 +14,25 @@ import "../styles/perfil.css";
 import Modal from "react-modal";
 import bcrypt from "bcryptjs";
 
-
 const Perfil = () => {
-  const { usuario } = useContext(AuthContext);
+  const { usuario, rol, setUsuario } = useContext(AuthContext);
   const [perfil, setPerfil] = useState(null);
   const [editando, setEditando] = useState(false);
   const [formData, setFormData] = useState({});
   const [nuevaImagen, setNuevaImagen] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [cambiarPass, setCambiarPass] = useState(false);
-const [confirmarPass, setConfirmarPass] = useState("");
-const [verNuevaPass, setVerNuevaPass] = useState(false);
-const [verConfirmarPass, setVerConfirmarPass] = useState(false);
-
-
+  const [confirmarPass, setConfirmarPass] = useState("");
+  const [verNuevaPass, setVerNuevaPass] = useState(false);
+  const [verConfirmarPass, setVerConfirmarPass] = useState(false);
 
   const direccionCompleta = perfil?.direccion
-  ? `${perfil.direccion.calle} ${perfil.direccion.numero}, ${perfil.direccion.colonia}, ${perfil.direccion.ciudad}, ${perfil.direccion.estado}, ${perfil.direccion.cp}`
-  : "";
+    ? `${perfil.direccion.calle} ${perfil.direccion.numero}, ${perfil.direccion.colonia}, ${perfil.direccion.ciudad}, ${perfil.direccion.estado}, ${perfil.direccion.cp}`
+    : "";
 
   const direccionURL = `https://www.google.com/maps?q=${encodeURIComponent(
-  direccionCompleta
-)}&output=embed`;
-
+    direccionCompleta
+  )}&output=embed`;
 
   useEffect(() => {
     if (!usuario) return;
@@ -43,45 +40,41 @@ const [verConfirmarPass, setVerConfirmarPass] = useState(false);
     const db = getDatabase();
     const perfilRef = ref(db, `usuarios/${usuario.uid}`);
 
-
     get(perfilRef).then((snapshot) => {
       if (snapshot.exists()) {
         setPerfil(snapshot.val());
         const data = snapshot.val();
-setPerfil(data);
+        setPerfil(data);
 
-// ⚠️ Desestructuramos `direccion` dentro de formData
-setFormData({
-  nombre: data.nombre || "",
-  correo: data.correo || "",
-  telefono: data.telefono || "",
-  nuevaPass: "",
-  imagen: data.imagen || "",
-  calle: data.direccion?.calle || "",
-  numero: data.direccion?.numero || "",
-  colonia: data.direccion?.colonia || "",
-  ciudad: data.direccion?.ciudad || "",
-  estado: data.direccion?.estado || "",
-  cp: data.direccion?.cp || ""
-});
-
+        // ⚠️ Desestructuramos `direccion` dentro de formData
+        setFormData({
+          nombre: data.nombre || "",
+          correo: data.correo || "",
+          telefono: data.telefono || "",
+          nuevaPass: "",
+          imagen: data.imagen || "",
+          calle: data.direccion?.calle || "",
+          numero: data.direccion?.numero || "",
+          colonia: data.direccion?.colonia || "",
+          ciudad: data.direccion?.ciudad || "",
+          estado: data.direccion?.estado || "",
+          cp: data.direccion?.cp || ""
+        });
       }
     });
   }, [usuario]);
 
-
   const validarPassword = (password) => {
-  const requisitos = [
-    { test: /.{8,}/, msg: "Mínimo 8 caracteres" },
-    { test: /[A-Z]/, msg: "Una letra mayúscula" },
-    { test: /[a-z]/, msg: "Una letra minúscula" },
-    { test: /[0-9]/, msg: "Un número" },
-    { test: /[^A-Za-z0-9]/, msg: "Un carácter especial" },
-  ];
+    const requisitos = [
+      { test: /.{8,}/, msg: "Mínimo 8 caracteres" },
+      { test: /[A-Z]/, msg: "Una letra mayúscula" },
+      { test: /[a-z]/, msg: "Una letra minúscula" },
+      { test: /[0-9]/, msg: "Un número" },
+      { test: /[^A-Za-z0-9]/, msg: "Un carácter especial" },
+    ];
 
-  return requisitos.filter((r) => !r.test.test(password)).map((r) => r.msg);
-};
-
+    return requisitos.filter((r) => !r.test.test(password)).map((r) => r.msg);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -95,267 +88,307 @@ setFormData({
   };
 
   const handleGuardar = async () => {
-  const db = getDatabase();
-  const perfilRef = ref(db, `usuarios/${usuario.uid}`);
-  let datosActualizados = {
-  ...formData,
-  direccion: {
-    calle: formData.calle,
-    numero: formData.numero,
-    colonia: formData.colonia,
-    ciudad: formData.ciudad,
-    estado: formData.estado,
-    cp: formData.cp,
-  },
-};
+    const db = getDatabase();
+    const perfilRef = ref(db, `usuarios/${usuario.uid}`);
+    let datosActualizados = {
+      ...formData,
+      direccion: {
+        calle: formData.calle,
+        numero: formData.numero,
+        colonia: formData.colonia,
+        ciudad: formData.ciudad,
+        estado: formData.estado,
+        cp: formData.cp,
+      },
+    };
 
-delete datosActualizados.calle;
-delete datosActualizados.numero;
-delete datosActualizados.colonia;
-delete datosActualizados.ciudad;
-delete datosActualizados.estado;
-delete datosActualizados.cp;
+    delete datosActualizados.calle;
+    delete datosActualizados.numero;
+    delete datosActualizados.colonia;
+    delete datosActualizados.ciudad;
+    delete datosActualizados.estado;
+    delete datosActualizados.cp;
 
+    if (cambiarPass) {
+      const errores = validarPassword(formData.nuevaPass || "");
+      if (errores.length > 0) {
+        alert("❌ La contraseña no cumple los requisitos:\n" + errores.join("\n"));
+        return;
+      }
+      if (formData.nuevaPass !== confirmarPass) {
+        alert("❌ Las contraseñas no coinciden");
+        return;
+      }
+      datosActualizados.password = await bcrypt.hash(formData.nuevaPass, 10);
+    }
 
-  if (cambiarPass) {
-  const errores = validarPassword(formData.nuevaPass || "");
-  if (errores.length > 0) {
-    alert("❌ La contraseña no cumple los requisitos:\n" + errores.join("\n"));
-    return;
-  }
-  if (formData.nuevaPass !== confirmarPass) {
-    alert("❌ Las contraseñas no coinciden");
-    return;
-  }
-  datosActualizados.password = await bcrypt.hash(formData.nuevaPass, 10);
-}
+    delete datosActualizados.nuevaPass;
 
+    if (nuevaImagen) {
+      const storage = getStorage();
+      const storageReference = storageRef(storage, `usuarios/${usuario.uid}`);
+      await uploadBytes(storageReference, nuevaImagen);
+      const urlImagen = await getDownloadURL(storageReference);
+      datosActualizados.imagen = urlImagen;
+    }
 
-  delete datosActualizados.nuevaPass;
-
-  if (nuevaImagen) {
-    const storage = getStorage();
-    const storageReference = storageRef(storage, `usuarios/${usuario.uid}`);
-    await uploadBytes(storageReference, nuevaImagen);
-    const urlImagen = await getDownloadURL(storageReference);
-    datosActualizados.imagen = urlImagen;
-  }
-
-  await update(perfilRef, datosActualizados);
-   setPerfil(datosActualizados);
-  setEditando(false);
-  setNuevaImagen(null);
-  // Vuelve a cargar el usuario desde Firebase
-const snapshotActualizado = await get(perfilRef);
-if (snapshotActualizado.exists()) {
-  const datosActualizadosCompletos = snapshotActualizado.val();
-  localStorage.setItem("adminId", usuario.uid);
-  setPerfil(datosActualizadosCompletos);
-  // Actualiza también en el contexto si usas AuthContext:
-  setUsuario({ uid: usuario.uid, ...datosActualizadosCompletos });
-}
-
- 
-};
-
-
-  if (!perfil) return <div className="loading">Cargando perfil...</div>;
-
+    await update(perfilRef, datosActualizados);
+    setPerfil(datosActualizados);
+    setEditando(false);
+    setNuevaImagen(null);
+    // Vuelve a cargar el usuario desde Firebase
+    const snapshotActualizado = await get(perfilRef);
+    if (snapshotActualizado.exists()) {
+      const datosActualizadosCompletos = snapshotActualizado.val();
+      localStorage.setItem("adminId", usuario.uid);
+      setPerfil(datosActualizadosCompletos);
+      // Actualiza también en el contexto si usas AuthContext:
+      setUsuario({ uid: usuario.uid, ...datosActualizadosCompletos });
+    }
+  };
 
   const contenido = (
     <div className="perfil-container">
-      <div className="perfil-card">
-        <img src={perfil.imagen} alt="Foto de perfil" className="perfil-foto" />
-        {editando ? (
-          <div className="perfil-info">
-            <input type="file" accept="image/*" onChange={handleImagenChange} />
+      <h2>Mi Perfil</h2>
+      {editando ? (
+        <form className="perfil-form" onSubmit={(e) => e.preventDefault()}>
+          <div className="form-group">
+            <label>Nombre:</label>
             <input
               type="text"
               name="nombre"
               value={formData.nombre || ""}
               onChange={handleChange}
-              placeholder="Nombre"
+              className="form-input"
             />
-            <p>
-              <strong>Correo:</strong> {perfil.correo}
-            </p>
-{!cambiarPass ? (
-  <button onClick={() => setCambiarPass(true)}>Cambiar contraseña</button>
-) : (
-  <>
- <div className="password-wrapper">
-  <input
-    className="auth-input"
-    type={verNuevaPass ? "text" : "password"}
-    name="nuevaPass"
-    value={formData.nuevaPass || ""}
-    onChange={handleChange}
-    placeholder="Nueva contraseña"
-  />
- <button
-  type="button"
-  className="toggle-password"
-  onClick={() => setVerNuevaPass(!verNuevaPass)}
->
-  {verNuevaPass ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-</button>
+          </div>
 
-</div>
-
-<div className="password-wrapper">
-  <input
-    className="auth-input"
-    type={verConfirmarPass ? "text" : "password"}
-    value={confirmarPass}
-    onChange={(e) => setConfirmarPass(e.target.value)}
-    placeholder="Confirmar contraseña"
-  />
-  <button
-    type="button"
-    className="toggle-password"
-    onClick={() => setVerConfirmarPass(!verConfirmarPass)}
-  >
-    {verConfirmarPass ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-  </button>
-</div>
-
-    {/* Validaciones */}
-    {formData.nuevaPass && (
-      <ul className="password-requisitos">
-        {validarPassword(formData.nuevaPass).map((msg, i) => (
-          <li key={i} className="requisito-incumplido">❌ {msg}</li>
-        ))}
-        {validarPassword(formData.nuevaPass).length === 0 && (
-          <li className="requisito-ok">✅ Contraseña válida</li>
-        )}
-      </ul>
-    )}
-    {formData.nuevaPass && confirmarPass && formData.nuevaPass !== confirmarPass && (
-      <p className="auth-error">❌ Las contraseñas no coinciden</p>
-    )}
-  </>
-)}
-
-
+          <div className="form-group">
+            <label>Teléfono:</label>
             <input
-              type="text"
+              type="tel"
               name="telefono"
               value={formData.telefono || ""}
               onChange={handleChange}
-              placeholder="Teléfono"
+              className="form-input"
             />
+          </div>
+
+          <div className="form-group">
+            <label>Calle:</label>
             <input
               type="text"
               name="calle"
               value={formData.calle || ""}
               onChange={handleChange}
-              placeholder="Calle"
+              className="form-input"
             />
+          </div>
+
+          <div className="form-group">
+            <label>Número:</label>
             <input
               type="text"
               name="numero"
               value={formData.numero || ""}
               onChange={handleChange}
-              placeholder="Número"
+              className="form-input"
             />
+          </div>
+
+          <div className="form-group">
+            <label>Colonia:</label>
             <input
               type="text"
               name="colonia"
               value={formData.colonia || ""}
               onChange={handleChange}
-              placeholder="Colonia"
+              className="form-input"
             />
+          </div>
+
+          <div className="form-group">
+            <label>Ciudad:</label>
             <input
               type="text"
               name="ciudad"
               value={formData.ciudad || ""}
               onChange={handleChange}
-              placeholder="Ciudad"
+              className="form-input"
             />
+          </div>
+
+          <div className="form-group">
+            <label>Estado:</label>
             <input
               type="text"
               name="estado"
               value={formData.estado || ""}
               onChange={handleChange}
-              placeholder="Estado"
+              className="form-input"
             />
+          </div>
+
+          <div className="form-group">
+            <label>Código Postal:</label>
             <input
               type="text"
               name="cp"
               value={formData.cp || ""}
               onChange={handleChange}
-              placeholder="Código Postal"
+              className="form-input"
             />
-            <button onClick={handleGuardar}>Guardar</button>
+          </div>
+
+          <div className="form-group">
+            <label>Cambiar contraseña:</label>
+            <input
+              type="checkbox"
+              checked={cambiarPass}
+              onChange={(e) => setCambiarPass(e.target.checked)}
+              className="checkbox-input"
+            />
+          </div>
+
+          {cambiarPass && (
+            <>
+              <div className="form-group">
+                <label>Nueva contraseña:</label>
+                <div className="password-input-container">
+                  <input
+                    type={verNuevaPass ? "text" : "password"}
+                    name="nuevaPass"
+                    value={formData.nuevaPass || ""}
+                    onChange={handleChange}
+                    className="form-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVerNuevaPass(!verNuevaPass)}
+                    className="toggle-password-btn"
+                  >
+                    {verNuevaPass ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Confirmar contraseña:</label>
+                <div className="password-input-container">
+                  <input
+                    type={verConfirmarPass ? "text" : "password"}
+                    value={confirmarPass}
+                    onChange={(e) => setConfirmarPass(e.target.value)}
+                    className="form-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVerConfirmarPass(!verConfirmarPass)}
+                    className="toggle-password-btn"
+                  >
+                    {verConfirmarPass ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          <div className="form-group">
+            <label>Imagen de perfil:</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setNuevaImagen(e.target.files[0])}
+              className="form-input file-input"
+            />
+          </div>
+
+          <div className="button-group">
+            <button onClick={handleGuardar} className="btn-guardar">
+              Guardar cambios
+            </button>
             <button
-              onClick={() => {
-                setFormData(perfil);
-                setEditando(false);
-                setNuevaImagen(null);
-              }}
+              onClick={() => setEditando(false)}
+              className="btn-cancelar"
             >
               Cancelar
             </button>
           </div>
-        ) : (
-          <div className="perfil-info">
-            <h2>{perfil.nombre}</h2>
-            <p>
-              <strong>Correo:</strong> {perfil.correo}
-            </p>
-            <p>
-              <strong>Teléfono:</strong> {perfil.telefono}
-            </p>
-            <p>
-              <strong>Dirección:</strong>
-            </p>
-            <button
-              className="btn-ver-maps"
-              onClick={() => setModalAbierto(true)}
-            >
-              Ver en Google Maps
-            </button>
-
-            <Modal
-              isOpen={modalAbierto}
-              onRequestClose={() => setModalAbierto(false)}
-              className="modal-maps"
-              overlayClassName="overlay-maps"
-            >
-              <h2>Ubicación</h2>
-              <iframe
-                src={direccionURL}
-                width="100%"
-                height="400"
-                allowFullScreen=""
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                style={{ borderRadius: "12px", border: "none" }}
-              ></iframe>
-              <button
-                onClick={() => setModalAbierto(false)}
-                className="btn-cerrar-maps"
-              >
-                Cerrar
-              </button>
-            </Modal>
-
-            <p>
-              <strong>Rol:</strong> {perfil.rol}
-            </p>
-            <button onClick={() => setEditando(true)}>Editar</button>
+        </form>
+      ) : (
+        <div className="perfil-info">
+          <div className="perfil-imagen">
+            <img
+              src={perfil?.imagen || "/img/default-user.png"}
+              alt="Foto de perfil"
+            />
           </div>
-        )}
-      </div>
+          <div className="perfil-detalles">
+            <p><strong>Nombre:</strong> {perfil?.nombre}</p>
+            <p><strong>Correo:</strong> {perfil?.correo}</p>
+            <p><strong>Teléfono:</strong> {perfil?.telefono}</p>
+            {perfil?.direccion && (
+              <>
+                <p><strong>Dirección:</strong></p>
+                <p>{perfil.direccion.calle} {perfil.direccion.numero}</p>
+                <p>{perfil.direccion.colonia}</p>
+                <p>{perfil.direccion.ciudad}, {perfil.direccion.estado}</p>
+                <p>CP: {perfil.direccion.cp}</p>
+                <button
+                  className="btn-ver-maps"
+                  onClick={() => setModalAbierto(true)}
+                >
+                  Ver en Google Maps
+                </button>
+              </>
+            )}
+          </div>
+          <button onClick={() => setEditando(true)} className="btn-editar">
+            Editar perfil
+          </button>
+        </div>
+      )}
+
+      <Modal
+        isOpen={modalAbierto}
+        onRequestClose={() => setModalAbierto(false)}
+        className="modal-maps"
+        overlayClassName="overlay-maps"
+      >
+        <h2>Ubicación</h2>
+        <iframe
+          src={direccionURL}
+          width="100%"
+          height="400"
+          allowFullScreen=""
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          style={{ borderRadius: "12px", border: "none" }}
+        ></iframe>
+        <button
+          onClick={() => setModalAbierto(false)}
+          className="btn-cerrar-maps"
+        >
+          Cerrar
+        </button>
+      </Modal>
     </div>
   );
 
-return perfil?.rol === "cliente" ? (
-  <ClienteLayout>{contenido}
-</ClienteLayout>
-) : (
-  contenido
-);
+  if (!perfil) {
+    return (
+      <div className="loading-container">
+        <div className="loading">Cargando perfil...</div>
+      </div>
+    );
+  }
+
+  // Seleccionar el layout según el rol
+  if (rol === "asistente") {
+    return <AssistantLayout>{contenido}</AssistantLayout>;
+  }
+
+  return <ClienteLayout>{contenido}</ClienteLayout>;
 };
 
 export default Perfil;

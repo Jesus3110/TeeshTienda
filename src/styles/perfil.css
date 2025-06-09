@@ -1,248 +1,224 @@
 .perfil-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 3rem 1rem;
-    background: linear-gradient(to right, #f5f7fa, #e8f0fe);
-    min-height: 100vh;
-  }
-  
-  .perfil-card {
-    background-color: white;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    padding: 3rem 2rem;
-    max-width: 600px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .perfil-foto {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 5px solid #0D47A1;
-    margin-bottom: 1.5rem;
-  }
-  
-  .perfil-info {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    width: 100%;
-  }
-  
-  .perfil-info input[type="text"],
-  .perfil-info input[type="file"] {
-    padding: 0.8rem;
-    font-size: 1rem;
-    border: 1.5px solid #ccc;
-    border-radius: 10px;
-    transition: border 0.3s ease;
-    width: 100%;
-  }
-  
-  .perfil-info input:focus {
-    border-color: #0D47A1;
-    outline: none;
-  }
-  
-  .perfil-info p {
-    font-size: 1rem;
-    color: #444;
-    margin: 0;
-    text-align: left;
-  }
-  
-  .perfil-info h2 {
-    color: #0D47A1;
-    text-align: center;
-    margin-bottom: 0.5rem;
-  }
-  
-  .perfil-info button {
-    padding: 0.8rem 1.2rem;
-    font-size: 1rem;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s ease;
-  }
-  
-  .perfil-info button:first-of-type {
-    background-color: #0D47A1;
-    color: white;
-    margin-top: 1rem;
-  }
-  
-  .perfil-info button:first-of-type:hover {
-    background-color: #08306b;
-  }
-  
-  .perfil-info button:last-of-type {
-    background-color: transparent;
-    color: #0D47A1;
-    border: 2px solid #0D47A1;
-  }
-  
-  .perfil-info button:last-of-type:hover {
-    background-color: #0D47A1;
-    color: white;
-  }
-  
-  .loading {
-    text-align: center;
-    font-size: 1.4rem;
-    padding: 3rem;
-    color: #0D47A1;
-  }
-
-  .btn-ver-maps {
-    display: inline-block;
-    margin-top: 0.5rem;
-    background-color: #FFC107;
-    color: #0D47A1;
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
-    font-weight: bold;
-    text-decoration: none;
-    border: none;
-    transition: background 0.3s ease;
-  }
-  
-  .btn-ver-maps:hover {
-    background-color: #e6b100;
-  }
-  
-  
-  @media screen and (max-width: 480px) {
-    .perfil-card {
-      padding: 2rem 1rem;
-    }
-  
-    .perfil-foto {
-      width: 110px;
-      height: 110px;
-    }
-  }
-  
-  .btn-ver-maps {
-    background-color: #FFC107;
-    color: #0D47A1;
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  
-  .btn-ver-maps:hover {
-    background-color: #e6b100;
-  }
-  
-  .overlay-maps {
-    background-color: rgba(0, 0, 0, 0.6);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .modal-maps {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    max-width: 700px;
-    width: 90%;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-    text-align: center;
-  }
-  
-  .btn-cerrar-maps {
-    margin-top: 1rem;
-    background-color: #0D47A1;
-    color: white;
-    padding: 0.6rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  
-  .btn-cerrar-maps:hover {
-    background-color: #08306b;
-  }
-  
-  .password-requisitos {
-  font-size: 0.9rem;
-  margin: 0.5rem 0;
-  color: #d32f2f;
-  list-style: none;
-  padding-left: 0;
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
 }
 
-.requisito-ok {
-  color: green;
-}
-
-.auth-error {
-  font-size: 0.9rem;
-  color: #d32f2f;
-  margin-top: 0.25rem;
-}
-
-.password-wrapper {
-  position: relative;
-  width: 100%;
-  margin-bottom: 1rem;
-}
-
-.auth-input {
-  width: 100%;
-  padding: 0.75rem 2.75rem 0.75rem 1rem; /* espacio a la derecha para el ícono */
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-sizing: border-box;
-}
-
-/* Botón del ojo */
-.toggle-password {
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  transform: translateY(-50%);
-  background: none !important;
-  border: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  height: auto;
-  width: auto;
-  box-shadow: none !important;
-  outline: none !important;
-  color: #003366;
+.perfil-imagen {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: #0052CC;
+  margin: 0 auto 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: white;
+  font-size: 2.5rem;
+  border: none;
+  box-shadow: none;
+}
+
+.perfil-imagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.perfil-container h2 {
+  color: #333;
+  margin-bottom: 2rem;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.perfil-detalles {
+  text-align: left;
+  width: 100%;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.perfil-detalles p {
+  margin: 1rem 0;
+  color: #333;
+  font-size: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.perfil-detalles strong {
+  color: #666;
+  font-weight: normal;
+  font-size: 0.9rem;
+}
+
+.btn-editar, .btn-ver-maps {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+  font-size: 1rem;
 }
 
-.toggle-password svg {
-  width: 20px;
-  height: 20px;
+.btn-editar {
+  background-color: #0052CC;
+  color: white;
 }
 
-.toggle-password:hover {
-  color: #007bff;
+.btn-editar:hover {
+  background-color: #0047B3;
+  transform: none;
+}
+
+.btn-ver-maps {
+  background-color: #0052CC;
+  color: white;
+  margin: 1rem 0;
+}
+
+.btn-ver-maps:hover {
+  background-color: #0047B3;
+  transform: none;
+}
+
+/* Estilos para el formulario de edición */
+.perfil-form {
+  text-align: left;
+  max-width: 100%;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  font-weight: normal;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #0052CC;
+  box-shadow: none;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn-guardar, .btn-cancelar {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.btn-guardar {
+  background-color: #0052CC;
+  color: white;
+}
+
+.btn-guardar:hover {
+  background-color: #0047B3;
+  transform: none;
+}
+
+.btn-cancelar {
+  background-color: #F5F5F5;
+  color: #333;
+}
+
+.btn-cancelar:hover {
+  background-color: #E5E5E5;
+  transform: none;
+}
+
+/* Modal de mapa */
+.modal-maps {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  outline: none;
+}
+
+.overlay-maps {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-cerrar-maps {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #0052CC;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  margin-top: 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.btn-cerrar-maps:hover {
+  background-color: #0047B3;
+}
+
+/* Estilos específicos para el layout del asistente */
+.assistant-layout .perfil-container {
+  margin: 2rem auto;
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .perfil-container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
 }
