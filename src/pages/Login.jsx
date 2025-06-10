@@ -153,6 +153,18 @@ const registrar = async () => {
       throw new Error("El número de teléfono debe tener al menos 10 dígitos numéricos");
     }
 
+    // Verificar si el correo ya existe
+    const usuariosRef = ref(getDatabase(), "usuarios");
+    const snapshot = await get(usuariosRef);
+    
+    if (snapshot.exists()) {
+      const usuarios = Object.values(snapshot.val());
+      const correoExiste = usuarios.some(usuario => usuario.correo === email);
+      if (correoExiste) {
+        throw new Error("El correo ya está registrado");
+      }
+    }
+
     const erroresPassword = validarPassword(pass);
     if (erroresPassword.length > 0) {
       throw new Error(
@@ -165,7 +177,6 @@ const registrar = async () => {
       throw new Error("Las contraseñas no coinciden");
     }
 
-    const db = getDatabase();
     const userId = uuidv4();
     const codigoCorreo = generarCodigo();
     let urlImagen = "/img/default-user.png";
@@ -177,7 +188,7 @@ const registrar = async () => {
       urlImagen = await getDownloadURL(storageRef);
     }
 
-    await set(ref(db, `usuarios/${userId}`), {
+    await set(ref(getDatabase(), `usuarios/${userId}`), {
       nombre: datos.nombre,
       correo: email,
       telefono: datos.telefono,
@@ -200,21 +211,18 @@ const registrar = async () => {
 
     // ✅ Enviar correo con el código
     await emailjs.send(
-  import.meta.env.VITE_EMAILJS_VERIF_SERVICE_ID,
-  import.meta.env.VITE_EMAILJS_VERIF_TEMPLATE_ID,
-  {
-    to_email: email,
-    nombre: datos.nombre,
-    codigo: codigoCorreo,
-  },
-  import.meta.env.VITE_EMAILJS_VERIF_PUBLIC_KEY
-);
+      import.meta.env.VITE_EMAILJS_VERIF_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_VERIF_TEMPLATE_ID,
+      {
+        to_email: email,
+        nombre: datos.nombre,
+        codigo: codigoCorreo,
+      },
+      import.meta.env.VITE_EMAILJS_VERIF_PUBLIC_KEY
+    );
 
-
-    // Aquí podrías redirigir a una vista para validar el código manualmente
     setExito(true);
-setTimeout(() => navigate(`/verificar-correo/${userId}`), 2000);
-
+    setTimeout(() => navigate(`/verificar-correo/${userId}`), 2000);
 
   } catch (err) {
     console.error("Error al registrar:", err);
@@ -360,13 +368,9 @@ const ingresar = async () => {
                   className="toggle-password"
                   onClick={() => setVerConfirmPass(!verConfirmPass)}
                 >
-                  {verConfirmPass ? (
-                    <FiEyeOff size={20} />
-                  ) : (
-                    <FiEye size={20} />
-                  )}
+                  {verConfirmPass ? <FiEyeOff size={20} /> : <FiEye size={20} />}
                 </button>
-              </div>  
+              </div>
             </div>
 
             <div className="auth-form-group">
@@ -467,6 +471,7 @@ const ingresar = async () => {
           </button>
         </p>
       </div>
+
       {modalInhabilitado && (
         <div className="modal-backdrop">
           <div className="modal-form">

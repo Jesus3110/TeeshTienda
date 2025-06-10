@@ -13,6 +13,7 @@ import {
 import "../styles/perfil.css";
 import Modal from "react-modal";
 import bcrypt from "bcryptjs";
+import AdminLayout from "../components/AdminLayout";
 
 const Perfil = () => {
   const { usuario, rol, setUsuario } = useContext(AuthContext);
@@ -384,6 +385,10 @@ const Perfil = () => {
   }
 
   // Seleccionar el layout según el rol
+  if (rol === "admin") {
+    return <AdminLayout>{contenido}</AdminLayout>;
+  }
+
   if (rol === "asistente") {
     return <AssistantLayout>{contenido}</AssistantLayout>;
   }

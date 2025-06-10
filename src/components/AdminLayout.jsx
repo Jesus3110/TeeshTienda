@@ -9,20 +9,18 @@ import "../styles/dashboard.css";
 import { useNavigate } from "react-router-dom";
 
 
-const AdminLayout = () => {
+const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { usuario } = useContext(AuthContext);
+  const { usuario, cerrarSesion } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const toggleSidebar = () => setSidebarOpen(true);
   const closeSidebar = () => setSidebarOpen(false);
-  const navigate = useNavigate();
 
-
-const cerrarSesion = () => {
-  localStorage.removeItem("adminId");
-  navigate("/login");
-};
-
+  const handleCerrarSesion = () => {
+    cerrarSesion();
+    navigate("/login");
+  };
 
   const privilegios = usuario?.privilegios || "";
 
@@ -88,14 +86,14 @@ const cerrarSesion = () => {
             </Link>
           )}
 
-          <Link to="/login" onClick={cerrarSesion}>
+          <Link to="/login" onClick={handleCerrarSesion}>
             <FaSignOutAlt /> {sidebarOpen && <span>Salir</span>}
           </Link>
         </nav>
       </aside>
 
       <main className={`main-content ${sidebarOpen ? "sidebar-open" : ""}`}>
-        <Outlet />
+        {children || <Outlet />}
       </main>
     </div>
   );
