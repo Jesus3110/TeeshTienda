@@ -116,6 +116,7 @@ if (typeof data.direccion === "object") {
       precio: p.precio,
       cantidad: p.cantidad,
       categoria: p.categoria || "Sin categoría",
+      id: p.idFirebase
     }));
   
     await set(pedidoRef, {

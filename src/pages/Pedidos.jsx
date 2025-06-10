@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import Modal from "react-modal";
 import { AuthContext } from "../context/AuthContext";
-import { getDatabase, ref, onValue, update, remove } from "firebase/database";
+import { getDatabase, ref, onValue, update, remove, get } from "firebase/database";
 import ClienteLayout from "../components/ClienteLayout";
 import "../styles/pedidos.css";
 
@@ -16,6 +16,7 @@ const Pedidos = () => {
   const [pedidoActivo, setPedidoActivo] = useState(null);
   const [modalMapaAbierto, setModalMapaAbierto] = useState(false);
   const [tiempoRestante, setTiempoRestante] = useState("");
+  const [confirmandoCancelacion, setConfirmandoCancelacion] = useState(false);
 
   useEffect(() => {
     if (!usuario) return;
@@ -121,6 +122,119 @@ const Pedidos = () => {
     return fecha.toLocaleDateString("es-MX", opciones);
   };
 
+  const restaurarStock = async (productos) => {
+    console.log('Iniciando restauración de stock:', productos);
+    if (!productos || productos.length === 0) {
+      console.log('No hay productos para restaurar');
+      return;
+    }
+
+    const db = getDatabase();
+    const productosRef = ref(db, 'productos');
+    
+    try {
+      console.log('Obteniendo datos actuales de productos...');
+      const snapshot = await get(productosRef);
+      const productosData = snapshot.val() || {};
+      console.log('Datos actuales de productos:', productosData);
+      
+      const updates = {};
+
+      productos.forEach(item => {
+        console.log('Procesando item:', item);
+        if (!item.id || !item.cantidad) {
+          console.log('Item inválido - sin ID o cantidad:', item);
+          return;
+        }
+        
+        const productoActual = productosData[item.id];
+        console.log('Producto actual en DB:', productoActual);
+        
+        if (productoActual) {
+          const stockActual = parseInt(productoActual.stock) || 0;
+          const cantidadARestaurar = parseInt(item.cantidad) || 0;
+          const nuevoStock = stockActual + cantidadARestaurar;
+          updates[`${item.id}/stock`] = nuevoStock;
+          console.log(`Producto ${item.id}: Stock actual ${stockActual} + ${cantidadARestaurar} = Nuevo stock ${nuevoStock}`);
+        } else {
+          console.log(`Producto ${item.id} no encontrado en la base de datos`);
+        }
+      });
+
+      console.log('Actualizaciones a realizar:', updates);
+      if (Object.keys(updates).length > 0) {
+        await update(productosRef, updates);
+        console.log('Stock restaurado exitosamente');
+      } else {
+        console.log('No hay actualizaciones para realizar');
+      }
+    } catch (error) {
+      console.error('Error al restaurar el stock:', error);
+      throw new Error('No se pudo restaurar el stock de los productos');
+    }
+  };
+
+  const calcularMontoDevolucion = (total) => {
+    const porcentajeCancelacion = 15;
+    const montoRetenido = (total * porcentajeCancelacion) / 100;
+    return total - montoRetenido;
+  };
+
+  const cancelarPedido = async (pedido) => {
+    if (!pedido || pedido.estado !== "pendiente") return;
+
+    const db = getDatabase();
+    const clienteUID = pedido.usuario;
+    const montoDevolucion = calcularMontoDevolucion(pedido.total);
+
+    try {
+      console.log('Iniciando cancelación de pedido:', pedido);
+      console.log('Productos a restaurar:', pedido.productos);
+      
+      // Restaurar stock
+      await restaurarStock(pedido.productos);
+
+      // Mover a historial del cliente
+      const refHistorialCliente = ref(
+        db,
+        `historialPedidos/${clienteUID}/${pedido.id}`
+      );
+      await update(refHistorialCliente, {
+        ...pedido,
+        estado: "cancelado",
+        fechaCancelacion: new Date().toISOString(),
+        montoDevolucion: montoDevolucion,
+        porcentajeRetenido: 15
+      });
+
+      // Mover a historial del admin
+      const refHistorialAdmin = ref(
+        db,
+        `historialPedidosAdmin/${clienteUID}/${pedido.id}`
+      );
+      await update(refHistorialAdmin, {
+        productos: pedido.productos,
+        metodoPago: pedido.metodoPago,
+        total: pedido.total,
+        usuario: pedido.usuario,
+        nombreCliente: pedido.nombre || "Sin nombre",
+        direccion: pedido.direccion || "",
+        estado: "cancelado",
+        fechaCancelacion: new Date().toISOString(),
+        montoDevolucion: montoDevolucion,
+        porcentajeRetenido: 15
+      });
+
+      // Eliminar el pedido activo
+      await remove(ref(db, `pedidos/${pedido.id}`));
+      setPedidoActivo(null);
+      setConfirmandoCancelacion(false);
+    } catch (error) {
+      console.error("Error al cancelar el pedido:", error);
+      alert("Hubo un error al cancelar el pedido. Por favor, intenta de nuevo.");
+    }
+  };
+
   if (loading) return <div className="loading">Cargando...</div>;
 
   const esAdmin = rol === "admin";
@@ -140,7 +254,7 @@ const contenido = (
             {esAdmin && <th>Cliente</th>}
             <th>Entrega</th>
             <th>Total</th>
-            <th>🔍</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -152,13 +266,26 @@ const contenido = (
               {esAdmin && <td>{p.nombre}</td>}
               <td>{p.fechaEntrega || "N/D"}</td>
               <td>${p.total}</td>
-              <td>
+              <td className="acciones-column">
                 <button
                   className="ver-detalle-btn"
                   onClick={() => handleAbrirModal(p)}
+                  title="Ver detalles"
                 >
                   👁️
                 </button>
+                {p.estado === "pendiente" && (
+                  <button
+                    className="cancelar-btn"
+                    onClick={() => {
+                      setPedidoActivo(p);
+                      setConfirmandoCancelacion(true);
+                    }}
+                    title="Cancelar pedido"
+                  >
+                    ❌
+                  </button>
+                )}
               </td>
             </tr>
           ))}
@@ -166,7 +293,59 @@ const contenido = (
       </table>
     </div>
 
-    {pedidoActivo && (
+    {pedidoActivo && confirmandoCancelacion && (
+      <Modal
+        isOpen={true}
+        onRequestClose={() => {
+          setConfirmandoCancelacion(false);
+          setPedidoActivo(null);
+        }}
+        contentLabel="Confirmar Cancelación"
+        className="pedido-modal"
+        overlayClassName="modal-overlay"
+      >
+        <div className="modal-content">
+          <h3>⚠️ Aviso de Cancelación</h3>
+          <div className="cancelacion-info">
+            <p className="aviso-importante">IMPORTANTE: Al cancelar este pedido se aplicarán los siguientes cargos:</p>
+            <ul>
+              <li>💰 <strong>Cargo por cancelación:</strong> 15% del valor total del pedido</li>
+              <li>🧾 <strong>Total del pedido:</strong> ${pedidoActivo.total.toFixed(2)}</li>
+              <li>📊 <strong>Cargo a retener:</strong> ${(pedidoActivo.total * 0.15).toFixed(2)}</li>
+              <li>💵 <strong>Monto a devolver:</strong> ${calcularMontoDevolucion(pedidoActivo.total).toFixed(2)}</li>
+            </ul>
+            <div className="advertencia-box">
+              <p className="advertencia">⚠️ Este cargo es necesario debido a:</p>
+              <ul>
+                <li>Comisiones bancarias no reembolsables</li>
+                <li>Gastos administrativos y operativos</li>
+                <li>Costos de procesamiento de la devolución</li>
+              </ul>
+              <p className="nota-final">Esta acción no se puede deshacer una vez confirmada.</p>
+            </div>
+          </div>
+          <div className="button-group">
+            <button
+              className="btn-confirmar-cancelacion"
+              onClick={() => cancelarPedido(pedidoActivo)}
+            >
+              Sí, acepto los cargos y deseo cancelar
+            </button>
+            <button
+              className="btn-cancelar"
+              onClick={() => {
+                setConfirmandoCancelacion(false);
+                setPedidoActivo(null);
+              }}
+            >
+              No, mantener pedido
+            </button>
+          </div>
+        </div>
+      </Modal>
+    )}
+
+    {pedidoActivo && !confirmandoCancelacion && (
       <Modal
         isOpen={true}
         onRequestClose={() => setPedidoActivo(null)}

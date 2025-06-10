@@ -132,7 +132,17 @@ const HistorialPedidos = () => {
                   {Object.entries(pedidos).map(([id, p]) => (
                     <tr key={id}>
                       <td>{id.slice(0, 6)}...</td>
-                      <td>{p.estado}</td>
+                      <td>
+                        {p.estado}
+                        {p.estado === "cancelado" && p.montoDevolucion !== undefined && (
+                          <div className="info-devolucion">
+                            <p>Devolución: ${typeof p.montoDevolucion === 'number' ? p.montoDevolucion.toFixed(2) : '0.00'}</p>
+                            {p.porcentajeRetenido && (
+                              <small>(Cargo por cancelación: {p.porcentajeRetenido}%)</small>
+                            )}
+                          </div>
+                        )}
+                      </td>
                       <td>{p.metodoPago}</td>
                       <td>${p.total}</td>
                       <td>

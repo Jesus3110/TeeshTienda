@@ -26,11 +26,19 @@
     font-weight: 600;
   }
   
-  .ver-detalle-btn {
+  .ver-detalle-btn,
+  .cancelar-btn {
     background: none;
     border: none;
     cursor: pointer;
     font-size: 1.2rem;
+    padding: 4px;
+    transition: transform 0.2s;
+  }
+  
+  .ver-detalle-btn:hover,
+  .cancelar-btn:hover {
+    transform: scale(1.2);
   }
   
   .modal-overlay {
@@ -178,5 +186,121 @@
   
   .btn-cerrar-maps:hover {
     background-color: #08306b;
+  }
+  
+  .acciones-column {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  
+  .cancelacion-info {
+    background-color: #fff3e0;
+    border: 2px solid #ffb74d;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px 0;
+  }
+  
+  .aviso-importante {
+    color: #e65100;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  
+  .cancelacion-info ul {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0;
+  }
+  
+  .cancelacion-info li {
+    margin: 12px 0;
+    color: #424242;
+    font-size: 1.05em;
+  }
+  
+  .advertencia-box {
+    background-color: #fbe9e7;
+    border: 1px solid #ffccbc;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 20px;
+  }
+  
+  .advertencia-box .advertencia {
+    color: #d84315;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  
+  .advertencia-box ul {
+    margin: 10px 0;
+    padding-left: 20px;
+    list-style-type: disc;
+  }
+  
+  .advertencia-box li {
+    color: #616161;
+    margin: 5px 0;
+    font-size: 0.95em;
+  }
+  
+  .nota-final {
+    color: #c62828;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.95em;
+  }
+  
+  .btn-confirmar-cancelacion {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+    font-size: 1em;
+  }
+  
+  .btn-confirmar-cancelacion:hover {
+    background-color: #b71c1c;
+  }
+  
+  .btn-cancelar {
+    background-color: #757575;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+    font-size: 1em;
+  }
+  
+  .btn-cancelar:hover {
+    background-color: #616161;
+  }
+  
+  .button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .button-group button {
+    min-width: 150px;
+  }
+  
+  .cancelar-btn {
+    color: white;
+    text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.5);
   }
   
