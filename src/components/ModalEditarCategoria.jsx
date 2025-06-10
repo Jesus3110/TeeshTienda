@@ -44,22 +44,28 @@ const ModalEditarCategoria = ({ categoria, onClose }) => {
       <div className="modal-form">
         {exito ? (
           <>
-            <h3>✅ Categoría actualizada correctamente</h3>
-            <button onClick={onClose}>Aceptar</button>
+            <h3 className="modal-title">✅ Categoría actualizada correctamente</h3>
+            <button className="btn-red" onClick={onClose}>Aceptar</button>
           </>
         ) : (
           <form onSubmit={editarCategoria}>
-            <h2>Editar Categoría</h2>
-            <input
-              type="text"
-              placeholder="Nuevo nombre de categoría"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              style={{ borderColor: error ? "red" : undefined }}
-            />
-            {error && <small style={{ color: "red" }}>{error}</small>}
-            <button type="submit">Guardar cambios</button>
-            <button type="button" onClick={onClose}>Cancelar</button>
+            <h2 className="modal-title">Editar Categoría</h2>
+            <div className="form-group">
+              <label className="form-label" htmlFor="nombreCategoria">Nuevo nombre de categoría:</label>
+              <input
+                id="nombreCategoria"
+                type="text"
+                placeholder="Nuevo nombre de categoría"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                className="form-input"
+              />
+              {error && <div className="form-error">{error}</div>}
+            </div>
+            <div className="form-actions">
+              <button type="submit" className="btn-red">Guardar cambios</button>
+              <button type="button" onClick={onClose} className="btn-table btn-delete">Cancelar</button>
+            </div>
           </form>
         )}
       </div>

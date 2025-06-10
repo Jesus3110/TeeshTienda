@@ -149,24 +149,27 @@ const CompletarPerfil = () => {
             placeholder="Nombre"
             value={datos.nombre}
             onChange={handleChange}
+            className="form-input"
           />
           <input
             name="telefono"
             placeholder="Teléfono"
             value={datos.telefono}
             onChange={handleChange}
+            className="form-input"
           />
           <div className="row">
-            <input name="calle" placeholder="Calle" onChange={handleChange} />
-            <input name="numero" placeholder="Número" onChange={handleChange} />
+            <input name="calle" placeholder="Calle" onChange={handleChange} className="form-input" />
+            <input name="numero" placeholder="Número" onChange={handleChange} className="form-input" />
           </div>
-          <input name="colonia" placeholder="Colonia" onChange={handleChange} />
-          <input name="ciudad" placeholder="Ciudad" onChange={handleChange} />
-          <input name="estado" placeholder="Estado" onChange={handleChange} />
+          <input name="colonia" placeholder="Colonia" onChange={handleChange} className="form-input" />
+          <input name="ciudad" placeholder="Ciudad" onChange={handleChange} className="form-input" />
+          <input name="estado" placeholder="Estado" onChange={handleChange} className="form-input" />
           <input
             name="cp"
             placeholder="Código Postal"
             onChange={handleChange}
+            className="form-input"
           />
 
           <div style={{ position: "relative" }}>

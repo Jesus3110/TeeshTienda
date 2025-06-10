@@ -213,57 +213,48 @@ useEffect(() => {
   if (!mesActual || !anioSeleccionado) return;
 
   const db = getDatabase();
-  const pedidosRef = ref(db, "pedidos");
+  const refHistorial = ref(db, "historialPedidosAdmin");
 
-  get(pedidosRef).then((snap) => {
+  get(refHistorial).then((snap) => {
     if (snap.exists()) {
-      const pedidos = Object.values(snap.val());
-
-      // Mapeo de nombres de mes a índice (0 = enero)
-      const meses = [
-        "enero", "febrero", "marzo", "abril", "mayo", "junio",
-        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-      ];
-      const mesIndexActual = meses.indexOf(mesActual.toLowerCase());
-      const anioActual = parseInt(anioSeleccionado);
-
-      const pedidosDelMes = pedidos.filter((pedido) => {
-        if (!pedido.creadoEn) return false;
-
-        const fecha = new Date(pedido.creadoEn);
-        const mesPedidoIndex = fecha.getMonth();
-        const anioPedido = fecha.getFullYear();
-
-        return mesPedidoIndex === mesIndexActual && anioPedido === anioActual;
-      });
-
-      // Debug para asegurar que el filtro funciona
-      console.log("Pedidos filtrados para gráfica:", pedidosDelMes.map(p => ({
-        total: p.total,
-        fecha: new Date(p.creadoEn).toLocaleString(),
-        metodo: p.metodoPago,
-      })));
-
-      let tarjeta = 0;
-      let efectivo = 0;
+      const data = snap.val();
       let totalTarjeta = 0;
       let totalEfectivo = 0;
+      let encontrados = 0;
 
-      pedidosDelMes.forEach((pedido) => {
-        if (
-          pedido.metodoPago &&
-          pedido.metodoPago.toLowerCase().includes("stripe")
-        ) {
-          tarjeta++;
-          totalTarjeta += Number(pedido.total || 0);
-        } else {
-          efectivo++;
-          totalEfectivo += Number(pedido.total || 0);
-        }
+      console.log("[Métodos de pago] mesActual:", mesActual, "anioSeleccionado:", anioSeleccionado);
+
+      Object.values(data).forEach((pedidosUsuario) => {
+        Object.values(pedidosUsuario).forEach((pedido) => {
+          if (!pedido.creadoEn || !pedido.metodoPago) return;
+
+          const fecha = new Date(pedido.creadoEn);
+          const meses = [
+            "enero", "febrero", "marzo", "abril", "mayo", "junio",
+            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+          ];
+          const mesPedidoIndex = fecha.getMonth();
+          const mesActualIndex = meses.indexOf(mesActual.toLowerCase());
+          const anioPedido = fecha.getFullYear();
+
+          if (
+            mesPedidoIndex === mesActualIndex &&
+            anioPedido === parseInt(anioSeleccionado)
+          ) {
+            encontrados++;
+            console.log(`[Pedido] mesPedidoIndex: ${mesPedidoIndex}, mesActualIndex: ${mesActualIndex}, anioPedido: ${anioPedido}, anioSeleccionado: ${anioSeleccionado}, metodoPago: ${pedido.metodoPago}, total: ${pedido.total}`);
+            if (pedido.metodoPago.toLowerCase().includes("stripe")) {
+              totalTarjeta += Number(pedido.total || 0);
+            } else {
+              totalEfectivo += Number(pedido.total || 0);
+            }
+          }
+        });
       });
 
-      const totalMonto = totalTarjeta + totalEfectivo || 1;
+      console.log(`Pedidos encontrados para ${mesActual} ${anioSeleccionado}:`, encontrados);
 
+      const totalMonto = totalTarjeta + totalEfectivo || 1;
       setMetodosPago([
         {
           name: "Tarjeta",
@@ -275,6 +266,11 @@ useEffect(() => {
           monto: totalEfectivo,
           porcentaje: ((totalEfectivo / totalMonto) * 100).toFixed(1),
         },
+      ]);
+    } else {
+      setMetodosPago([
+        { name: "Tarjeta", monto: 0, porcentaje: 0 },
+        { name: "Efectivo", monto: 0, porcentaje: 0 },
       ]);
     }
   });

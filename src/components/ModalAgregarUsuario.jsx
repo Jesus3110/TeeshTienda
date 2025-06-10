@@ -79,56 +79,71 @@ const hashedPassword = await bcrypt.hash(rawPassword, 10); // 10 es el "salt rou
       <div className="modal-form">
         {exito ? (
           <>
-            <h3>✅ {rol === "admin" ? "Admin" : "Asistente"} creado y correo enviado</h3>
-            <button onClick={onClose}>Aceptar</button>
+            <h3 className="modal-title">✅ {rol === "admin" ? "Admin" : "Asistente"} creado y correo enviado</h3>
+            <button className="btn-red" onClick={onClose}>Aceptar</button>
           </>
         ) : (
           <form onSubmit={handleSubmit}>
-            <h2>Crear nuevo {rol === "admin" ? "Administrador" : "Asistente"}</h2>
-            <input
-              name="nombre"
-              placeholder="Nombre"
-              onChange={(e) => setNombre(e.target.value)}
-              required
-            />
-            <input
-              name="apellido"
-              placeholder="Apellido"
-              onChange={(e) => setApellido(e.target.value)}
-              required
-            />
-
-            <input
-              name="correoDestino"
-              placeholder="Correo destino para enviar credenciales"
-              onChange={(e) => setCorreoDestino(e.target.value)}
-              type="email"
-            />
-
-            <label>Tipo de usuario:</label>
-            <select value={rol} onChange={(e) => setRol(e.target.value)}>
-              <option value="admin">Administrador</option>
-              <option value="asistente">Asistente de atención al cliente</option>
-            </select>
-
+            <h2 className="modal-title">Crear nuevo {rol === "admin" ? "Administrador" : "Asistente"}</h2>
+            <div className="form-group">
+              <label className="form-label" htmlFor="nombre">Nombre:</label>
+              <input
+                name="nombre"
+                id="nombre"
+                placeholder="Nombre"
+                onChange={(e) => setNombre(e.target.value)}
+                required
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="apellido">Apellido:</label>
+              <input
+                name="apellido"
+                id="apellido"
+                placeholder="Apellido"
+                onChange={(e) => setApellido(e.target.value)}
+                required
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="correoDestino">Correo destino para enviar credenciales:</label>
+              <input
+                name="correoDestino"
+                id="correoDestino"
+                placeholder="Correo destino para enviar credenciales"
+                onChange={(e) => setCorreoDestino(e.target.value)}
+                type="email"
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Tipo de usuario:</label>
+              <select value={rol} onChange={(e) => setRol(e.target.value)} className="form-input">
+                <option value="admin">Administrador</option>
+                <option value="asistente">Asistente de atención al cliente</option>
+              </select>
+            </div>
             {rol === "admin" && (
-              <>
-                <label>Privilegios:</label>
-                <select value={nivel} onChange={(e) => setNivel(e.target.value)}>
+              <div className="form-group">
+                <label className="form-label">Privilegios:</label>
+                <select value={nivel} onChange={(e) => setNivel(e.target.value)} className="form-input">
                   <option value="god">Admin God (acceso total)</option>
                   <option value="premium">Admin Premium (sin ingresos)</option>
                   <option value="estandar">Admin Estándar (limitado)</option>
                 </select>
-              </>
+              </div>
             )}
-
-            <button type="submit" disabled={subiendo}>
-              {subiendo ? "Creando..." : "Registrar"}
-            </button>
-            <button type="button" onClick={onClose}>
-              Cancelar
-            </button>
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {error && <div className="form-error">{error}</div>}
+            <div className="form-actions">
+              <button type="submit" disabled={subiendo} className="btn-red">
+                {subiendo ? "Creando..." : "Registrar"}
+              </button>
+              <button type="button" onClick={onClose} className="btn-table btn-delete">
+                Cancelar
+              </button>
+            </div>
           </form>
         )}
       </div>

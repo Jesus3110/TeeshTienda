@@ -20,13 +20,15 @@ export const generarReporteMensual = async (mes = "mayo", anio = new Date().getF
   const reinversionSnap = await get(ref(db, `dashboard/reinversion/${anio}/${mes}`));
   const productosSnap = await get(ref(db, `dashboard/productosVendidosPorMes/${anio}/${mes}`));
   const categoriasSnap = await get(ref(db, `dashboard/categoriasVendidasPorMes/${anio}/${mes}`));
-  const pedidosSnap = await get(ref(db, "pedidos"));
+  const historialSnap = await get(ref(db, "historialPedidosAdmin"));
 
   const ingresoMes = ingresoSnap.exists() ? ingresoSnap.val() : 0;
   const reinversion = reinversionSnap.exists() ? reinversionSnap.val() : { monto: 0 };
   const productos = productosSnap.val() || {};
   const categorias = categoriasSnap.val() || {};
-  const pedidos = pedidosSnap.exists() ? Object.values(pedidosSnap.val()) : [];
+  const pedidos = historialSnap.exists()
+    ? Object.values(historialSnap.val()).flatMap(usuario => Object.values(usuario))
+    : [];
 
   let totalTarjeta = 0;
   let totalEfectivo = 0;

@@ -247,7 +247,7 @@ const Perfil = () => {
               type="checkbox"
               checked={cambiarPass}
               onChange={(e) => setCambiarPass(e.target.checked)}
-              className="checkbox-input"
+              className="custom-checkbox"
             />
           </div>
 

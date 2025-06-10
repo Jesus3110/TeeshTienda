@@ -127,48 +127,50 @@ function Carrito() {
         {carrito.length === 0 ? (
           <p>No hay productos en el carrito.</p>
         ) : (
-          <table className="carrito-table">
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Precio</th>
-                <th>Cantidad</th>
-                <th>Subtotal</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {carrito.map((prod, index) => (
-                <tr key={index}>
-                  <td>{prod.nombre}</td>
-                  <td>${prod.precio}</td>
-                  <td>
-                    <input
-                      type="number"
-                      min="1"
-                      value={prod.cantidad === "" ? "" : prod.cantidad}
-                      onChange={(e) => cambiarCantidad(index, e.target.value)}
-                      className="carrito-cantidad-input"
-                    />
-                  </td>
-                  <td>
-                    $
-                    {!isNaN(prod.precio * prod.cantidad)
-                      ? (prod.precio * prod.cantidad).toFixed(2)
-                      : "0.00"}
-                  </td>
-                  <td>
-                    <button
-                      className="carrito-eliminar-btn"
-                      onClick={() => eliminarProducto(index)}
-                    >
-                      <FaTimes />
-                    </button>
-                  </td>
+          <div className="table-container">
+            <table className="carrito-table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Precio</th>
+                  <th>Cantidad</th>
+                  <th>Subtotal</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {carrito.map((prod, index) => (
+                  <tr key={index}>
+                    <td>{prod.nombre}</td>
+                    <td>${prod.precio}</td>
+                    <td>
+                      <input
+                        type="number"
+                        min="1"
+                        value={prod.cantidad === "" ? "" : prod.cantidad}
+                        onChange={(e) => cambiarCantidad(index, e.target.value)}
+                        className="carrito-cantidad-input"
+                      />
+                    </td>
+                    <td>
+                      $
+                      {!isNaN(prod.precio * prod.cantidad)
+                        ? (prod.precio * prod.cantidad).toFixed(2)
+                        : "0.00"}
+                    </td>
+                    <td>
+                      <button
+                        className="carrito-eliminar-btn"
+                        onClick={() => eliminarProducto(index)}
+                      >
+                        <FaTimes />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
 {carrito.length > 0 && (

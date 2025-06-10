@@ -230,70 +230,66 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
         <div className="modal-backdrop">
           <div className="modal-form">
             <h3>✅ Producto actualizado correctamente</h3>
-            <button onClick={onClose}>Aceptar</button>
+            <button className="btn-red" onClick={onClose}>Aceptar</button>
           </div>
         </div>
       ) : errorVisible ? (
         <div className="modal-backdrop">
           <div className="modal-form">
-            <h3 style={{ color: "red" }}>❌ {errorMensaje}</h3>
-            <button onClick={onClose}>Cerrar</button>
+            <h3 className="form-error">❌ {errorMensaje}</h3>
+            <button className="btn-table btn-delete" onClick={onClose}>Cerrar</button>
           </div>
         </div>
       ) : (
         <div className="modal-backdrop">
           <div className="modal-form">
-            <h2>Editar Producto</h2>
+            <h2 className="modal-title">Editar Producto</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>Nombre:</label>
+                <label className="form-label">Nombre:</label>
                 <input
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleChange}
                   placeholder="Nombre del producto"
-                  style={{ borderColor: errores.nombre ? "red" : undefined }}
+                  className={`form-input${errores.nombre ? ' error' : ''}`}
                 />
                 {errores.nombre && (
-                  <small style={{ color: "red" }}>{errores.nombre}</small>
+                  <div className="form-error">{errores.nombre}</div>
                 )}
               </div>
 
               <div className="form-group">
-                <label>Descripción:</label>
+                <label className="form-label">Descripción:</label>
                 <textarea
                   name="descripcion"
                   value={formData.descripcion}
                   onChange={handleChange}
                   placeholder="Descripción del producto"
-                  style={{
-                    borderColor: errores.descripcion ? "red" : undefined,
-                  }}
+                  className={`form-input${errores.descripcion ? ' error' : ''}`}
                 />
                 {errores.descripcion && (
-                  <small style={{ color: "red" }}>{errores.descripcion}</small>
+                  <div className="form-error">{errores.descripcion}</div>
                 )}
               </div>
 
               <div className="form-group">
-                <label>Precio:</label>
+                <label className="form-label">Precio:</label>
                 <input
                   name="precio"
                   type="number"
-                  value={
-                    aplicarDescuento ? formData.precioOriginal : formData.precio
-                  }
+                  value={aplicarDescuento ? formData.precioOriginal : formData.precio}
                   onChange={handleChange}
                   placeholder="Precio del producto"
-                  style={{ borderColor: errores.precio ? "red" : undefined }}
+                  className={`form-input${errores.precio ? ' error' : ''}`}
                 />
                 {errores.precio && (
-                  <small style={{ color: "red" }}>{errores.precio}</small>
+                  <div className="form-error">{errores.precio}</div>
                 )}
               </div>
 
               <div className="form-group">
-                <label>
+                <label className="switch-label">
                   <input
                     type="checkbox"
                     checked={aplicarDescuento}
@@ -306,6 +302,7 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
                         }));
                       }
                     }}
+                    className="custom-checkbox"
                   />
                   ¿Aplicar descuento?
                 </label>
@@ -313,78 +310,66 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
 
               {aplicarDescuento && (
                 <div className="form-group">
-                  <label>Seleccionar descuento:</label>
+                  <label className="form-label">Seleccionar descuento:</label>
                   <select
                     name="descuento"
                     onChange={handleDescuentoChange}
                     value={descuentoSeleccionado?.id || ""}
-                    style={{ width: "100%" }}
+                    className="form-input"
                   >
                     <option value="">-- Seleccione un descuento --</option>
                     {descuentosDisponibles.map((descuento) => (
                       <option key={descuento.id} value={descuento.id}>
-                        {descuento.porcentaje}% - Válido hasta{" "}
-                        {new Date(descuento.validoHasta).toLocaleDateString()}
+                        {descuento.porcentaje}% - Válido hasta {new Date(descuento.validoHasta).toLocaleDateString()}
                       </option>
                     ))}
                   </select>
 
                   {descuentoSeleccionado && formData.precioOriginal && (
                     <div className="descuento-info">
-                      <p>
-                        <strong>Precio original:</strong> $
-                        {formData.precioOriginal.toFixed(2)}
-                      </p>
-                      <p>
-                        <strong>Descuento:</strong>{" "}
-                        {descuentoSeleccionado.porcentaje}%
-                      </p>
-                      <p>
-                        <strong>Precio final:</strong> $
-                        {precioConDescuento.toFixed(2)}
-                      </p>
+                      <p><strong>Precio original:</strong> ${formData.precioOriginal.toFixed(2)}</p>
+                      <p><strong>Descuento:</strong> {descuentoSeleccionado.porcentaje}%</p>
+                      <p><strong>Precio final:</strong> ${precioConDescuento.toFixed(2)}</p>
                     </div>
                   )}
                 </div>
               )}
 
               <div className="form-group">
-                <label>Stock:</label>
+                <label className="form-label">Stock:</label>
                 <input
                   name="stock"
                   type="number"
                   value={formData.stock}
                   onChange={handleChange}
                   placeholder="Cantidad en stock"
-                  style={{ borderColor: errores.stock ? "red" : undefined }}
+                  className={`form-input${errores.stock ? ' error' : ''}`}
                 />
                 {errores.stock && (
-                  <small style={{ color: "red" }}>{errores.stock}</small>
+                  <div className="form-error">{errores.stock}</div>
                 )}
               </div>
 
               <div className="form-group">
-                <label>Categoría:</label>
+                <label className="form-label">Categoría:</label>
                 <select
                   name="categoria"
                   value={formData.categoria}
                   onChange={handleChange}
-                  style={{ borderColor: errores.categoria ? "red" : undefined }}
+                  className={`form-input${errores.categoria ? ' error' : ''}`}
                 >
                   <option value="">-- Selecciona una categoría --</option>
                   {categorias.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
+                    <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
                 {errores.categoria && (
-                  <small style={{ color: "red" }}>{errores.categoria}</small>
+                  <div className="form-error">{errores.categoria}</div>
                 )}
               </div>
 
               <div className="form-group">
-                <label>Imagen:</label>
+                <label className="form-label">Imagen:</label>
                 {formData.imagen && (
                   <div style={{ marginBottom: "10px" }}>
                     <p>Imagen actual:</p>
@@ -396,40 +381,33 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
                   type="file"
                   accept="image/*"
                   onChange={handleChange}
+                  className="form-input"
                 />
               </div>
 
               <div className="form-actions">
-                <button
-                  type="submit"
-                  disabled={subiendo}
-                  className="btn-primary"
-                >
+                <button type="submit" disabled={subiendo} className="btn-red">
                   {subiendo ? "Guardando..." : "Guardar Cambios"}
                 </button>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="btn-secondary"
-                >
+                <button type="button" onClick={onClose} className="btn-table btn-delete">
                   Cancelar
                 </button>
               </div>
             </form>
-          </div>
 
-          {sinCambiosVisible && (
-            <div className="modal-backdrop">
-              <div className="modal-form">
-                <h3 style={{ color: "#555" }}>
-                  ⚠️ No se detectaron cambios en el producto
-                </h3>
-                <button onClick={() => setSinCambiosVisible(false)}>
-                  Aceptar
-                </button>
+            {sinCambiosVisible && (
+              <div className="modal-backdrop">
+                <div className="modal-form">
+                  <h3 className="form-error" style={{ color: "#555" }}>
+                    ⚠️ No se detectaron cambios en el producto
+                  </h3>
+                  <button className="btn-red" onClick={() => setSinCambiosVisible(false)}>
+                    Aceptar
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </>

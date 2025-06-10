@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { getDatabase, ref, onValue, update } from "firebase/database";
 import  ClienteLayout  from "../components/ClienteLayout";
@@ -15,6 +15,7 @@ const HistorialPedidos = () => {
   const [calificacion, setCalificacion] = useState(5);
   const [comentario, setComentario] = useState("");
   const [seccionesAbiertas, setSeccionesAbiertas] = useState({});
+  const textareaRef = useRef(null);
 
   useEffect(() => {
     if (!usuario) return;
@@ -95,6 +96,42 @@ const HistorialPedidos = () => {
     setComentario("");
   };
 
+  // Función auxiliar para obtener la clase CSS según el estado
+  const getEstadoClass = (estado) => {
+    switch (estado) {
+      case 'pendiente':
+        return 'status-pending';
+      case 'en_proceso':
+        return 'status-processing';
+      case 'enviado':
+        return 'status-shipped';
+      case 'entregado':
+        return 'status-delivered';
+      case 'cancelado':
+        return 'status-cancelled';
+      default:
+        return '';
+    }
+  };
+
+  // Función auxiliar para formatear el estado
+  const formatearEstado = (estado) => {
+    switch (estado) {
+      case 'pendiente':
+        return 'Pendiente';
+      case 'en_proceso':
+        return 'En proceso';
+      case 'enviado':
+        return 'Enviado';
+      case 'entregado':
+        return 'Entregado';
+      case 'cancelado':
+        return 'Cancelado';
+      default:
+        return estado;
+    }
+  };
+
   const contenido =(
     <div className="historial-container">
       <h2>
@@ -110,13 +147,13 @@ const HistorialPedidos = () => {
               onClick={() => toggleSeccion(uid)}
               className="usuario-toggle"
             >
-              📂 {Object.values(pedidos)[0]?.nombreCliente || "Sin nombre"} (
+               {Object.values(pedidos)[0]?.nombreCliente || "Sin nombre"} (
               {Object.keys(pedidos).length} pedidos)
             </button>
           )}
 
           {(rol !== "admin" || seccionesAbiertas[uid]) && (
-            <div className="table-responsive">
+            <div className="table-container">
               <table className="pedidos-table">
                 <thead>
                   <tr>
@@ -133,7 +170,9 @@ const HistorialPedidos = () => {
                     <tr key={id}>
                       <td>{id.slice(0, 6)}...</td>
                       <td>
-                        {p.estado}
+                        <span className={`status-badge ${getEstadoClass(p.estado)}`}>
+                          {formatearEstado(p.estado)}
+                        </span>
                         {p.estado === "cancelado" && p.montoDevolucion !== undefined && (
                           <div className="info-devolucion">
                             <p>Devolución: ${typeof p.montoDevolucion === 'number' ? p.montoDevolucion.toFixed(2) : '0.00'}</p>
@@ -146,8 +185,8 @@ const HistorialPedidos = () => {
                       <td>{p.metodoPago}</td>
                       <td>${p.total}</td>
                       <td>
-                        <button onClick={() => setPedidoActivo({ ...p, id })}>
-                          👁
+                        <button className="detalle-btn" onClick={() => setPedidoActivo({ ...p, id })}>
+                          Detalles
                         </button>
                       </td>
                       {rol !== "admin" && (
@@ -191,9 +230,15 @@ const HistorialPedidos = () => {
 
             <label>Comentario:</label>
             <textarea
+              ref={textareaRef}
               value={comentario}
               onChange={(e) => setComentario(e.target.value)}
             />
+            {useEffect(() => {
+              if (pedidoCalificar && textareaRef.current) {
+                textareaRef.current.focus();
+              }
+            }, [pedidoCalificar])}
             <button className="btn btn-success" onClick={guardarCalificacion}>
               Enviar Calificación
             </button>

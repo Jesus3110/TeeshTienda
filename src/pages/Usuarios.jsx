@@ -54,15 +54,16 @@ const Usuarios = () => {
     <div className="usuarios-admin">
       <h2>Gestión de Usuarios</h2>
 
-      <div className="filtros">
+      <div className="filtros-productos-flex filtros-usuarios-compact">
         <input
           type="text"
+          className="input-busqueda"
           placeholder="Buscar por nombre o correo..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
-
         <select
+          className="select-estado"
           onChange={(e) => setFiltroRol(e.target.value)}
           value={filtroRol}
         >
@@ -71,75 +72,76 @@ const Usuarios = () => {
           <option value="admin">Administrador</option>
           <option value="inhabilitados">Inhabilitados</option>
         </select>
-
-        <button onClick={() => setMostrarModalAgregar(true)}>
+        <button className="btn-red" onClick={() => setMostrarModalAgregar(true)}>
           ➕ Agregar administrador
         </button>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Foto</th>
-            <th>Nombre</th>
-            <th>Correo</th>
-            <th>Dirección</th>
-            <th>Teléfono</th>
-            <th>Rol</th>
-            <th>Privilegio</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuariosFiltrados.map((user, index) => (
-            <tr key={user.idFirebase}>
-              <td>{index + 1}</td>
-              <td>
-                <img
-                  src={user.imagen || "/img/user-default.png"} // ✅ Aquí está la corrección
-                  alt="foto"
-                  width="50"
-                  style={{ borderRadius: "50%" }}
-                />
-              </td>
-              <td>{user.nombre}</td>
-              <td>{user.correo}</td>
-              <td>
-                {user.direccion && (
-                  <button
-                    style={{ marginLeft: "0.5rem" }}
-                    onClick={() => {
-                      setDireccionSeleccionada(user.direccion);
-                      setModalAbierto(true);
-                    }}
-                  >
-                    📍 Ver
-                  </button>
-                )}
-              </td>
-              <td>{user.telefono}</td>
-              <td>{user.rol}</td>
-              <td>{user.privilegios}</td>
-              <td>
-                {user.activo ? (
-                  <button
-                    onClick={() => cambiarEstadoUsuario(user.idFirebase, false)}
-                  >
-                    Inhabilitar
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => cambiarEstadoUsuario(user.idFirebase, true)}
-                  >
-                    Habilitar
-                  </button>
-                )}
-              </td>
+      <div className="table-container">
+        <table className="usuarios-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Foto</th>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Dirección</th>
+              <th>Teléfono</th>
+              <th>Rol</th>
+              <th>Privilegio</th>
+              <th>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {usuariosFiltrados.map((user, index) => (
+              <tr key={user.idFirebase}>
+                <td>{index + 1}</td>
+                <td>
+                  <img
+                    src={user.imagen || "/img/user-default.png"}
+                    alt="foto"
+                    width="50"
+                    style={{ borderRadius: "50%" }}
+                  />
+                </td>
+                <td>{user.nombre}</td>
+                <td>{user.correo}</td>
+                <td>
+                  {user.direccion && (
+                    <button
+                      style={{ marginLeft: "0.5rem" }}
+                      onClick={() => {
+                        setDireccionSeleccionada(user.direccion);
+                        setModalAbierto(true);
+                      }}
+                    >
+                      📍 Ver
+                    </button>
+                  )}
+                </td>
+                <td>{user.telefono}</td>
+                <td>{user.rol}</td>
+                <td>{user.privilegios}</td>
+                <td>
+                  {user.activo ? (
+                    <button
+                      onClick={() => cambiarEstadoUsuario(user.idFirebase, false)}
+                    >
+                      Inhabilitar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => cambiarEstadoUsuario(user.idFirebase, true)}
+                    >
+                      Habilitar
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {mostrarModalAgregar && (
         <ModalAgregarUsuario onClose={() => setMostrarModalAgregar(false)} />

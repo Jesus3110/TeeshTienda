@@ -59,27 +59,21 @@ function ModalBanner({ banner, onClose, onGuardarExitoso }) {
   return (
     <div className="modal-backdrop">
       <div className="modal-form">
-        <h2>{banner ? "Editar Banner" : "Nuevo Banner"}</h2>
-
+        <h2 className="modal-title">{banner ? "Editar Banner" : "Nuevo Banner"}</h2>
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>
-              Título:
-            </label>
+          <div className="form-group">
+            <label className="form-label">Título:</label>
             <input
               type="text"
               name="titulo"
               value={formData.titulo}
               onChange={handleInputChange}
               placeholder="Título del banner"
-              style={{ width: "100%", padding: "0.5rem" }}
+              className="form-input"
             />
           </div>
-
-          <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>
-              Descuento asociado:
-            </label>
+          <div className="form-group">
+            <label className="form-label">Descuento asociado:</label>
             <select
               name="descuentoId"
               value={formData.descuentoId}
@@ -92,7 +86,7 @@ function ModalBanner({ banner, onClose, onGuardarExitoso }) {
                   porcentaje: selected ? selected.porcentaje : "",
                 }));
               }}
-              style={{ width: "100%", padding: "0.5rem" }}
+              className="form-input"
             >
               <option value="">-- Selecciona un descuento --</option>
               {descuentosDisponibles.map((desc) => (
@@ -109,28 +103,17 @@ function ModalBanner({ banner, onClose, onGuardarExitoso }) {
                     ...prev,
                     descuentoId: "",
                     porcentaje: "",
-                    titulo: "", // Descomenta esta línea si quieres limpiar también el título
+                    titulo: "",
                   }));
                 }}
-                style={{
-                  marginTop: "0.5rem",
-                  padding: "0.4rem 0.8rem",
-                  backgroundColor: "#999",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
+                className="btn-table btn-delete"
               >
                 🧹 Quitar descuento
               </button>
             )}
           </div>
-
-          <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>
-              Porcentaje visual:
-            </label>
+          <div className="form-group">
+            <label className="form-label">Porcentaje visual:</label>
             <input
               type="number"
               name="porcentaje"
@@ -139,73 +122,52 @@ function ModalBanner({ banner, onClose, onGuardarExitoso }) {
               min={1}
               max={100}
               placeholder="Ej. 25"
-              style={{ width: "100%", padding: "0.5rem" }}
+              className="form-input"
             />
           </div>
-
-          <div style={{ marginBottom: "1rem" }}>
-            <label
-              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-            >
+          <div className="form-group">
+            <label className="switch-label">
               <input
                 type="checkbox"
                 name="activo"
                 checked={formData.activo}
                 onChange={handleInputChange}
+                className="custom-checkbox"
               />
               Banner activo
             </label>
           </div>
-
           {formData.imagenURL && (
-            <div style={{ marginBottom: "1rem" }}>
-              <p>Imagen actual:</p>
+            <div className="form-group">
+              <label className="form-label">Imagen actual:</label>
               <img
                 src={formData.imagenURL}
                 alt="Banner actual"
-                style={{ maxWidth: "200px", maxHeight: "100px" }}
               />
             </div>
           )}
-
-          <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>
-              {banner ? "Nueva imagen (opcional)" : "Imagen (requerida)"}
-            </label>
+          <div className="form-group">
+            <label className="form-label">{banner ? "Nueva imagen (opcional)" : "Imagen (requerida)"}</label>
             <input
               type="file"
               onChange={handleFileChange}
               accept="image/*"
               required={!banner}
-              style={{ width: "100%" }}
+              className="form-input"
             />
           </div>
-
-          <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+          <div className="form-actions">
             <button
               type="submit"
               disabled={cargando}
-              style={{
-                padding: "0.5rem 1rem",
-                backgroundColor: "#D62828",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
+              className="btn-red"
             >
               {cargando ? "Guardando..." : "Guardar"}
             </button>
             <button
               type="button"
               onClick={onClose}
-              style={{
-                padding: "0.5rem 1rem",
-                backgroundColor: "#ccc",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
+              className="btn-table btn-delete"
             >
               Cancelar
             </button>

@@ -16,6 +16,8 @@ const Categorias = () => {
   const [mostrarModalEditar, setMostrarModalEditar] = useState(false);
 const [categoriaEditar, setCategoriaEditar] = useState(null);
 const [resumenCategorias, setResumenCategorias] = useState({ conteo: {}, totalVentas: 0 });
+const [ventasPorCategoria, setVentasPorCategoria] = useState({});
+const [totalVentasCategorias, setTotalVentasCategorias] = useState(0);
 
 
 
@@ -50,6 +52,15 @@ useEffect(() => {
       });
   
       setResumenCategorias({ conteo, totalVentas });
+    });
+  
+    // Escuchar ventas por categoría desde dashboard
+    const refVentas = ref(db, "dashboard/categoriasVendidas");
+    onValue(refVentas, (snapshot) => {
+      const data = snapshot.val() || {};
+      setVentasPorCategoria(data);
+      const total = Object.values(data).reduce((acc, val) => acc + val, 0);
+      setTotalVentasCategorias(total);
     });
   }, []);
   
@@ -104,79 +115,76 @@ useEffect(() => {
     <div className="categorias-admin">
       <h2>Gestión de Categorías</h2>
 
-      <div className="filtros">
+      <div className="filtros-categorias-flex">
         <input
           type="text"
+          className="input-busqueda"
           placeholder="Buscar categoría..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
-        <label>
+        <label className="switch-label">
           <input
             type="checkbox"
+            className="custom-checkbox custom-checkbox-lg"
             checked={mostrarActivas}
             onChange={(e) => setMostrarActivas(e.target.checked)}
           />
           Ver activas
         </label>
-        <label>
+        <label className="switch-label">
           <input
             type="checkbox"
+            className="custom-checkbox custom-checkbox-lg"
             checked={mostrarInactivas}
             onChange={(e) => setMostrarInactivas(e.target.checked)}
           />
           Ver inactivas
         </label>
+        <button className="btn-red" onClick={() => setMostrarModalAgregar(true)}> Agregar</button>
       </div>
 
-      <div className="form-nueva-categoria">
-
-        <button onClick={() => setMostrarModalAgregar(true)}>➕ Agregar</button>
-
-{mostrarModalAgregar && (
-  <ModalAgregarCategoria onClose={() => setMostrarModalAgregar(false)} />
-)}
-
+      <div className="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Categoría</th>
+              <th>Productos</th>
+              <th>% Ventas</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {categoriasFiltradas.map((cat) => {
+              const resumen = resumenCategorias.conteo[cat.nombre] || { count: 0, ventas: 0 };
+              const ventasCat = ventasPorCategoria[cat.nombre] || 0;
+              const porcentajeReal = totalVentasCategorias > 0
+                ? ((ventasCat / totalVentasCategorias) * 100).toFixed(1)
+                : 0;
+              return (
+                <tr key={cat.idFirebase}>
+                  <td>{cat.idFirebase}</td>
+                  <td>{cat.nombre}</td>
+                  <td>{resumen.count}</td>
+                  <td>{porcentajeReal}%</td>
+                  <td>
+                    <button onClick={() => toggleActiva(cat.idFirebase, cat.activa)} className="btn-table btn-toggle">
+                      {cat.activa ? "Deshabilitar" : "Habilitar"}
+                    </button>
+                    <button onClick={() => eliminarCategoria(cat.idFirebase)} className="btn-table btn-delete">Eliminar</button>
+                    <button onClick={() => {
+                      setCategoriaEditar(cat);
+                      setMostrarModalEditar(true);
+                    }} className="btn-table btn-edit">Modificar</button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Categoría</th>
-            <th>Productos</th>
-            <th>% Ventas</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-        {categoriasFiltradas.map((cat) => {
-  const resumen = resumenCategorias.conteo[cat.nombre] || { count: 0, ventas: 0 };
-  const porcentaje = resumenCategorias.totalVentas
-    ? ((resumen.ventas / resumenCategorias.totalVentas) * 100).toFixed(1)
-    : 0;
-    return (
-        <tr key={cat.idFirebase}>
-          <td>{cat.idFirebase}</td>
-          <td>{cat.nombre}</td>
-          <td>{resumen.count}</td>
-          <td>{porcentaje}%</td>
-          <td>
-            <button onClick={() => toggleActiva(cat.idFirebase, cat.activa)}>
-              {cat.activa ? "Deshabilitar" : "Habilitar"}
-            </button>
-            <button onClick={() => eliminarCategoria(cat.idFirebase)}>Eliminar</button>
-            <button onClick={() => {
-              setCategoriaEditar(cat);
-              setMostrarModalEditar(true);
-            }}>Modificar</button>
-          </td>
-        </tr>
-      );
-    })}
-
-        </tbody>
-      </table>
       {mostrarModalEditar && categoriaEditar && (
   <ModalEditarCategoria
     categoria={categoriaEditar}
@@ -186,6 +194,10 @@ useEffect(() => {
     }}
   />
 )}
+
+      {mostrarModalAgregar && (
+        <ModalAgregarCategoria onClose={() => setMostrarModalAgregar(false)} />
+      )}
 
     </div>
   );

@@ -255,12 +255,14 @@ for (const prod of carrito) {
               placeholder="Calle"
               value={direccionForm.calle}
               onChange={(e) => setDireccionForm({ ...direccionForm, calle: e.target.value })}
+              className="form-input"
             />
             <input
               type="text"
               placeholder="Número"
               value={direccionForm.numero}
               onChange={(e) => setDireccionForm({ ...direccionForm, numero: e.target.value })}
+              className="form-input"
             />
           </div>
           <input
@@ -268,6 +270,7 @@ for (const prod of carrito) {
             placeholder="Colonia"
             value={direccionForm.colonia}
             onChange={(e) => setDireccionForm({ ...direccionForm, colonia: e.target.value })}
+            className="form-input"
           />
           <div className="address-row">
             <input
@@ -275,12 +278,14 @@ for (const prod of carrito) {
               placeholder="Ciudad"
               value={direccionForm.ciudad}
               onChange={(e) => setDireccionForm({ ...direccionForm, ciudad: e.target.value })}
+              className="form-input"
             />
             <input
               type="text"
               placeholder="Estado"
               value={direccionForm.estado}
               onChange={(e) => setDireccionForm({ ...direccionForm, estado: e.target.value })}
+              className="form-input"
             />
           </div>
           <input
@@ -288,6 +293,7 @@ for (const prod of carrito) {
             placeholder="Código Postal"
             value={direccionForm.cp}
             onChange={(e) => setDireccionForm({ ...direccionForm, cp: e.target.value })}
+            className="form-input"
           />
         </div>
 

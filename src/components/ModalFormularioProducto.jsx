@@ -180,162 +180,154 @@ const ModalFormularioProducto = ({ onClose }) => {
   };
 
   return (
-    <>
-      {exitoVisible ? (
-        <div className="modal-backdrop">
-          <div className="modal-form">
-            <h3>✅ Producto agregado correctamente</h3>
-            <button onClick={onClose}>Aceptar</button>
-          </div>
-        </div>
-      ) : errorVisible ? (
-        <div className="modal-backdrop">
-          <div className="modal-form">
-            <h3 style={{ color: "red" }}>❌ {errorMensaje}</h3>
-            <button onClick={onClose}>Cerrar</button>
-          </div>
-        </div>
-      ) : (
-        <div className="modal-backdrop">
-          <div className="modal-form">
-            <h2>Agregar Producto</h2>
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Nombre:</label>
+    <div className="modal-backdrop">
+      <div className="modal-form">
+        {exitoVisible ? (
+          <>
+            <h3 className="modal-title">✅ Producto agregado correctamente</h3>
+            <button className="btn-red" onClick={onClose}>Aceptar</button>
+          </>
+        ) : errorVisible ? (
+          <>
+            <h3 className="modal-title" style={{ color: "red" }}>❌ {errorMensaje}</h3>
+            <button className="btn-table btn-delete" onClick={onClose}>Cerrar</button>
+          </>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <h2 className="modal-title">Agregar Producto</h2>
+            <div className="form-group">
+              <label className="form-label" htmlFor="nombre">Nombre:</label>
+              <input
+                name="nombre"
+                id="nombre"
+                placeholder="Nombre del producto"
+                value={producto.nombre}
+                onChange={handleChange}
+                className="form-input"
+              />
+              {errores.nombre && <div className="form-error">{errores.nombre}</div>}
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="descripcion">Descripción:</label>
+              <textarea
+                name="descripcion"
+                id="descripcion"
+                placeholder="Descripción"
+                value={producto.descripcion}
+                onChange={handleChange}
+                className="form-input"
+              />
+              {errores.descripcion && <div className="form-error">{errores.descripcion}</div>}
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="precio">Precio:</label>
+              <input
+                name="precio"
+                id="precio"
+                type="number"
+                placeholder="Precio deseado (lo que tú quieres ganar)"
+                onChange={handleChange}
+                className={`form-input${errores.precio ? ' error' : ''}`}
+              />
+              {errores.precio && <div className="form-error">{errores.precio}</div>}
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="stock">Stock:</label>
+              <input
+                name="stock"
+                id="stock"
+                type="number"
+                placeholder="Cantidad en stock"
+                onChange={handleChange}
+                className={`form-input${errores.stock ? ' error' : ''}`}
+              />
+              {errores.stock && <div className="form-error">{errores.stock}</div>}
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="marca">Marca:</label>
+              <input
+                name="marca"
+                id="marca"
+                placeholder="Marca del producto"
+                value={producto.marca}
+                onChange={handleChange}
+                className={`form-input${errores.marca ? ' error' : ''}`}
+              />
+              {errores.marca && <div className="form-error">{errores.marca}</div>}
+            </div>
+            <div className="form-group">
+              <label className="form-label">Categoría:</label>
+              <select
+                name="categoria"
+                value={producto.categoria}
+                onChange={handleChange}
+                className="form-input"
+              >
+                <option value="">-- Selecciona una categoría --</option>
+                {categorias.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              {errores.categoria && <div className="form-error">{errores.categoria}</div>}
+            </div>
+            <div className="form-group">
+              <label className="switch-label">
                 <input
-                  name="nombre"
-                  placeholder="Nombre del producto"
-                  onChange={handleChange}
-                  style={{ borderColor: errores.nombre ? 'red' : undefined }}
+                  type="checkbox"
+                  checked={aplicarDescuento}
+                  onChange={() => setAplicarDescuento(!aplicarDescuento)}
+                  className="custom-checkbox"
                 />
-                {errores.nombre && <small style={{ color: "red" }}>{errores.nombre}</small>}
-              </div>
-
+                ¿Aplicar descuento?
+              </label>
+            </div>
+            {aplicarDescuento && (
               <div className="form-group">
-                <label>Descripción:</label>
-                <textarea
-                  name="descripcion"
-                  placeholder="Descripción del producto"
-                  onChange={handleChange}
-                  style={{ borderColor: errores.descripcion ? 'red' : undefined }}
-                />
-                {errores.descripcion && <small style={{ color: "red" }}>{errores.descripcion}</small>}
-              </div>
-
-              <div className="form-group">
-                <label>Precio deseado (lo que tú quieres ganar):</label>
-                <input
-                  name="precio"
-                  type="number"
-                  placeholder="Precio del producto"
-                  onChange={handleChange}
-                  style={{ borderColor: errores.precio ? 'red' : undefined }}
-                />
-                {errores.precio && <small style={{ color: "red" }}>{errores.precio}</small>}
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={aplicarDescuento}
-                    onChange={() => setAplicarDescuento(!aplicarDescuento)}
-                  />
-                  ¿Aplicar descuento?
-                </label>
-              </div>
-
-              {aplicarDescuento && (
-                <div className="form-group">
-                  <label>Seleccionar descuento:</label>
-                  <select
-                    name="descuento"
-                    onChange={handleDescuentoChange}
-                    value={descuentoSeleccionado?.id || ''}
-                    style={{ width: '100%' }}
-                  >
-                    <option value="">-- Seleccione un descuento --</option>
-                    {descuentosDisponibles.map((descuento) => (
-                      <option key={descuento.id} value={descuento.id}>
-                        {descuento.porcentaje}% - Válido hasta {new Date(descuento.validoHasta).toLocaleDateString()}
-                      </option>
-                    ))}
-                  </select>
-                  
-                  {descuentoSeleccionado && producto.precio && (
-                    <div className="descuento-info">
-                      <p><strong>Precio original:</strong> ${parseFloat(producto.precio).toFixed(2)}</p>
-                      <p><strong>Descuento:</strong> {descuentoSeleccionado.porcentaje}%</p>
-                      <p><strong>Precio final:</strong> ${precioConDescuento.toFixed(2)}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="form-group">
-                <label>Stock:</label>
-                <input
-                  name="stock"
-                  type="number"
-                  placeholder="Cantidad en stock"
-                  onChange={handleChange}
-                  style={{ borderColor: errores.stock ? 'red' : undefined }}
-                />
-                {errores.stock && <small style={{ color: "red" }}>{errores.stock}</small>}
-              </div>
-
-              <div className="form-group">
-  <label>Marca:</label>
-  <input
-    name="marca"
-    placeholder="Marca del producto"
-    value={producto.marca}
-    onChange={handleChange}
-    style={{ borderColor: errores.marca ? 'red' : undefined }}
-  />
-  {errores.marca && <small style={{ color: "red" }}>{errores.marca}</small>}
-</div>
-
-
-              <div className="form-group">
-                <label>Categoría:</label>
+                <label className="form-label">Seleccionar descuento:</label>
                 <select
-                  name="categoria"
-                  value={producto.categoria}
-                  onChange={handleChange}
-                  style={{ borderColor: errores.categoria ? "red" : undefined }}
+                  name="descuento"
+                  onChange={handleDescuentoChange}
+                  value={descuentoSeleccionado?.id || ''}
+                  className="form-input"
                 >
-                  <option value="">-- Selecciona una categoría --</option>
-                  {categorias.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  <option value="">-- Seleccione un descuento --</option>
+                  {descuentosDisponibles.map((descuento) => (
+                    <option key={descuento.id} value={descuento.id}>
+                      {descuento.porcentaje}% - Válido hasta {new Date(descuento.validoHasta).toLocaleDateString()}
+                    </option>
                   ))}
                 </select>
-                {errores.categoria && <small style={{ color: "red" }}>{errores.categoria}</small>}
+                {descuentoSeleccionado && producto.precio && (
+                  <div className="descuento-info">
+                    <p><strong>Precio original:</strong> ${parseFloat(producto.precio).toFixed(2)}</p>
+                    <p><strong>Descuento:</strong> {descuentoSeleccionado.porcentaje}%</p>
+                    <p><strong>Precio final:</strong> ${precioConDescuento.toFixed(2)}</p>
+                  </div>
+                )}
               </div>
-
-              <div className="form-group">
-                <label>Imagen:</label>
-                <input
-                  name="imagen"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-actions">
-                <button type="submit" disabled={subiendo} className="btn-primary">
-                  {subiendo ? "Subiendo..." : "Agregar Producto"}
-                </button>
-                <button type="button" onClick={onClose} className="btn-secondary">
-                  Cancelar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </>
+            )}
+            <div className="form-group">
+              <label className="form-label">Imagen:</label>
+              <input
+                name="imagen"
+                type="file"
+                accept="image/*"
+                onChange={handleChange}
+                className="form-input"
+              />
+            </div>
+            <div className="form-actions">
+              <button type="submit" disabled={subiendo} className="btn-red">
+                {subiendo ? "Subiendo..." : "Agregar Producto"}
+              </button>
+              <button type="button" onClick={onClose} className="btn-table btn-delete">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
   );
 };
 

@@ -15,14 +15,16 @@ export const generarReporteAnual = async (anio = new Date().getFullYear()) => {
   const productosSnap = await get(ref(db, "dashboard/productosVendidos"));
   const categoriasSnap = await get(ref(db, "dashboard/categoriasVendidas"));
   const totalSnap = await get(ref(db, "dashboard/ingresosTotales"));
-  const pedidosSnap = await get(ref(db, "pedidos"));
+  const historialSnap = await get(ref(db, "historialPedidosAdmin"));
 
   const ingresos = ingresosSnap.val() || {};
   const reinversion = reinversionSnap.val() || {};
   const productos = productosSnap.val() || {};
   const categorias = categoriasSnap.val() || {};
   const total = totalSnap.val() || 0;
-  const pedidos = pedidosSnap.exists() ? Object.values(pedidosSnap.val()) : [];
+  const pedidos = historialSnap.exists()
+    ? Object.values(historialSnap.val()).flatMap(usuario => Object.values(usuario))
+    : [];
 
   const fecha = new Date();
   const mesActualIndex = fecha.getMonth();

@@ -108,146 +108,117 @@ const bannersFiltrados = banners.filter((b) => {
 
 return (
   <div className="container" style={{ padding: "2rem" }}>
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: "1rem",
-      }}
-    >
+    <div className="banners-header-flex">
       <h2>Administrar Banners</h2>
-      <button
-        onClick={handleNuevoBanner}
-        style={{
-          padding: "0.5rem 1rem",
-          backgroundColor: "#D62828",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-        }}
-      >
-        + Nuevo Banner
-      </button>
-      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
-  <input
-    type="checkbox"
-    checked={verDeshabilitados}
-    onChange={(e) => setVerDeshabilitados(e.target.checked)}
-  />
-  Ver deshabilitados
-</label>
-
+      <div className="banners-header-actions">
+        <button className="btn-red" onClick={handleNuevoBanner}>
+          + Nuevo Banner
+        </button>
+        <label className="switch-label">
+          <input
+            type="checkbox"
+            className="custom-checkbox custom-checkbox-lg"
+            checked={verDeshabilitados}
+            onChange={(e) => setVerDeshabilitados(e.target.checked)}
+          />
+          Ver deshabilitados
+        </label>
+      </div>
     </div>
 
     {/* Lista de banners */}
     <div className="banners-list">
-      {cargando && banners.length === 0 ? (
-        <p>Cargando banners...</p>
-      ) : banners.length === 0 ? (
-        <p>No hay banners registrados</p>
-      ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <div className="table-container">
+        <table className="banners-table">
           <thead>
-            <tr style={{ backgroundColor: "#f5f5f5" }}>
-              <th style={{ padding: "0.5rem", textAlign: "left" }}>Imagen</th>
-              <th style={{ padding: "0.5rem", textAlign: "left" }}>Título</th>
-              <th style={{ padding: "0.5rem", textAlign: "left" }}>Descuento</th>
-              <th style={{ padding: "0.5rem", textAlign: "left" }}>Productos</th>
-              <th style={{ padding: "0.5rem", textAlign: "left" }}>Estado</th>
-              <th style={{ padding: "0.5rem", textAlign: "left" }}>Acciones</th>
+            <tr>
+              <th>Imagen</th>
+              <th>Título</th>
+              <th>Descuento</th>
+              <th>Productos</th>
+              <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {bannersFiltrados.map((banner) => {
-              const productosAsociados = productos.filter(
-                (p) => p.descuentoAplicado === banner.descuentoId
-              );
-              return (
-                <tr
-                  key={banner.id}
-                  style={{
-                    borderBottom: "1px solid #eee",
-                    backgroundColor: banner.activo ? "#fff" : "#f9f9f9",
-                  }}
-                >
-                  <td style={{ padding: "0.5rem" }}>
-                    <img
-                      src={banner.imagenURL}
-                      alt={banner.titulo}
-                      style={{
-                        width: "120px",
-                        height: "60px",
-                        objectFit: "cover",
-                      }}
-                    />
-                  </td>
-                  <td style={{ padding: "0.5rem" }}>
-                    <strong>{banner.titulo || "Sin título"}</strong>
-                  </td>
-                  <td style={{ padding: "0.5rem" }}>
-                    {banner.porcentaje ? `${banner.porcentaje}%` : "N/A"}
-                  </td>
-                  <td style={{ padding: "0.5rem" }}>
-                    <button
-                      onClick={() => {
-                        setProductosFiltrados(productosAsociados);
-                        setMostrarModalProductos(true);
-                      }}
-                      style={{
-                        padding: "0.3rem 0.6rem",
-                        backgroundColor: "#6c5ce7",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Ver ({productosAsociados.length})
-                    </button>
-                  </td>
-                  <td style={{ padding: "0.5rem" }}>
-                    {banner.activo !== false ? "Activo" : "Inactivo"}
-                  </td>
-                  <td style={{ padding: "0.5rem" }}>
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
-                      <button
-                        onClick={() => handleEditar(banner)}
+            {cargando && banners.length === 0 ? (
+              <tr>
+                <td colSpan={6} style={{ textAlign: "center", padding: "2rem" }}>
+                  Cargando banners...
+                </td>
+              </tr>
+            ) : bannersFiltrados.length === 0 ? (
+              <tr>
+                <td colSpan={6} style={{ textAlign: "center", padding: "2rem" }}>
+                  No hay banners registrados
+                </td>
+              </tr>
+            ) : (
+              bannersFiltrados.map((banner) => {
+                const productosAsociados = productos.filter(
+                  (p) => p.descuentoAplicado === banner.descuentoId
+                );
+                return (
+                  <tr
+                    key={banner.id}
+                    className={banner.activo ? "" : "row-inactive"}
+                  >
+                    <td>
+                      <img
+                        src={banner.imagenURL}
+                        alt={banner.titulo}
                         style={{
-                          padding: "0.3rem 0.6rem",
-                          backgroundColor: "#3498db",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
+                          width: "120px",
+                          height: "60px",
+                          objectFit: "cover",
                         }}
-                      >
-                        Editar
-                      </button>
+                      />
+                    </td>
+                    <td>
+                      <strong>{banner.titulo || "Sin título"}</strong>
+                    </td>
+                    <td>
+                      {banner.porcentaje ? `${banner.porcentaje}%` : "N/A"}
+                    </td>
+                    <td>
                       <button
-                        onClick={() =>
-                          handleEliminar(banner.id, banner.imagenURL)
-                        }
-                        style={{
-                          padding: "0.3rem 0.6rem",
-                          backgroundColor: "#ff4444",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
+                        onClick={() => {
+                          setProductosFiltrados(productosAsociados);
+                          setMostrarModalProductos(true);
                         }}
+                        className="btn-table btn-edit"
                       >
-                        Eliminar
+                        Ver productos
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                    <td>
+                      <span className={`status-badge ${banner.activo ? "status-active" : "status-inactive"}`}>
+                        {banner.activo !== false ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="table-actions">
+                        <button
+                          onClick={() => handleEditar(banner)}
+                          className="btn-table btn-edit"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleEliminar(banner.id, banner.imagenURL)}
+                          className="btn-table btn-delete"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
-      )}
+      </div>
     </div>
 
     {/* Modal de creación/edición */}

@@ -4,8 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import { getDatabase, ref, onValue, update, remove, get } from "firebase/database";
 import ClienteLayout from "../components/ClienteLayout";
 import "../styles/pedidos.css";
-
-
+import "../styles/tables.css";
 
 Modal.setAppElement("#root");
 
@@ -17,6 +16,8 @@ const Pedidos = () => {
   const [modalMapaAbierto, setModalMapaAbierto] = useState(false);
   const [tiempoRestante, setTiempoRestante] = useState("");
   const [confirmandoCancelacion, setConfirmandoCancelacion] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
+  const [estadoFiltro, setEstadoFiltro] = useState("todos");
 
   useEffect(() => {
     if (!usuario) return;
@@ -104,6 +105,7 @@ const Pedidos = () => {
         direccion: pedido.direccion || "",
         estado: "entregado",
         calificacion: pedido.calificacion || null, // <--- ESTE calificacion es null en ese momento
+        creadoEn: pedido.creadoEn,
       });
 
       await remove(refPedido);
@@ -222,7 +224,8 @@ const Pedidos = () => {
         estado: "cancelado",
         fechaCancelacion: new Date().toISOString(),
         montoDevolucion: montoDevolucion,
-        porcentajeRetenido: 15
+        porcentajeRetenido: 15,
+        creadoEn: pedido.creadoEn,
       });
 
       // Eliminar el pedido activo
@@ -239,216 +242,286 @@ const Pedidos = () => {
 
   const esAdmin = rol === "admin";
 
-  
-const contenido = (
-  <div className="pedidos-container">
-    <h2>{esAdmin ? "Pedidos de Clientes" : "Mis Pedidos"}</h2>
+  const pedidosFiltrados = pedidos.filter((pedido) => {
+    const matchesBusqueda = pedido.id.includes(busqueda) || pedido.nombre.includes(busqueda);
+    const matchesEstado = estadoFiltro === "todos" || pedido.estado === estadoFiltro;
+    return matchesBusqueda && matchesEstado;
+  });
 
-    <div className="table-responsive">
-      <table className="pedidos-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Estado</th>
-            <th>Pago</th>
-            {esAdmin && <th>Cliente</th>}
-            <th>Entrega</th>
-            <th>Total</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pedidos.map((p) => (
-            <tr key={p.id}>
-              <td>{p.id.slice(0, 6)}...</td>
-              <td>{p.estado}</td>
-              <td>{p.metodoPago}</td>
-              {esAdmin && <td>{p.nombre}</td>}
-              <td>{p.fechaEntrega || "N/D"}</td>
-              <td>${p.total}</td>
-              <td className="acciones-column">
-                <button
-                  className="ver-detalle-btn"
-                  onClick={() => handleAbrirModal(p)}
-                  title="Ver detalles"
-                >
-                  👁️
-                </button>
-                {p.estado === "pendiente" && (
-                  <button
-                    className="cancelar-btn"
-                    onClick={() => {
-                      setPedidoActivo(p);
-                      setConfirmandoCancelacion(true);
-                    }}
-                    title="Cancelar pedido"
-                  >
-                    ❌
-                  </button>
-                )}
-              </td>
+  // Función auxiliar para obtener la clase CSS según el estado
+  const getEstadoClass = (estado) => {
+    switch (estado) {
+      case 'pendiente':
+        return 'status-pending';
+      case 'en_proceso':
+        return 'status-processing';
+      case 'enviado':
+        return 'status-shipped';
+      case 'entregado':
+        return 'status-delivered';
+      case 'cancelado':
+        return 'status-cancelled';
+      default:
+        return '';
+    }
+  };
+
+  // Función auxiliar para formatear el estado
+  const formatearEstado = (estado) => {
+    switch (estado) {
+      case 'pendiente':
+        return 'Pendiente';
+      case 'en_proceso':
+        return 'En proceso';
+      case 'enviado':
+        return 'Enviado';
+      case 'entregado':
+        return 'Entregado';
+      case 'cancelado':
+        return 'Cancelado';
+      default:
+        return estado;
+    }
+  };
+
+  const contenido = (
+    <div className="pedidos-container">
+      <h2>Gestión de Pedidos</h2>
+
+      <div className="filtros-productos-flex filtros-pedidos-compact">
+        <input
+          type="text"
+          className="input-busqueda"
+          placeholder="Buscar por ID o cliente..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+        <select
+          className="select-estado"
+          value={estadoFiltro}
+          onChange={(e) => setEstadoFiltro(e.target.value)}
+        >
+          <option value="todos">Todos los estados</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="en_proceso">En proceso</option>
+          <option value="enviado">Enviado</option>
+          <option value="entregado">Entregado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+
+      <div className="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Pedido</th>
+              <th>Cliente</th>
+              <th>Fecha</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {pedidosFiltrados.map((pedido) => (
+              <tr key={pedido.id}>
+                <td>{pedido.id}</td>
+                <td>{pedido.nombre}</td>
+                <td>{new Date(pedido.fecha).toLocaleDateString()}</td>
+                <td>${pedido.total.toFixed(2)}</td>
+                <td>
+                  <span className={`status-badge ${getEstadoClass(pedido.estado)}`}>
+                    {formatearEstado(pedido.estado)}
+                  </span>
+                </td>
+                <td>
+                  <div className="table-actions">
+                    <button
+                      className="btn-table btn-edit"
+                      onClick={() => handleAbrirModal(pedido)}
+                    >
+                      Ver detalles
+                    </button>
+                    {pedido.estado !== 'cancelado' && pedido.estado !== 'entregado' && (
+                      <>
+                        <button
+                          className="btn-table btn-toggle"
+                          onClick={() => cambiarEstado(pedido)}
+                        >
+                          Actualizar estado
+                        </button>
+                        <button
+                          className="btn-table btn-delete"
+                          onClick={() => cancelarPedido(pedido)}
+                        >
+                          Cancelar
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-    {pedidoActivo && confirmandoCancelacion && (
-      <Modal
-        isOpen={true}
-        onRequestClose={() => {
-          setConfirmandoCancelacion(false);
-          setPedidoActivo(null);
-        }}
-        contentLabel="Confirmar Cancelación"
-        className="pedido-modal"
-        overlayClassName="modal-overlay"
-      >
-        <div className="modal-content">
-          <h3>⚠️ Aviso de Cancelación</h3>
-          <div className="cancelacion-info">
-            <p className="aviso-importante">IMPORTANTE: Al cancelar este pedido se aplicarán los siguientes cargos:</p>
-            <ul>
-              <li>💰 <strong>Cargo por cancelación:</strong> 15% del valor total del pedido</li>
-              <li>🧾 <strong>Total del pedido:</strong> ${pedidoActivo.total.toFixed(2)}</li>
-              <li>📊 <strong>Cargo a retener:</strong> ${(pedidoActivo.total * 0.15).toFixed(2)}</li>
-              <li>💵 <strong>Monto a devolver:</strong> ${calcularMontoDevolucion(pedidoActivo.total).toFixed(2)}</li>
-            </ul>
-            <div className="advertencia-box">
-              <p className="advertencia">⚠️ Este cargo es necesario debido a:</p>
+      {pedidoActivo && confirmandoCancelacion && (
+        <Modal
+          isOpen={true}
+          onRequestClose={() => {
+            setConfirmandoCancelacion(false);
+            setPedidoActivo(null);
+          }}
+          contentLabel="Confirmar Cancelación"
+          className="pedido-modal"
+          overlayClassName="modal-overlay"
+        >
+          <div className="modal-content">
+            <h3>⚠️ Aviso de Cancelación</h3>
+            <div className="cancelacion-info">
+              <p className="aviso-importante">IMPORTANTE: Al cancelar este pedido se aplicarán los siguientes cargos:</p>
               <ul>
-                <li>Comisiones bancarias no reembolsables</li>
-                <li>Gastos administrativos y operativos</li>
-                <li>Costos de procesamiento de la devolución</li>
+                <li>💰 <strong>Cargo por cancelación:</strong> 15% del valor total del pedido</li>
+                <li>🧾 <strong>Total del pedido:</strong> ${pedidoActivo.total.toFixed(2)}</li>
+                <li>📊 <strong>Cargo a retener:</strong> ${(pedidoActivo.total * 0.15).toFixed(2)}</li>
+                <li>💵 <strong>Monto a devolver:</strong> ${calcularMontoDevolucion(pedidoActivo.total).toFixed(2)}</li>
               </ul>
-              <p className="nota-final">Esta acción no se puede deshacer una vez confirmada.</p>
+              <div className="advertencia-box">
+                <p className="advertencia">⚠️ Este cargo es necesario debido a:</p>
+                <ul>
+                  <li>Comisiones bancarias no reembolsables</li>
+                  <li>Gastos administrativos y operativos</li>
+                  <li>Costos de procesamiento de la devolución</li>
+                </ul>
+                <p className="nota-final">Esta acción no se puede deshacer una vez confirmada.</p>
+              </div>
             </div>
-          </div>
-          <div className="button-group">
-            <button
-              className="btn-confirmar-cancelacion"
-              onClick={() => cancelarPedido(pedidoActivo)}
-            >
-              Sí, acepto los cargos y deseo cancelar
-            </button>
-            <button
-              className="btn-cancelar"
-              onClick={() => {
-                setConfirmandoCancelacion(false);
-                setPedidoActivo(null);
-              }}
-            >
-              No, mantener pedido
-            </button>
-          </div>
-        </div>
-      </Modal>
-    )}
-
-    {pedidoActivo && !confirmandoCancelacion && (
-      <Modal
-        isOpen={true}
-        onRequestClose={() => setPedidoActivo(null)}
-        contentLabel="Detalles del Pedido"
-        className="pedido-modal"
-        overlayClassName="modal-overlay"
-      >
-        <div className="modal-content">
-          <h3>Pedido #{pedidoActivo.id.slice(0, 6)}</h3>
-
-          <div className="info-section">
-            <p><strong>Estado:</strong> {pedidoActivo.estado}</p>
-            <p><strong>Pago:</strong> {pedidoActivo.metodoPago}</p>
-
-            {pedidoActivo.fechaEntrega && (
-              <>
-                <p><strong>Entrega estimada:</strong> {formatearFechaLarga(pedidoActivo.fechaEntrega)}</p>
-                <p><strong>Tiempo restante:</strong> {tiempoRestante}</p>
-              </>
-            )}
-
-            {pedidoActivo.direccion && (
-              <>
-                <p><strong>Dirección:</strong></p>
-                <button className="btn-ver-maps" onClick={() => setModalMapaAbierto(true)}>
-                  📍 Ver en Google Maps
-                </button>
-              </>
-            )}
-
-            {rol !== "cliente" && (
-              <p><strong>Cliente:</strong> {pedidoActivo.nombre}</p>
-            )}
-          </div>
-
-          <div className="productos-section">
-            <h4>Productos:</h4>
-            <ul>
-              {pedidoActivo.productos.map((prod, i) => (
-                <li key={i}>
-                  {prod.nombre} × {prod.cantidad} — ${prod.precio * prod.cantidad}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {pedidoActivo.calificacion && (
-            <div className="calificacion-section">
-              <p><strong>Calificación:</strong> {"★".repeat(pedidoActivo.calificacion.estrellas)}</p>
-              <p><strong>Comentario:</strong> {pedidoActivo.calificacion.comentario || "Sin comentario."}</p>
-            </div>
-          )}
-
-          <div className="modal-actions">
-            {rol === "admin" && pedidoActivo.estado !== "entregado" && (
+            <div className="button-group">
               <button
-                className="btn btn-success"
-                onClick={() => cambiarEstado(pedidoActivo)}
+                className="btn-confirmar-cancelacion"
+                onClick={() => cancelarPedido(pedidoActivo)}
               >
-                {pedidoActivo.estado === "pendiente"
-                  ? "Marcar como En Proceso"
-                  : "Marcar como Entregado"}
+                Sí, acepto los cargos y deseo cancelar
               </button>
-            )}
-            <button className="btn btn-cerrar" onClick={() => setPedidoActivo(null)}>
-              Cerrar
-            </button>
+              <button
+                className="btn-cancelar"
+                onClick={() => {
+                  setConfirmandoCancelacion(false);
+                  setPedidoActivo(null);
+                }}
+              >
+                No, mantener pedido
+              </button>
+            </div>
           </div>
-        </div>
-      </Modal>
-    )}
+        </Modal>
+      )}
 
-    {modalMapaAbierto && (
-      <Modal
-        isOpen={true}
-        onRequestClose={() => setModalMapaAbierto(false)}
-        contentLabel="Ubicación del Pedido"
-        className="modal-maps"
-        overlayClassName="overlay-maps"
-      >
-        <h3>Ubicación del Pedido</h3>
-        <iframe
-          src={`https://www.google.com/maps?q=${encodeURIComponent(pedidoActivo?.direccion || "")}&output=embed`}
-          width="100%"
-          height="400"
-          style={{ borderRadius: "12px", border: "none" }}
-          loading="lazy"
-          allowFullScreen
-        ></iframe>
-        <button className="btn-cerrar-maps" onClick={() => setModalMapaAbierto(false)}>
-          Cerrar Mapa
-        </button>
-      </Modal>
-    )}
-  </div>
-);
+      {pedidoActivo && !confirmandoCancelacion && (
+        <Modal
+          isOpen={true}
+          onRequestClose={() => setPedidoActivo(null)}
+          contentLabel="Detalles del Pedido"
+          className="pedido-modal"
+          overlayClassName="modal-overlay"
+        >
+          <div className="modal-content">
+            <h3>Pedido #{pedidoActivo.id.slice(0, 6)}</h3>
 
-// 👇 Este es el return final:
-return rol === "cliente" ? (
-  <ClienteLayout>{contenido}</ClienteLayout>
-) : (
-  contenido
-);
+            <div className="info-section">
+              <p><strong>Estado:</strong> {pedidoActivo.estado}</p>
+              <p><strong>Pago:</strong> {pedidoActivo.metodoPago}</p>
+
+              {pedidoActivo.fechaEntrega && (
+                <>
+                  <p><strong>Entrega estimada:</strong> {formatearFechaLarga(pedidoActivo.fechaEntrega)}</p>
+                  <p><strong>Tiempo restante:</strong> {tiempoRestante}</p>
+                </>
+              )}
+
+              {pedidoActivo.direccion && (
+                <>
+                  <p><strong>Dirección:</strong></p>
+                  <button className="btn-ver-maps" onClick={() => setModalMapaAbierto(true)}>
+                    📍 Ver en Google Maps
+                  </button>
+                </>
+              )}
+
+              {rol !== "cliente" && (
+                <p><strong>Cliente:</strong> {pedidoActivo.nombre}</p>
+              )}
+            </div>
+
+            <div className="productos-section">
+              <h4>Productos:</h4>
+              <ul>
+                {pedidoActivo.productos.map((prod, i) => (
+                  <li key={i}>
+                    {prod.nombre} × {prod.cantidad} — ${prod.precio * prod.cantidad}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {pedidoActivo.calificacion && (
+              <div className="calificacion-section">
+                <p><strong>Calificación:</strong> {"★".repeat(pedidoActivo.calificacion.estrellas)}</p>
+                <p><strong>Comentario:</strong> {pedidoActivo.calificacion.comentario || "Sin comentario."}</p>
+              </div>
+            )}
+
+            <div className="modal-actions">
+              {rol === "admin" && pedidoActivo.estado !== "entregado" && (
+                <button
+                  className="btn btn-success"
+                  onClick={() => cambiarEstado(pedidoActivo)}
+                >
+                  {pedidoActivo.estado === "pendiente"
+                    ? "Marcar como En Proceso"
+                    : "Marcar como Entregado"}
+                </button>
+              )}
+              <button className="btn btn-cerrar" onClick={() => setPedidoActivo(null)}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {modalMapaAbierto && (
+        <Modal
+          isOpen={true}
+          onRequestClose={() => setModalMapaAbierto(false)}
+          contentLabel="Ubicación del Pedido"
+          className="modal-maps"
+          overlayClassName="overlay-maps"
+        >
+          <h3>Ubicación del Pedido</h3>
+          <iframe
+            src={`https://www.google.com/maps?q=${encodeURIComponent(pedidoActivo?.direccion || "")}&output=embed`}
+            width="100%"
+            height="400"
+            style={{ borderRadius: "12px", border: "none" }}
+            loading="lazy"
+            allowFullScreen
+          ></iframe>
+          <button className="btn-cerrar-maps" onClick={() => setModalMapaAbierto(false)}>
+            Cerrar Mapa
+          </button>
+        </Modal>
+      )}
+    </div>
+  );
+
+  // 👇 Este es el return final:
+  return rol === "cliente" ? (
+    <ClienteLayout>{contenido}</ClienteLayout>
+  ) : (
+    contenido
+  );
 }
 
 export default Pedidos;

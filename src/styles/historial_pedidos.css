@@ -1,20 +1,44 @@
+.usuario-section {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  margin-bottom: 2rem;
+  padding: 1.5rem 1rem 1rem 1rem;
+  transition: box-shadow 0.2s;
+}
+
 .usuario-toggle {
-  background-color: #f0f0f0;
-  color: #333;
-  padding: 10px 15px;
+  background: linear-gradient(90deg, #fbeee6 0%, #f0f0f0 100%);
+  color: #1a2a3a;
+  padding: 18px 28px;
   border: none;
   width: 100%;
   text-align: left;
-  font-weight: bold;
-  border-radius: 6px;
+  font-weight: 700;
+  font-size: 1.15rem;
+  border-radius: 10px;
   cursor: pointer;
-  margin-top: 10px;
-  margin-bottom: 5px;
-  transition: background-color 0.2s ease;
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  transition: background 0.2s, box-shadow 0.2s;
 }
 
 .usuario-toggle:hover {
-  background-color: #ddd;
+  background: linear-gradient(90deg, #ffe6d6 0%, #e0e0e0 100%);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+
+/* Icono de carpeta (emoji) más grande */
+.usuario-toggle::before {
+  content: '📁';
+  font-size: 1.3em;
+  margin-right: 0.7rem;
+  vertical-align: middle;
 }
 
 .pedidos-table {
@@ -36,11 +60,14 @@
 }
 
 .pedido-modal {
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
+  background: #fff;
+  border-radius: 16px;
   max-width: 500px;
+  width: 95%;
+  padding: 0;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
   margin: auto;
+  overflow: hidden;
 }
 
 .modal-overlay {
@@ -97,4 +124,68 @@
   font-weight: bold;
   margin-top: 15px;
   text-align: center;
+}
+
+/* Botón de detalles (👁) */
+.detalle-btn {
+  background: #fbe9e7;
+  color: #c62828;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 1.1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px rgba(198,40,40,0.07);
+  margin: 0 0.2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.detalle-btn:hover {
+  background: #c62828;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(198,40,40,0.13);
+}
+
+/* Modal de detalles */
+.modal-content {
+  padding: 2.2rem 2rem 1.5rem 2rem;
+  color: #222;
+}
+.modal-content h3 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1565c0;
+  margin-bottom: 1.2rem;
+}
+.modal-content h4 {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+  color: #333;
+}
+.modal-content ul {
+  margin: 0.7rem 0 1.2rem 1.2rem;
+  padding: 0;
+}
+.modal-content li {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+.modal-content button {
+  margin-top: 1.5rem;
+  background: #1565c0;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.modal-content button:hover {
+  background: #0d3c7b;
 }

@@ -125,59 +125,61 @@ const unsubscribeDescuentos = onValue(descuentosRef, async (snapshot) => {
     <div className="descuentos-admin">
       <h2>Gestión de Descuentos</h2>
 
-      <div className="controles">
-        <button onClick={() => setMostrarModal(true)} className="btn-agregar">
+      <div className="filtros-productos-flex filtros-descuentos-compact">
+        <button onClick={() => setMostrarModal(true)} className="btn-red">
           ➕ Agregar descuento
         </button>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Descuento</th>
-            <th>Productos</th>
-            <th>Válido hasta</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {descuentos.map((desc) => {
-            const numProductos = contarProductosConDescuento(desc.id);
-            return (
-              <tr key={desc.id}>
-                <td>{desc.id.substring(0, 8)}...</td>
-                <td>{desc.porcentaje}%</td>
-                <td>
-                  {numProductos > 0 ? (
-                    <span className="badge">{numProductos} producto(s)</span>
-                  ) : (
-                    "Ninguno"
-                  )}
-                </td>
-                <td>{formatearFecha(desc.validoHasta)}</td>
-                <td className="acciones">
-                  <button 
-                    className="btn-editar"
-                    onClick={() => {
-                      setDescuentoEditar(desc);
-                      setMostrarEditar(true);
-                    }}
-                  >
-                    Editar
-                  </button>
-                  <button 
-                    className="btn-eliminar"
-                    onClick={() => eliminarDescuento(desc.id)}
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <div className="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Descuento</th>
+              <th>Productos</th>
+              <th>Válido hasta</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {descuentos.map((desc) => {
+              const numProductos = contarProductosConDescuento(desc.id);
+              return (
+                <tr key={desc.id}>
+                  <td>{desc.id.substring(0, 8)}...</td>
+                  <td>{desc.porcentaje}%</td>
+                  <td>
+                    {numProductos > 0 ? (
+                      <span className="badge">{numProductos} producto(s)</span>
+                    ) : (
+                      "Ninguno"
+                    )}
+                  </td>
+                  <td>{formatearFecha(desc.validoHasta)}</td>
+                  <td className="acciones">
+                    <button 
+                      className="btn-table btn-edit"
+                      onClick={() => {
+                        setDescuentoEditar(desc);
+                        setMostrarEditar(true);
+                      }}
+                    >
+                      Editar
+                    </button>
+                    <button 
+                      className="btn-table btn-delete"
+                      onClick={() => eliminarDescuento(desc.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       {mostrarModal && (
         <ModalDescuento 
