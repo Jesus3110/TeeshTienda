@@ -9,28 +9,30 @@ function ProductosDestacados({
   productosVendidos = {} // ← Recibes este prop desde Firebase
 }) {
   // Normaliza nombres para evitar errores por espacios o mayúsculas
-  const normalizar = (str) => str.trim().toLowerCase();
+  const normalizar = (str) => str?.trim().toLowerCase() || '';
 
   // Filtra solo productos que están en el ranking de vendidos
   const productosFiltrados = productos.filter((producto) =>
-    Object.keys(productosVendidos).some(
-      (nombre) => normalizar(nombre) === normalizar(producto.nombre)
+    producto?.nombre && Object.keys(productosVendidos).some(
+      (nombre) => nombre && normalizar(nombre) === normalizar(producto.nombre)
     )
   );
 
   // Ordena por cantidad vendida
   const productosOrdenados = productosFiltrados.sort((a, b) => {
+    if (!a?.nombre || !b?.nombre) return 0;
+    
     const ventasA =
       productosVendidos[
         Object.keys(productosVendidos).find(
-          (nombre) => normalizar(nombre) === normalizar(a.nombre)
+          (nombre) => nombre && normalizar(nombre) === normalizar(a.nombre)
         )
       ] || 0;
 
     const ventasB =
       productosVendidos[
         Object.keys(productosVendidos).find(
-          (nombre) => normalizar(nombre) === normalizar(b.nombre)
+          (nombre) => nombre && normalizar(nombre) === normalizar(b.nombre)
         )
       ] || 0;
 
