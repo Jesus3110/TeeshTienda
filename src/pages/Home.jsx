@@ -13,6 +13,7 @@ import ModalCategoria from "../components/ModalCategoria";
 import ProductosDestacados from "../components/ProductosDestacados";
 import ClienteLayout from "../components/ClienteLayout";
 import ChatBot from "../components/ChatBot";
+import BannerCarousel from "../components/BannerCarousel";
 
 
 function Home() {
@@ -239,46 +240,7 @@ function Home() {
     {/* Carrusel de Banners */}
     {banners.length > 0 && (
       <div className="banner-carousel">
-        <Slider {...carouselSettings}>
-          {banners.map((banner) => {
-            const ahora = Date.now();
-            const descuento = descuentos.find(
-              (d) =>
-                d.id === banner.descuentoId ||
-                d.idFirebase === banner.descuentoId
-            );
-            const tieneFechaValida =
-              descuento?.validoHasta &&
-              ahora <= new Date(descuento.validoHasta).getTime();
-            const tieneDescuento =
-              typeof banner.porcentaje === "number" &&
-              descuento &&
-              tieneFechaValida;
-            const mostrarTitulo =
-              banner.titulo &&
-              (tieneDescuento || !banner.descuentoId);
-
-            return (
-              <div key={banner.id} className="banner-slide">
-                <Link to={banner.enlace || "#"}>
-                  <img
-                    src={banner.imagenURL}
-                    alt={banner.titulo || "Banner"}
-                    className="banner-img"
-                  />
-                </Link>
-                {tieneDescuento && (
-                  <div className="banner-discount">
-                    -{banner.porcentaje}%
-                  </div>
-                )}
-                {mostrarTitulo && (
-                  <div className="banner-title">{banner.titulo}</div>
-                )}
-              </div>
-            );
-          })}
-        </Slider>
+        <BannerCarousel banners={banners} />
       </div>
     )}
 
