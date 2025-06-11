@@ -74,8 +74,8 @@ const ModalFormularioProducto = ({ onClose }) => {
   }, []);
 
   useEffect(() => {
-    if (!aplicarDescuento && formData.precioOriginal) {
-      setFormData((prev) => ({
+    if (!aplicarDescuento && producto.precioOriginal) {
+      setProducto((prev) => ({
         ...prev,
         precio: prev.precioOriginal,
         precioOriginal: null,

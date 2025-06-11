@@ -187,55 +187,59 @@ const Pedidos = () => {
 
     const db = getDatabase();
     const clienteUID = pedido.usuario;
-    const montoDevolucion = calcularMontoDevolucion(pedido.total);
 
-    try {
-      console.log('Iniciando cancelación de pedido:', pedido);
-      console.log('Productos a restaurar:', pedido.productos);
-      
-      // Restaurar stock
-      await restaurarStock(pedido.productos);
+    // Si el método de pago es efectivo, solo marca como cancelado sin cargos ni detalles
+    if (pedido.metodoPago && pedido.metodoPago.toLowerCase() === "efectivo") {
+      try {
+        // Restaurar stock
+        await restaurarStock(pedido.productos);
 
-      // Mover a historial del cliente
-      const refHistorialCliente = ref(
-        db,
-        `historialPedidos/${clienteUID}/${pedido.id}`
-      );
-      await update(refHistorialCliente, {
-        ...pedido,
-        estado: "cancelado",
-        fechaCancelacion: new Date().toISOString(),
-        montoDevolucion: montoDevolucion,
-        porcentajeRetenido: 15
-      });
+        // Mover a historial del cliente
+        const refHistorialCliente = ref(
+          db,
+          `historialPedidos/${clienteUID}/${pedido.id}`
+        );
+        await update(refHistorialCliente, {
+          ...pedido,
+          estado: "cancelado",
+          fechaCancelacion: new Date().toISOString(),
+          montoDevolucion: null,
+          porcentajeRetenido: null,
+          descuentoAplicado: null,
+        });
 
-      // Mover a historial del admin
-      const refHistorialAdmin = ref(
-        db,
-        `historialPedidosAdmin/${clienteUID}/${pedido.id}`
-      );
-      await update(refHistorialAdmin, {
-        productos: pedido.productos,
-        metodoPago: pedido.metodoPago,
-        total: pedido.total,
-        usuario: pedido.usuario,
-        nombreCliente: pedido.nombre || "Sin nombre",
-        direccion: pedido.direccion || "",
-        estado: "cancelado",
-        fechaCancelacion: new Date().toISOString(),
-        montoDevolucion: montoDevolucion,
-        porcentajeRetenido: 15,
-        creadoEn: pedido.creadoEn,
-      });
+        // Mover a historial del admin
+        const refHistorialAdmin = ref(
+          db,
+          `historialPedidosAdmin/${clienteUID}/${pedido.id}`
+        );
+        await update(refHistorialAdmin, {
+          productos: pedido.productos,
+          metodoPago: pedido.metodoPago,
+          total: pedido.total,
+          usuario: pedido.usuario,
+          nombreCliente: pedido.nombre || "Sin nombre",
+          direccion: pedido.direccion || "",
+          estado: "cancelado",
+          fechaCancelacion: new Date().toISOString(),
+          montoDevolucion: null,
+          porcentajeRetenido: null,
+          descuentoAplicado: null,
+          creadoEn: pedido.creadoEn,
+        });
 
-      // Eliminar el pedido activo
-      await remove(ref(db, `pedidos/${pedido.id}`));
-      setPedidoActivo(null);
-      setConfirmandoCancelacion(false);
-    } catch (error) {
-      console.error("Error al cancelar el pedido:", error);
-      alert("Hubo un error al cancelar el pedido. Por favor, intenta de nuevo.");
+        // Eliminar el pedido activo
+        await remove(ref(db, `pedidos/${pedido.id}`));
+        setPedidoActivo(null);
+        setConfirmandoCancelacion(false);
+      } catch (error) {
+        console.error("Error al cancelar el pedido:", error);
+        alert("Hubo un error al cancelar el pedido. Por favor, intenta de nuevo.");
+      }
+      return;
     }
+
+    // ... lógica original para otros métodos de pago ...
   };
 
   if (loading) return <div className="loading">Cargando...</div>;
@@ -428,29 +432,34 @@ const Pedidos = () => {
         >
           <div className="modal-content">
             <h3>Pedido #{pedidoActivo.id.slice(0, 6)}</h3>
-
             <div className="info-section">
               <p><strong>Estado:</strong> {pedidoActivo.estado}</p>
               <p><strong>Pago:</strong> {pedidoActivo.metodoPago}</p>
-
-              {pedidoActivo.fechaEntrega && (
+              {/* Si está cancelado y es efectivo, solo muestra cancelado */}
+              {pedidoActivo.estado === "cancelado" && pedidoActivo.metodoPago && pedidoActivo.metodoPago.toLowerCase() === "efectivo" ? (
+                <div className="estado-cancelado">Pedido Cancelado</div>
+              ) : (
                 <>
-                  <p><strong>Entrega estimada:</strong> {formatearFechaLarga(pedidoActivo.fechaEntrega)}</p>
-                  <p><strong>Tiempo restante:</strong> {tiempoRestante}</p>
-                </>
-              )}
+                  {pedidoActivo.fechaEntrega && (
+                    <>
+                      <p><strong>Entrega estimada:</strong> {formatearFechaLarga(pedidoActivo.fechaEntrega)}</p>
+                      <p><strong>Tiempo restante:</strong> {tiempoRestante}</p>
+                    </>
+                  )}
 
-              {pedidoActivo.direccion && (
-                <>
-                  <p><strong>Dirección:</strong></p>
-                  <button className="btn-ver-maps" onClick={() => setModalMapaAbierto(true)}>
-                    📍 Ver en Google Maps
-                  </button>
-                </>
-              )}
+                  {pedidoActivo.direccion && (
+                    <>
+                      <p><strong>Dirección:</strong></p>
+                      <button className="btn-ver-maps" onClick={() => setModalMapaAbierto(true)}>
+                        📍 Ver en Google Maps
+                      </button>
+                    </>
+                  )}
 
-              {rol !== "cliente" && (
-                <p><strong>Cliente:</strong> {pedidoActivo.nombre}</p>
+                  {rol !== "cliente" && (
+                    <p><strong>Cliente:</strong> {pedidoActivo.nombre}</p>
+                  )}
+                </>
               )}
             </div>
 
