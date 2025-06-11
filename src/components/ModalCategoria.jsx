@@ -15,7 +15,7 @@ function ModalCategoria({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-categoria" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-categoria" onClick={(e) => e.stopPropagation()} tabIndex={0} autoFocus>
         <button className="modal-close-btn" onClick={onClose}>
           ×
         </button>

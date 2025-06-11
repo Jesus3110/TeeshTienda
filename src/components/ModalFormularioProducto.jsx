@@ -73,6 +73,20 @@ const ModalFormularioProducto = ({ onClose }) => {
     return () => unsubscribeDescuentos();
   }, []);
 
+  useEffect(() => {
+    if (!aplicarDescuento && formData.precioOriginal) {
+      setFormData((prev) => ({
+        ...prev,
+        precio: prev.precioOriginal,
+        precioOriginal: null,
+        descuentoAplicado: null
+      }));
+      setDescuentoSeleccionado(null);
+      setPrecioConDescuento(0);
+    }
+  }, [aplicarDescuento]);
+
+  
   const calcularPrecioConDescuento = (precio, porcentaje) => {
     return precio - (precio * (porcentaje / 100));
   };

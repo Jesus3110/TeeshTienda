@@ -245,7 +245,7 @@ const Productos = () => {
                     {esDescuentoValido && prod.precioOriginal ? (
                       <>
                         <span className="price-original">
-                          ${prod.precioOriginal.toFixed(2)}
+                        ${Number(prod.precioOriginal || prod.precio).toFixed(2)}
                         </span>
                         <span className="price-discount">
                           ${precioConDescuento.toFixed(2)}

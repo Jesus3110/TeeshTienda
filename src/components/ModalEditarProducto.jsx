@@ -78,6 +78,20 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
     return () => unsubscribeCategorias();
   }, [producto, descuentos]);
 
+  useEffect(() => {
+    if (!aplicarDescuento && formData.precioOriginal) {
+      setFormData((prev) => ({
+        ...prev,
+        precio: prev.precioOriginal,
+        precioOriginal: null,
+        descuentoAplicado: null
+      }));
+      setDescuentoSeleccionado(null);
+      setPrecioConDescuento(0);
+    }
+  }, [aplicarDescuento]);
+  
+
   const calcularPrecioConDescuento = (precio, porcentaje) => {
     return precio - precio * (porcentaje / 100);
   };
@@ -313,7 +327,7 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
 
                   {descuentoSeleccionado && formData.precioOriginal && (
                     <div className="descuento-info">
-                      <p><strong>Precio original:</strong> ${formData.precioOriginal.toFixed(2)}</p>
+                      <p><strong>Precio original:</strong> ${Number(formData.precioOriginal || 0).toFixed(2)}</p>
                       <p><strong>Descuento:</strong> {descuentoSeleccionado.porcentaje}%</p>
                       <p><strong>Precio final:</strong> ${precioConDescuento.toFixed(2)}</p>
                     </div>

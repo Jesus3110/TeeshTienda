@@ -1,14 +1,42 @@
 .modal-categoria {
-  position: relative;
-  background-color: #ffffff;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-  max-width: 800px;
-  width: 95%;
-  margin: 0 auto;
+  max-height: 90vh;
   overflow-y: auto;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  position: relative;
+  width: 95%;
+  max-width: 1000px;
+  scrollbar-width: thin;
+  scrollbar-color: red transparent;
 }
+
+/* Scrollbar en navegadores WebKit (Chrome, Edge, Safari) */
+.modal-categoria::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-categoria::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-categoria::-webkit-scrollbar-thumb {
+  background-color: red;
+  border-radius: 10px;
+  border: 2px solid white;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow: hidden;
+}
+
 
 .modal-close-btn {
   position: absolute;
