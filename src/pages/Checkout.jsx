@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/checkout.css";
 import ClienteLayout from "../components/ClienteLayout";
 import { FaMoneyBillWave, FaTimesCircle, FaCreditCard } from "react-icons/fa";
+import ModalAlerta from "../components/ModalAlerta";
 
 
 
@@ -47,6 +48,7 @@ const [direccionForm, setDireccionForm] = useState({
   estado: "",
   cp: "",
 });
+const [alerta, setAlerta] = useState({ visible: false, mensaje: "", tipo: "info" });
 
 
   useEffect(() => {
@@ -95,12 +97,12 @@ if (typeof data.direccion === "object") {
 
 
     if (!direccionFinal) {
-      alert("Debe especificar una dirección de envío.");
+      setAlerta({ visible: true, mensaje: "Debe especificar una dirección de envío.", tipo: "error" });
       return;
     }
   
     if (carrito.length === 0) {
-      alert("Tu carrito está vacío.");
+      setAlerta({ visible: true, mensaje: "Tu carrito está vacío.", tipo: "error" });
       return;
     }
   
@@ -138,8 +140,7 @@ if (typeof data.direccion === "object") {
     const refCarrito = ref(db, `carritos/${usuario.uid}`);
     await set(refCarrito, null);
   
-    alert("✅ Pedido registrado correctamente");
-    navigate("/");
+    setAlerta({ visible: true, mensaje: "✅ Pedido registrado correctamente. Para ver más detalles, ve a la pestaña de Pedidos.", tipo: "success" });
 
     for (const prod of carrito) {
   const stockRef = ref(db, `productos/${prod.idFirebase}/stock`);
@@ -155,7 +156,7 @@ const guardarNuevaDireccion = async () => {
   const { calle, numero, colonia, ciudad, estado, cp } = direccionForm;
 
   if (!calle || !numero || !colonia || !ciudad || !estado || !cp) {
-    alert("Todos los campos de dirección son obligatorios");
+    setAlerta({ visible: true, mensaje: "Todos los campos de dirección son obligatorios", tipo: "error" });
     return;
   }
 
@@ -164,7 +165,6 @@ const guardarNuevaDireccion = async () => {
   const userRef = ref(db, `usuarios/${usuario.uid}/direccion`);
   setDireccionForm(nueva);
 setDireccionGuardada(true);
-setUsarNuevaDireccion(false);
 
 };
 
@@ -351,6 +351,20 @@ for (const prod of carrito) {
   </div>
 </div>
 
+{alerta.visible && (
+  <ModalAlerta
+    mensaje={alerta.mensaje}
+    tipo={alerta.tipo}
+    onClose={() => {
+      if (alerta.tipo === "success") {
+        setAlerta({ ...alerta, visible: false });
+        navigate("/");
+      } else {
+        setAlerta({ ...alerta, visible: false });
+      }
+    }}
+  />
+)}
 
 </ClienteLayout>
   );

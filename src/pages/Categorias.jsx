@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getDatabase, ref, onValue, remove, update, set } from "firebase/database";
 import ModalAgregarCategoria from "../components/ModalAgregarCategoria";
 import ModalEditarCategoria from "../components/ModalEditarCategoria";
+import ModalAlerta from "../components/ModalAlerta";
 import "../styles/modal.css";
 import "../styles/categorias.css";
 
@@ -18,6 +19,7 @@ const [categoriaEditar, setCategoriaEditar] = useState(null);
 const [resumenCategorias, setResumenCategorias] = useState({ conteo: {}, totalVentas: 0 });
 const [ventasPorCategoria, setVentasPorCategoria] = useState({});
 const [totalVentasCategorias, setTotalVentasCategorias] = useState(0);
+const [alerta, setAlerta] = useState({ visible: false, mensaje: "", tipo: "error" });
 
 
 
@@ -92,7 +94,7 @@ useEffect(() => {
     const cantidadProductos = resumenCategorias.conteo[categoria.nombre]?.count || 0;
   
     if (cantidadProductos > 0) {
-      alert(`No puedes eliminar la categoría "${categoria.nombre}" porque tiene ${cantidadProductos} producto(s) asignado(s).`);
+      setAlerta({ visible: true, mensaje: `No puedes eliminar la categoría "${categoria.nombre}" porque tiene ${cantidadProductos} producto(s) asignado(s).`, tipo: "error" });
       return;
     }
   
@@ -197,6 +199,14 @@ useEffect(() => {
 
       {mostrarModalAgregar && (
         <ModalAgregarCategoria onClose={() => setMostrarModalAgregar(false)} />
+      )}
+
+      {alerta.visible && (
+        <ModalAlerta
+          mensaje={alerta.mensaje}
+          tipo={alerta.tipo}
+          onClose={() => setAlerta({ ...alerta, visible: false })}
+        />
       )}
 
     </div>

@@ -1,5 +1,6 @@
 import React, { useState } from "react"; // <-- Agrega useState
 import "../styles/modalProducto.css";
+import ModalAlerta from "./ModalAlerta";
 
 function ModalProducto({
   producto,
@@ -11,6 +12,7 @@ function ModalProducto({
   carrito = [],
 }) {
   const [cantidad, setCantidad] = useState(1);
+  const [alerta, setAlerta] = useState({ visible: false, mensaje: "", tipo: "error" });
 
   const cantidadEnCarrito = carrito
     .filter((p) => p.idFirebase === producto.idFirebase)
@@ -168,9 +170,7 @@ function ModalProducto({
                   className="btn-agregar-carrito-modal"
                   onClick={() => {
                     if (cantidad > stockDisponible) {
-                      alert(
-                        `❌ Solo quedan ${stockDisponible} disponibles (ya tienes ${cantidadEnCarrito} en tu carrito)`
-                      );
+                      setAlerta({ visible: true, mensaje: `❌ Solo quedan ${stockDisponible} disponibles (ya tienes ${cantidadEnCarrito} en tu carrito)`, tipo: "error" });
                       return;
                     }
                     onAddToCart(producto, cantidad);
@@ -283,6 +283,13 @@ function ModalProducto({
           )}
         </div>
       </div>
+      {alerta.visible && (
+        <ModalAlerta
+          mensaje={alerta.mensaje}
+          tipo={alerta.tipo}
+          onClose={() => setAlerta({ ...alerta, visible: false })}
+        />
+      )}
     </div>
   );
 }

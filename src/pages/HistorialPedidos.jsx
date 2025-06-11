@@ -40,6 +40,12 @@ const HistorialPedidos = () => {
     return () => unsubscribe();
   }, [usuario, rol]);
 
+  useEffect(() => {
+    if (pedidoCalificar && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [pedidoCalificar]);
+
   const toggleSeccion = (uid) => {
     setSeccionesAbiertas((prev) => ({
       ...prev,
@@ -222,7 +228,10 @@ const HistorialPedidos = () => {
           overlayClassName="modal-overlay"
         >
           <div className="modal-content">
-            <h3>Calificar Pedido #{pedidoCalificar.id.slice(0, 6)}</h3>
+            <h3>
+              Calificar Pedido<br />
+              <span className="id-rojo">#{pedidoCalificar.id.slice(0, 6)}</span>
+            </h3>
             <label>Calificación:</label>
             <div className="estrellas-container">
               {renderEstrellas(calificacion, setCalificacion)}
@@ -231,23 +240,18 @@ const HistorialPedidos = () => {
             <label>Comentario:</label>
             <textarea
               ref={textareaRef}
+              className="textarea-calificacion"
               value={comentario}
               onChange={(e) => setComentario(e.target.value)}
             />
-            {useEffect(() => {
-              if (pedidoCalificar && textareaRef.current) {
-                textareaRef.current.focus();
-              }
-            }, [pedidoCalificar])}
-            <button className="btn btn-success" onClick={guardarCalificacion}>
-              Enviar Calificación
-            </button>
-            <button
-              className="btn btn-cerrar"
-              onClick={() => setPedidoCalificar(null)}
-            >
-              Cancelar
-            </button>
+            <div className="modal-actions">
+              <button className="btn btn-success" onClick={guardarCalificacion}>
+                Enviar Calificación
+              </button>
+              <button className="btn btn-cerrar" onClick={() => setPedidoCalificar(null)}>
+                Cancelar
+              </button>
+            </div>
           </div>
         </Modal>
       )}

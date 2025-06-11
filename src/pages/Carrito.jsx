@@ -11,11 +11,13 @@ import {
   FaArrowLeft,
   FaTimes,
 } from "react-icons/fa";
+import ModalAlerta from "../components/ModalAlerta";
 
 function Carrito() {
   const [carrito, setCarrito] = useState([]);
   const navigate = useNavigate();
   const { usuario } = useContext(AuthContext);
+  const [alerta, setAlerta] = useState({ visible: false, mensaje: "", tipo: "error" });
 
   // Cargar carrito desde Firebase al iniciar
   useEffect(() => {
@@ -75,7 +77,7 @@ function Carrito() {
 
       if (cantidadInt > stockDisponible) {
         copia[index].cantidad = stockDisponible;
-        alert(`❌ Solo hay ${stockDisponible} unidades disponibles.`);
+        setAlerta({ visible: true, mensaje: `❌ Solo hay ${stockDisponible} unidades disponibles.`, tipo: "error" });
       } else {
         copia[index].cantidad = cantidadInt;
       }
@@ -83,7 +85,7 @@ function Carrito() {
       actualizarCarrito(copia);
     } catch (error) {
       console.error("Error al validar stock:", error);
-      alert("Error al validar stock.");
+      setAlerta({ visible: true, mensaje: "Error al validar stock.", tipo: "error" });
     }
   };
 
@@ -108,7 +110,7 @@ function Carrito() {
 
   const confirmarCompra = async () => {
     if (!usuario) {
-      alert("Debes iniciar sesión para continuar con la compra.");
+      setAlerta({ visible: true, mensaje: "Debes iniciar sesión para continuar con la compra.", tipo: "error" });
       navigate("/login");
       return;
     }
@@ -195,6 +197,13 @@ function Carrito() {
 )}
 
       </div>
+      {alerta.visible && (
+        <ModalAlerta
+          mensaje={alerta.mensaje}
+          tipo={alerta.tipo}
+          onClose={() => setAlerta({ ...alerta, visible: false })}
+        />
+      )}
     </ClienteLayout>
   );
 }

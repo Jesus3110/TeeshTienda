@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getDatabase, ref, get } from "firebase/database";
+import ModalAlerta from "../components/ModalAlerta";
 
 function Producto() {
   const { id } = useParams(); // este es el idFirebase
   const navigate = useNavigate();
   const [producto, setProducto] = useState(null);
+  const [alerta, setAlerta] = useState({ visible: false, mensaje: "", tipo: "success" });
 
   useEffect(() => {
     const db = getDatabase();
@@ -26,7 +28,7 @@ function Producto() {
   }, [id]);
 
   const añadirAlCarrito = () => {
-    alert(`🛒 "${producto.nombre}" añadido al carrito (simulado)`);
+    setAlerta({ visible: true, mensaje: `🛒 "${producto.nombre}" añadido al carrito (simulado)`, tipo: "success" });
     // Aquí puedes guardar en localStorage o contexto global
   };
 
@@ -86,6 +88,13 @@ function Producto() {
           ⬅️ Regresar
         </button>
       </div>
+      {alerta.visible && (
+        <ModalAlerta
+          mensaje={alerta.mensaje}
+          tipo={alerta.tipo}
+          onClose={() => setAlerta({ ...alerta, visible: false })}
+        />
+      )}
     </div>
   );
 }

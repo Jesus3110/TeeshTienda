@@ -5,6 +5,7 @@ import { getDatabase, ref, onValue, update, remove, get } from "firebase/databas
 import ClienteLayout from "../components/ClienteLayout";
 import "../styles/pedidos.css";
 import "../styles/tables.css";
+import ModalAlerta from "../components/ModalAlerta";
 
 Modal.setAppElement("#root");
 
@@ -18,6 +19,7 @@ const Pedidos = () => {
   const [confirmandoCancelacion, setConfirmandoCancelacion] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
+  const [alerta, setAlerta] = useState({ visible: false, mensaje: "", tipo: "error" });
 
   useEffect(() => {
     if (!usuario) return;
@@ -234,7 +236,7 @@ const Pedidos = () => {
         setConfirmandoCancelacion(false);
       } catch (error) {
         console.error("Error al cancelar el pedido:", error);
-        alert("Hubo un error al cancelar el pedido. Por favor, intenta de nuevo.");
+        setAlerta({ visible: true, mensaje: "Hubo un error al cancelar el pedido. Por favor, intenta de nuevo.", tipo: "error" });
       }
       return;
     }
@@ -288,6 +290,16 @@ const Pedidos = () => {
     }
   };
 
+  const obtenerFechaPedido = (pedido) => {
+    if (pedido.creadoEn && !isNaN(new Date(pedido.creadoEn))) {
+      return new Date(pedido.creadoEn).toLocaleDateString();
+    } else if (pedido.fecha && !isNaN(new Date(pedido.fecha))) {
+      return new Date(pedido.fecha).toLocaleDateString();
+    } else {
+      return 'Sin fecha';
+    }
+  };
+
   const contenido = (
     <div className="pedidos-container">
       <h2>Gestión de Pedidos</h2>
@@ -329,9 +341,9 @@ const Pedidos = () => {
           <tbody>
             {pedidosFiltrados.map((pedido) => (
               <tr key={pedido.id}>
-                <td>{pedido.id}</td>
+                <td>{pedido.id.slice(0, 6)}</td>
                 <td>{pedido.nombre}</td>
-                <td>{new Date(pedido.fecha).toLocaleDateString()}</td>
+                <td>{obtenerFechaPedido(pedido)}</td>
                 <td>${pedido.total.toFixed(2)}</td>
                 <td>
                   <span className={`status-badge ${getEstadoClass(pedido.estado)}`}>
@@ -348,18 +360,25 @@ const Pedidos = () => {
                     </button>
                     {pedido.estado !== 'cancelado' && pedido.estado !== 'entregado' && (
                       <>
-                        <button
-                          className="btn-table btn-toggle"
-                          onClick={() => cambiarEstado(pedido)}
-                        >
-                          Actualizar estado
-                        </button>
-                        <button
-                          className="btn-table btn-delete"
-                          onClick={() => cancelarPedido(pedido)}
-                        >
-                          Cancelar
-                        </button>
+                        {rol === 'admin' && (
+                          <button
+                            className="btn-table btn-toggle"
+                            onClick={() => cambiarEstado(pedido)}
+                          >
+                            Actualizar estado
+                          </button>
+                        )}
+                        {rol === 'cliente' && (
+                          <button
+                            className="btn-table btn-delete"
+                            onClick={() => {
+                              setPedidoActivo(pedido);
+                              setConfirmandoCancelacion(true);
+                            }}
+                          >
+                            Cancelar
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
@@ -383,30 +402,39 @@ const Pedidos = () => {
         >
           <div className="modal-content">
             <h3>⚠️ Aviso de Cancelación</h3>
-            <div className="cancelacion-info">
-              <p className="aviso-importante">IMPORTANTE: Al cancelar este pedido se aplicarán los siguientes cargos:</p>
-              <ul>
-                <li>💰 <strong>Cargo por cancelación:</strong> 15% del valor total del pedido</li>
-                <li>🧾 <strong>Total del pedido:</strong> ${pedidoActivo.total.toFixed(2)}</li>
-                <li>📊 <strong>Cargo a retener:</strong> ${(pedidoActivo.total * 0.15).toFixed(2)}</li>
-                <li>💵 <strong>Monto a devolver:</strong> ${calcularMontoDevolucion(pedidoActivo.total).toFixed(2)}</li>
-              </ul>
-              <div className="advertencia-box">
-                <p className="advertencia">⚠️ Este cargo es necesario debido a:</p>
-                <ul>
-                  <li>Comisiones bancarias no reembolsables</li>
-                  <li>Gastos administrativos y operativos</li>
-                  <li>Costos de procesamiento de la devolución</li>
-                </ul>
-                <p className="nota-final">Esta acción no se puede deshacer una vez confirmada.</p>
+            {pedidoActivo.metodoPago && pedidoActivo.metodoPago.toLowerCase() === "efectivo" ? (
+              <div className="cancelacion-info">
+                <p className="aviso-importante">
+                  ¿Estás seguro de que deseas cancelar este pedido?
+                </p>
+                <p>Esta acción no se puede deshacer.</p>
               </div>
-            </div>
+            ) : (
+              <div className="cancelacion-info">
+                <p className="aviso-importante">IMPORTANTE: Al cancelar este pedido se aplicarán los siguientes cargos:</p>
+                <ul>
+                  <li>💰 <strong>Cargo por cancelación:</strong> 15% del valor total del pedido</li>
+                  <li>🧾 <strong>Total del pedido:</strong> ${pedidoActivo.total.toFixed(2)}</li>
+                  <li>📊 <strong>Cargo a retener:</strong> ${(pedidoActivo.total * 0.15).toFixed(2)}</li>
+                  <li>💵 <strong>Monto a devolver:</strong> ${calcularMontoDevolucion(pedidoActivo.total).toFixed(2)}</li>
+                </ul>
+                <div className="advertencia-box">
+                  <p className="advertencia">⚠️ Este cargo es necesario debido a:</p>
+                  <ul>
+                    <li>Comisiones bancarias no reembolsables</li>
+                    <li>Gastos administrativos y operativos</li>
+                    <li>Costos de procesamiento de la devolución</li>
+                  </ul>
+                  <p className="nota-final">Esta acción no se puede deshacer una vez confirmada.</p>
+                </div>
+              </div>
+            )}
             <div className="button-group">
               <button
                 className="btn-confirmar-cancelacion"
                 onClick={() => cancelarPedido(pedidoActivo)}
               >
-                Sí, acepto los cargos y deseo cancelar
+                Sí, cancelar pedido
               </button>
               <button
                 className="btn-cancelar"
@@ -521,6 +549,14 @@ const Pedidos = () => {
             Cerrar Mapa
           </button>
         </Modal>
+      )}
+
+      {alerta.visible && (
+        <ModalAlerta
+          mensaje={alerta.mensaje}
+          tipo={alerta.tipo}
+          onClose={() => setAlerta({ ...alerta, visible: false })}
+        />
       )}
     </div>
   );

@@ -3,6 +3,7 @@ import Slider from "react-slick";
 import { obtenerBanners } from "../services/bannersService";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { getDatabase, ref, onValue } from "firebase/database";
 
 function BannerCarousel({ banners: bannersProp }) {
   const [banners, setBanners] = useState(bannersProp || []);
@@ -14,17 +15,19 @@ function BannerCarousel({ banners: bannersProp }) {
       setCargando(false);
       return;
     }
-    const cargarBanners = async () => {
-      try {
-        const lista = await obtenerBanners();
-        setBanners(lista.sort((a, b) => a.orden - b.orden));
-      } catch (error) {
-        console.error("Error cargando banners:", error);
-      } finally {
-        setCargando(false);
-      }
-    };
-    cargarBanners();
+    // Suscripción en tiempo real
+    const db = getDatabase();
+    const bannersRef = ref(db, "banners");
+    const unsubscribe = onValue(bannersRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      const lista = Object.entries(data)
+        .map(([id, value]) => ({ id, ...value }))
+        .filter((b) => b.activo !== false)
+        .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+      setBanners(lista);
+      setCargando(false);
+    });
+    return () => unsubscribe();
   }, [bannersProp]);
 
   const settings = {
@@ -36,10 +39,15 @@ function BannerCarousel({ banners: bannersProp }) {
     autoplay: true,
     autoplaySpeed: 5000,
     arrows: true,
-    adaptiveHeight: true
+    adaptiveHeight: true,
   };
 
-  if (cargando) return <div style={{ padding: "2rem", textAlign: "center" }}>Cargando banners...</div>;
+  if (cargando)
+    return (
+      <div style={{ padding: "2rem", textAlign: "center" }}>
+        Cargando banners...
+      </div>
+    );
   if (banners.length === 0) return null;
 
   console.log("BANNERS EN CAROUSEL:", banners);
@@ -58,19 +66,38 @@ function BannerCarousel({ banners: bannersProp }) {
           console.log("RENDER BANNER:", banner);
           return (
             <div key={banner.id} style={{ position: "relative" }}>
-              <a href={banner.enlace || "#"} style={{ display: "block", position: "relative" }}>
-                <img
-                  src={banner.imagenURL}
-                  alt={banner.titulo || "Banner promocional"}
-                  style={{
-                    width: "100%",
-                    maxHeight: "400px",
-                    objectFit: "cover",
-                    borderRadius: "8px",
-                    display: "block",
-                  }}
-                />
-  
+              <a
+                href={banner.enlace || "#"}
+                style={{ display: "block", position: "relative" }}
+              >
+                <div
+  style={{
+    width: "100%",
+    aspectRatio: "16/9", // ✅ fuerza proporción
+    maxHeight: "300px",  // ✅ límite visual
+    overflow: "hidden",
+    position: "relative",
+    borderRadius: "12px",
+    backgroundColor: "#000",
+  }}
+>
+  <img
+    src={banner.imagenURL}
+    alt={banner.titulo || "Banner"}
+    style={{
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      objectPosition: "center",
+      border: "none",
+    }}
+  />
+</div>
+
+
                 {/* Porcentaje - esquina superior derecha */}
                 {banner.porcentaje && (
                   <div
@@ -90,7 +117,7 @@ function BannerCarousel({ banners: bannersProp }) {
                     {banner.porcentaje}% OFF
                   </div>
                 )}
-  
+
                 {/* Título - esquina inferior izquierda */}
                 {banner.titulo && (
                   <div
@@ -118,8 +145,6 @@ function BannerCarousel({ banners: bannersProp }) {
       </Slider>
     </div>
   );
-  
-  
 }
 
 export default BannerCarousel;

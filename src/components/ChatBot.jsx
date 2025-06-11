@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { AuthContext } from "../context/AuthContext";
-import { getDatabase, ref, push, onValue, set, update } from "firebase/database";
+import { getDatabase, ref, push, onValue, set, update, get, child } from "firebase/database";
 import '../styles/chatbot.css';
 
 const ChatBot = () => {
@@ -110,6 +110,14 @@ const ChatBot = () => {
     // Si ya hay un asistente asignado, no enviar respuesta del bot
     if (hasAssistant) return;
 
+    // --- NUEVO: Si ya se solicitó un asistente, no responder nada especial ---
+    const chatRef = ref(db, `chats/${currentChatId}`);
+    const chatSnap = await get(chatRef);
+    if (chatSnap.exists() && chatSnap.val().needsAssistant) {
+      return; // Ya se pidió un asistente, no responder más
+    }
+    // --- FIN NUEVO ---
+
     // Obtener respuesta del bot
     const botResponse = getBotResponse(inputMessage.toLowerCase());
     
@@ -124,25 +132,41 @@ const ChatBot = () => {
 
       if (newCount >= 2 || inputMessage.toLowerCase().includes('asistente')) {
         setTimeout(async () => {
-          sendMessageToChat(
-            `chats/${currentChatId}`,
-            "Parece que necesitas ayuda más específica. Te conectaré con un asistente para ayudarte mejor. 👨‍💼",
-            true
-          );
-          
-          // Marcar el chat como necesitando asistente
-          await set(ref(db, `chats/${currentChatId}/needsAssistant`), true);
-          
-          // Crear notificación para los asistentes
-          const notifRef = push(ref(db, 'notifications'));
-          await set(notifRef, {
-            type: 'new_chat',
-            chatId: currentChatId,
-            userName: usuario?.nombre || 'Usuario',
-            message: inputMessage,
-            timestamp: Date.now(),
-            read: false
-          });
+          // --- NUEVO: Verificar si hay asistentes en línea ---
+          const usuariosRef = ref(db, 'usuarios');
+          const snapshot = await get(usuariosRef);
+          let hayAsistenteEnLinea = false;
+          if (snapshot.exists()) {
+            const usuarios = Object.values(snapshot.val());
+            // Solo asistentes activos y online
+            hayAsistenteEnLinea = usuarios.some(u => u.rol === 'asistente' && u.activo === true && u.online === true);
+          }
+
+          if (hayAsistenteEnLinea) {
+            sendMessageToChat(
+              `chats/${currentChatId}`,
+              "Parece que necesitas ayuda más específica. Te conectaré con un asistente para ayudarte mejor. 👨‍💼",
+              true
+            );
+            // Marcar el chat como necesitando asistente
+            await set(ref(db, `chats/${currentChatId}/needsAssistant`), true);
+            // Crear notificación para los asistentes
+            const notifRef = push(ref(db, 'notifications'));
+            await set(notifRef, {
+              type: 'new_chat',
+              chatId: currentChatId,
+              userName: usuario?.nombre || 'Usuario',
+              message: inputMessage,
+              timestamp: Date.now(),
+              read: false
+            });
+          } else {
+            sendMessageToChat(
+              `chats/${currentChatId}`,
+              "Por el momento no hay asistentes en línea. Un asesor se comunicará contigo en cuanto sea posible.",
+              true
+            );
+          }
         }, 1000);
       } else {
         setTimeout(() => {

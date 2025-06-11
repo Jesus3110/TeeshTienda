@@ -70,6 +70,7 @@ const Usuarios = () => {
           <option value="todos">Todos los roles</option>
           <option value="cliente">Cliente</option>
           <option value="admin">Administrador</option>
+          <option value="asistente">Asistente</option>
           <option value="inhabilitados">Inhabilitados</option>
         </select>
         <button className="btn-red" onClick={() => setMostrarModalAgregar(true)}>

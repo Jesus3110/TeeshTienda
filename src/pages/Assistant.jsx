@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
 import { AuthContext } from "../context/AuthContext";
-import { getDatabase, ref, onValue, set, push, remove, update, get } from "firebase/database";
+import { getDatabase, ref, onValue, set, push, remove, update, get, onDisconnect } from "firebase/database";
 import AssistantLayout from '../components/AssistantLayout';
 import '../styles/assistant.css';
 
@@ -152,10 +152,10 @@ const Assistant = () => {
         return (b.lastMessage || 0) - (a.lastMessage || 0);
       }));
 
-      // Actualizar el chat seleccionado si existe
+      // Actualizar el chat seleccionado si existe y cambió
       if (selectedChat) {
         const updatedSelectedChat = chatsArray.find(chat => chat.id === selectedChat.id);
-        if (updatedSelectedChat) {
+        if (updatedSelectedChat && JSON.stringify(updatedSelectedChat) !== JSON.stringify(selectedChat)) {
           setSelectedChat(updatedSelectedChat);
         }
       }
@@ -163,6 +163,20 @@ const Assistant = () => {
 
     return () => unsubscribe();
   }, [usuario, selectedChat?.id]);
+
+  useEffect(() => {
+    if (!usuario || usuario.rol !== 'asistente') return;
+    const db = getDatabase();
+    const userRef = ref(db, `usuarios/${usuario.uid}/online`);
+    // Marcar online: true
+    set(userRef, true);
+    // Configurar onDisconnect para poner online: false
+    onDisconnect(userRef).set(false);
+    // Cleanup: al salir de la vista, poner online: false
+    return () => {
+      set(userRef, false);
+    };
+  }, [usuario]);
 
   const handleChatSelect = async (chat) => {
     setSelectedChat(chat);

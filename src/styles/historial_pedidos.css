@@ -62,7 +62,7 @@
 .pedido-modal {
   background: #fff;
   border-radius: 16px;
-  max-width: 500px;
+  max-width: 370px;
   width: 95%;
   padding: 0;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
@@ -176,7 +176,7 @@
 }
 .modal-content button {
   margin-top: 1.5rem;
-  background: #1565c0;
+  background:#e93636;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -188,4 +188,73 @@
 }
 .modal-content button:hover {
   background: #0d3c7b;
+}
+
+/* Mejorar textarea en modal de calificación */
+.pedido-modal textarea {
+  width: 100%;
+  min-height: 80px;
+  border: 2px solid #e93636;
+  border-radius: 8px;
+  padding: 0.8rem;
+  font-size: 1rem;
+  resize: vertical;
+  margin-bottom: 1.2rem;
+  box-sizing: border-box;
+}
+
+/* Estrellas rojas */
+.estrellas, .estrellas-container span, .estrellas-container svg {
+  color: #e93636 !important;
+  font-size: 1.7em;
+  cursor: pointer;
+}
+
+/* Botones rojos grandes en modal calificación */
+.pedido-modal .btn, .pedido-modal .btn-success, .pedido-modal .btn-cerrar {
+  background-color: #e93636 !important;
+  color: #fff !important;
+  border: none;
+  border-radius: 8px;
+  padding: 0.9rem 2rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin: 0.5rem 0.5rem 0 0;
+  transition: background 0.2s;
+}
+.pedido-modal .btn:hover, .pedido-modal .btn-success:hover, .pedido-modal .btn-cerrar:hover {
+  background-color: #b71c1c !important;
+}
+
+/* Centrar y estilizar el título del modal de calificación */
+.pedido-modal h3 {
+  text-align: center;
+  color: #e93636;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  margin-left: 0;
+  margin-right: 0;
+}
+.pedido-modal .id-rojo {
+  color: #e93636;
+  display: block;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-top: 0.2em;
+}
+
+.pedido-modal .modal-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 2rem;
+}
+
+.pedido-modal .btn-cerrar {
+  display: block;
+  margin: 0 auto;
+  
 }

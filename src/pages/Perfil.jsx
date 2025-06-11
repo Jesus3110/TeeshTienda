@@ -14,6 +14,7 @@ import "../styles/perfil.css";
 import Modal from "react-modal";
 import bcrypt from "bcryptjs";
 import AdminLayout from "../components/AdminLayout";
+import ModalAlerta from "../components/ModalAlerta";
 
 const Perfil = () => {
   const { usuario, rol, setUsuario } = useContext(AuthContext);
@@ -26,6 +27,7 @@ const Perfil = () => {
   const [confirmarPass, setConfirmarPass] = useState("");
   const [verNuevaPass, setVerNuevaPass] = useState(false);
   const [verConfirmarPass, setVerConfirmarPass] = useState(false);
+  const [alerta, setAlerta] = useState({ visible: false, mensaje: "", tipo: "error" });
 
   const direccionCompleta = perfil?.direccion
     ? `${perfil.direccion.calle} ${perfil.direccion.numero}, ${perfil.direccion.colonia}, ${perfil.direccion.ciudad}, ${perfil.direccion.estado}, ${perfil.direccion.cp}`
@@ -113,11 +115,11 @@ const Perfil = () => {
     if (cambiarPass) {
       const errores = validarPassword(formData.nuevaPass || "");
       if (errores.length > 0) {
-        alert("❌ La contraseña no cumple los requisitos:\n" + errores.join("\n"));
+        setAlerta({ visible: true, mensaje: "❌ La contraseña no cumple los requisitos:\n" + errores.join("\n"), tipo: "error" });
         return;
       }
       if (formData.nuevaPass !== confirmarPass) {
-        alert("❌ Las contraseñas no coinciden");
+        setAlerta({ visible: true, mensaje: "❌ Las contraseñas no coinciden", tipo: "error" });
         return;
       }
       datosActualizados.password = await bcrypt.hash(formData.nuevaPass, 10);
@@ -373,6 +375,14 @@ const Perfil = () => {
           Cerrar
         </button>
       </Modal>
+
+      {alerta.visible && (
+        <ModalAlerta
+          mensaje={alerta.mensaje}
+          tipo={alerta.tipo}
+          onClose={() => setAlerta({ ...alerta, visible: false })}
+        />
+      )}
     </div>
   );
 

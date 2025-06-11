@@ -14,6 +14,7 @@ import ProductosDestacados from "../components/ProductosDestacados";
 import ClienteLayout from "../components/ClienteLayout";
 import ChatBot from "../components/ChatBot";
 import BannerCarousel from "../components/BannerCarousel";
+import ModalAlerta from "../components/ModalAlerta";
 
 
 function Home() {
@@ -29,6 +30,7 @@ function Home() {
   const [descuentos, setDescuentos] = useState([]);
   const [productosVendidos, setProductosVendidos] = useState({});
   const [carrito, setCarrito] = useState([]);
+  const [alerta, setAlerta] = useState({ visible: false, mensaje: "", tipo: "success" });
 
 
   const obtenerDescuentoProducto = (producto) => {
@@ -203,7 +205,7 @@ function Home() {
         }
 
         set(carritoRef, carritoActual);
-        alert(`✅ "${producto.nombre}" añadido al carrito.`);
+        setAlerta({ visible: true, mensaje: `✅ "${producto.nombre}" añadido al carrito.`, tipo: "success" });
       },
       { onlyOnce: true }
     );
@@ -317,6 +319,14 @@ function Home() {
         productosRelacionados={productos}
         onProductoClick={handleProductoRelacionadoClick}
         carrito={carrito}
+      />
+    )}
+
+    {alerta.visible && (
+      <ModalAlerta
+        mensaje={alerta.mensaje}
+        tipo={alerta.tipo}
+        onClose={() => setAlerta({ ...alerta, visible: false })}
       />
     )}
   </div>
