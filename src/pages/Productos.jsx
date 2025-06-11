@@ -15,9 +15,7 @@ const toggleActivo = async (id, estadoActual) => {
 };
 
 const eliminarProducto = async (id) => {
-  const confirmar = window.confirm(
-    "¿Estás seguro de que quieres eliminar este producto?"
-  );
+  const confirmar = window.confirm("¿Estás seguro de que quieres eliminar este producto?");
   if (!confirmar) return;
 
   const db = getDatabase();
@@ -49,8 +47,12 @@ const Productos = () => {
       const listaDescuentos = Object.entries(data).map(([id, value]) => ({
         id,
         ...value,
-        validoHasta: value.validoHasta ? new Date(value.validoHasta) : null,
+        nombre: value.nombre || "Sin nombre",
+        validoHasta: typeof value.validoHasta === "number"
+          ? new Date(value.validoHasta)
+          : null,
       }));
+
       setDescuentos(listaDescuentos);
 
       const productosRef = ref(db, "productos");
@@ -59,25 +61,44 @@ const Productos = () => {
         const lista = [];
 
         for (const [idFirebase, value] of Object.entries(data)) {
-          const producto = { idFirebase, ...value };
-          const descuentoId = producto.descuentoAplicado;
+          const prod = { idFirebase, ...value };
+          const idDescuento = prod.descuentoAplicado;
 
-          if (descuentoId) {
-            const descuento = listaDescuentos.find((d) => d.id === descuentoId);
-            if (!descuento || !descuento.validoHasta || !(descuento.validoHasta instanceof Date) || descuento.validoHasta.getTime() <= Date.now()) {
-              const refProducto = ref(db, `productos/${idFirebase}`);
-              await update(refProducto, {
+          const descuento = listaDescuentos.find(d => d.id === idDescuento);
+          console.log("🟨 Producto leído:", prod.nombre);
+          console.log("🟩 Descuento encontrado:", descuento);
+
+          let vencido = false;
+
+          if (
+            descuento &&
+            descuento.validoHasta instanceof Date &&
+            !isNaN(descuento.validoHasta.getTime())
+          ) {
+            vencido = descuento.validoHasta.getTime() <= Date.now();
+          }
+
+          console.log("🕒 Fecha del descuento:", descuento?.validoHasta?.toISOString?.());
+          console.log("🔴 ¿Está vencido?", vencido);
+
+          if (descuento && vencido) {
+            if (prod.precioOriginal && typeof prod.precioOriginal === "number") {
+              const refProd = ref(db, `productos/${idFirebase}`);
+              await update(refProd, {
                 descuentoAplicado: null,
-                precio: producto.precioOriginal || producto.precio,
+                precio: prod.precioOriginal,
                 precioOriginal: null,
               });
-              producto.descuentoAplicado = null;
-              producto.precio = producto.precioOriginal || producto.precio;
-              producto.precioOriginal = null;
+              prod.descuentoAplicado = null;
+              prod.precio = prod.precioOriginal;
+              prod.precioOriginal = null;
+              console.warn("‼️ Se eliminó descuento vencido de:", prod.nombre);
+            } else {
+              console.warn("🛑 PrecioOriginal inválido. No se borra descuento de:", prod.nombre);
             }
           }
 
-          lista.push(producto);
+          lista.push(prod);
         }
 
         setProductos(lista);
@@ -97,9 +118,7 @@ const Productos = () => {
         }
       });
 
-      return () => {
-        unsubscribeProductos();
-      };
+      return () => unsubscribeProductos();
     });
 
     const refVendidos = ref(db, "dashboard/productosVendidos");
@@ -117,46 +136,30 @@ const Productos = () => {
 
   const obtenerDescuentoProducto = (producto) => {
     if (!producto.descuentoAplicado) return null;
-    return descuentos.find(
-      (d) => d.id.trim() === producto.descuentoAplicado.trim()
-    );
+    return descuentos.find((d) => d.id.trim() === producto.descuentoAplicado.trim());
   };
 
   const calcularPrecioConDescuento = (precio, descuento, precioOriginal = null) => {
     if (typeof precio !== "number" || isNaN(precio)) return precio;
     if (!descuento || typeof descuento.porcentaje !== "number") return precio;
 
-    const baseParaDescuento =
-      precioOriginal && typeof precioOriginal === "number"
-        ? precioOriginal
-        : precio;
-
-    const descuentoAplicado = baseParaDescuento * (descuento.porcentaje / 100);
-    const precioFinal = precio - descuentoAplicado;
-
-    return Math.round(precioFinal * 100) / 100;
+    const base = precioOriginal && typeof precioOriginal === "number" ? precioOriginal : precio;
+    const final = base * (1 - descuento.porcentaje / 100);
+    return Math.round(final * 100) / 100;
   };
 
   const productosFiltrados = productos
-    .filter((prod) => prod && prod.nombre)
-    .filter((prod) => {
-      const coincideBusqueda = (prod.nombre || "")
-        .toLowerCase()
-        .includes(busqueda.toLowerCase());
-      const coincideCategoria =
-        categoriaFiltro === "todos" || prod.categoria === categoriaFiltro;
-      const mostrarActivo = verActivos && prod.activo;
-      const mostrarDeshabilitado = verDeshabilitados && !prod.activo;
-
-      return coincideBusqueda && coincideCategoria && (mostrarActivo || mostrarDeshabilitado);
+    .filter((p) => p && p.nombre)
+    .filter((p) => {
+      const matchNombre = p.nombre.toLowerCase().includes(busqueda.toLowerCase());
+      const matchCategoria = categoriaFiltro === "todos" || p.categoria === categoriaFiltro;
+      const matchActivos = verActivos && p.activo;
+      const matchInactivos = verDeshabilitados && !p.activo;
+      return matchNombre && matchCategoria && (matchActivos || matchInactivos);
     });
 
-  if (cargando) {
-    return <div className="cargando">Cargando productos...</div>;
-  }
-
   return (
-    <div className="productos-admin">
+      <div className="productos-admin">
       <h2>Gestión de Productos</h2>
 
       <div className="filtros-productos-flex">
@@ -275,7 +278,7 @@ const Productos = () => {
                   </td>
                   <td>
                     <div className="table-actions">
-                      <button 
+                      <button
                         className="btn-table btn-edit"
                         onClick={() => {
                           setProductoEditar(prod);
@@ -290,7 +293,7 @@ const Productos = () => {
                       >
                         {prod.activo ? "Deshabilitar" : "Habilitar"}
                       </button>
-                      <button 
+                      <button
                         className="btn-table btn-delete"
                         onClick={() => eliminarProducto(prod.idFirebase)}
                       >

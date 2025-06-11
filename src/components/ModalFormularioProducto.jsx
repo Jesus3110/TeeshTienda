@@ -81,18 +81,16 @@ const ModalFormularioProducto = ({ onClose }) => {
     const { name, value, files } = e.target;
     if (name === "imagen") {
       setProducto((prev) => ({ ...prev, imagen: files[0] }));
-    }  else if (name === "precio") {
-  const precioDeseado = parseFloat(value);
-  const precioBruto = calcularPrecioConComision(precioDeseado);
-  setProducto((prev) => ({ 
-    ...prev, 
-    precio: precioBruto, 
-    precioOriginal: precioBruto 
-  }));
-  if (descuentoSeleccionado) {
-    setPrecioConDescuento(calcularPrecioConDescuento(precioBruto, descuentoSeleccionado.porcentaje));
-  }
-} else {
+    } else if (name === "precio") {
+      setProducto((prev) => ({
+        ...prev,
+        precio: value, // SIEMPRE el precio base, sin descuento ni comisión
+        precioOriginal: value
+      }));
+      if (aplicarDescuento && descuentoSeleccionado) {
+        setPrecioConDescuento(calcularPrecioConDescuento(parseFloat(value), descuentoSeleccionado.porcentaje));
+      }
+    } else {
       setProducto((prev) => ({ ...prev, [name]: value }));
     }
   };
@@ -121,8 +119,8 @@ const ModalFormularioProducto = ({ onClose }) => {
     if (!producto.precio) nuevosErrores.precio = "El precio es obligatorio";
     if (!producto.stock) nuevosErrores.stock = "El stock es obligatorio";
     if (!producto.marca) nuevosErrores.marca = "La marca es obligatoria";
+    if (aplicarDescuento && !descuentoSeleccionado) nuevosErrores.descuento = "Debes seleccionar un descuento";
 
-  
     setErrores(nuevosErrores);
   
     if (Object.keys(nuevosErrores).length > 0) {
@@ -146,16 +144,17 @@ const ModalFormularioProducto = ({ onClose }) => {
         urlImagen = await getDownloadURL(imagenRef);
       }
 
-      const precioFinal = aplicarDescuento && descuentoSeleccionado ? 
-  precioConDescuento : parseFloat(producto.precio);
-
+      const precioOriginal = parseFloat(producto.precioOriginal || producto.precio);
+      const precioFinal = aplicarDescuento && descuentoSeleccionado
+        ? calcularPrecioConDescuento(precioOriginal, descuentoSeleccionado.porcentaje)
+        : precioOriginal;
 
       const nuevoProducto = {
         id: nuevoID,
         nombre: producto.nombre,
         descripcion: producto.descripcion,
         precio: precioFinal,
-        precioOriginal: parseFloat(producto.precio),
+        precioOriginal: precioOriginal,
         stock: parseInt(producto.stock),
         marca: producto.marca,
         categoria: producto.categoria,

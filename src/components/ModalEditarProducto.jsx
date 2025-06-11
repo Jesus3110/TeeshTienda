@@ -101,38 +101,19 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
     }
   };
 
-  // Dentro de tu componente ModalEditarProducto...
-
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
     if (name === "imagen" && files.length > 0) {
       setNuevaImagen(files[0]);
     } else if (name === "precio") {
-      const precioDeseado = value === "" ? "" : parseFloat(value);
-
-      if (aplicarDescuento) {
-        const precioBruto = calcularPrecioConComision(precioDeseado);
-
-        setFormData((prev) => ({
-          ...prev,
-          precioOriginal: precioBruto,
-        }));
-
-        if (descuentoSeleccionado && precioDeseado !== "") {
-          setPrecioConDescuento(
-            calcularPrecioConDescuento(
-              precioBruto,
-              descuentoSeleccionado.porcentaje
-            )
-          );
-        }
-      } else {
-        const precioBruto = calcularPrecioConComision(precioDeseado);
-        setFormData((prev) => ({
-          ...prev,
-          precio: precioBruto,
-        }));
+      setFormData((prev) => ({
+        ...prev,
+        precio: value,
+        precioOriginal: value
+      }));
+      if (aplicarDescuento && descuentoSeleccionado) {
+        setPrecioConDescuento(calcularPrecioConDescuento(parseFloat(value), descuentoSeleccionado.porcentaje));
       }
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -154,6 +135,10 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (aplicarDescuento && !descuentoSeleccionado) {
+      setErrores({ ...errores, descuento: "Debes seleccionar un descuento" });
+      return;
+    }
     if (!validar()) return;
 
     // Verifica si hay cambios
@@ -198,18 +183,19 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
         aplicarDescuento && descuentoSeleccionado
           ? descuentoSeleccionado.id
           : null;
-      const precioFinal =
-  aplicarDescuento && descuentoSeleccionado
-    ? precioConDescuento
-    : parseFloat(formData.precio);
+
+      const precioOriginal = aplicarDescuento
+        ? formData.precioOriginal
+        : parseFloat(formData.precio);
+      const precioFinal = aplicarDescuento && descuentoSeleccionado
+        ? calcularPrecioConDescuento(parseFloat(precioOriginal), descuentoSeleccionado.porcentaje)
+        : parseFloat(precioOriginal);
 
       await update(productoRef, {
         ...formData,
         imagen: urlImagen,
         precio: precioFinal,
-        precioOriginal: aplicarDescuento
-          ? formData.precioOriginal
-          : precioFinal,
+        precioOriginal: precioOriginal,
         descuentoAplicado,
         updatedAt: Date.now(),
       });
@@ -278,7 +264,7 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
                 <input
                   name="precio"
                   type="number"
-                  value={aplicarDescuento ? formData.precioOriginal : formData.precio}
+                  value={formData.precio}
                   onChange={handleChange}
                   placeholder="Precio del producto"
                   className={`form-input${errores.precio ? ' error' : ''}`}
