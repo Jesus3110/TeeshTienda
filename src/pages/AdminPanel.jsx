@@ -35,6 +35,7 @@ const { usuario } = useContext(AuthContext);
   const [estadoPedidosSemana, setEstadoPedidosSemana] = useState([]);
   const [modalMapaAbierto, setModalMapaAbierto] = useState(false);
   const [pedidoActivo, setPedidoActivo] = useState(null);
+  const [entregadosCanceladosSemana, setEntregadosCanceladosSemana] = useState([]);
   
 
   const COLORS = [
@@ -57,7 +58,10 @@ const { usuario } = useContext(AuthContext);
         pendiente: 0,
         "en proceso": 0,
         entregado: 0,
+        cancelado: 0,
       };
+      let entregadosSemana = 0;
+      let canceladosSemana = 0;
 
       const hoy = new Date();
       const primerDiaSemana = new Date(
@@ -70,9 +74,12 @@ const { usuario } = useContext(AuthContext);
           const fechaPedido = new Date(pedido.creadoEn);
           if (pedido.creadoEn && fechaPedido >= primerDiaSemana) {
             const estado = pedido.estado?.toLowerCase();
+            const metodo = (pedido.metodoPago || '').toLowerCase();
             if (resumenSemanal.hasOwnProperty(estado)) {
               resumenSemanal[estado]++;
             }
+            if (estado === "entregado") entregadosSemana++;
+            if (estado === "cancelado" && metodo.includes('stripe')) canceladosSemana++;
           }
 
           nuevasEntregas.push({
@@ -90,6 +97,10 @@ const { usuario } = useContext(AuthContext);
         );
 
         setEstadoPedidosSemana(resumenFormateado); // nuevo useState: estadoPedidosSemana
+        setEntregadosCanceladosSemana([
+          { name: "Entregados", value: entregadosSemana },
+          { name: "Cancelados", value: canceladosSemana },
+        ]);
       }
 
       setEntregas(nuevasEntregas);
@@ -171,6 +182,35 @@ onValue(ingresosPorMesRef, (snapshot) => {
 
   setIngresosData(listaIngresos);
 });
+
+    // --- GRAFICA DE ENTREGADOS/CANCELADOS DESDE HISTORIAL ---
+    const historialRef = ref(db, "historialPedidosAdmin");
+    onValue(historialRef, (snapshot) => {
+      const data = snapshot.val();
+      let entregadosSemana = 0;
+      let canceladosSemana = 0;
+      const hoy = new Date();
+      const primerDiaSemana = new Date(hoy);
+      primerDiaSemana.setDate(hoy.getDate() - hoy.getDay()); // domingo
+      primerDiaSemana.setHours(0, 0, 0, 0);
+      if (data) {
+        Object.values(data).forEach(usuarioPedidos => {
+          Object.values(usuarioPedidos).forEach(pedido => {
+            if (!pedido.creadoEn) return;
+            const fechaPedido = new Date(pedido.creadoEn);
+            if (fechaPedido >= primerDiaSemana) {
+              const estado = (pedido.estado || '').toLowerCase();
+              if (estado === "entregado") entregadosSemana++;
+              if (estado === "cancelado") canceladosSemana++;
+            }
+          });
+        });
+      }
+      setEntregadosCanceladosSemana([
+        { name: "Entregados", value: entregadosSemana },
+        { name: "Cancelados", value: canceladosSemana },
+      ]);
+    });
 
   }, []);
 
@@ -336,6 +376,31 @@ onValue(ingresosPorMesRef, (snapshot) => {
   </div>
 )}
 
+          {/* Entregados vs Cancelados (Semana) */}
+          <div className="chart-card">
+            <h2>Entregados vs Cancelados (Semana)</h2>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={entregadosCanceladosSemana}
+                  dataKey="value"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  innerRadius={40}
+                  label
+                >
+                  {entregadosCanceladosSemana.map((entry, index) => (
+                    <Cell
+                      key={`cell-entregados-cancelados-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
 
           {/* Calendario de entregas */}
           <div className="chart-card">
@@ -352,9 +417,17 @@ onValue(ingresosPorMesRef, (snapshot) => {
         {/* Modal */}
         {modalOpen && (
           <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="modal-content modal-scrollable"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
+            >
               <h2>📦 Entregas programadas</h2>
-
               {infoEntrega.map((p, index) => (
                 <div
                   key={index}
@@ -368,7 +441,6 @@ onValue(ingresosPorMesRef, (snapshot) => {
                   <p>
                     <strong>Cliente:</strong> {p.nombre}
                   </p>
-
                   {p.direccion ? (
                     <button
                       className="btn-ver-maps"
@@ -382,7 +454,6 @@ onValue(ingresosPorMesRef, (snapshot) => {
                   ) : (
                     <p style={{ color: "gray" }}>Sin dirección disponible</p>
                   )}
-
                   <p>
                     <strong>Total:</strong> ${p.total}
                   </p>
@@ -391,20 +462,6 @@ onValue(ingresosPorMesRef, (snapshot) => {
                   </p>
                 </div>
               ))}
-
-              <button
-                onClick={closeModal}
-                style={{
-                  marginTop: "1rem",
-                  backgroundColor: "#e74c3c",
-                  color: "#fff",
-                  padding: "0.5rem 1rem",
-                  border: "none",
-                  borderRadius: "5px",
-                }}
-              >
-                Cerrar
-              </button>
             </div>
           </div>
         )}

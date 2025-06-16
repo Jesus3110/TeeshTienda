@@ -27,6 +27,7 @@ import RutaProtegidaCliente from "./router/RutaProtegidaCliente";
 import VerificarCorreo from "./pages/VerificarCorreo";
 import Assistant from "./pages/Assistant";
 import "./styles/notifications.css";
+import AssistantLayout from "./components/AssistantLayout";
 
 function App() {
   const location = useLocation();
@@ -36,14 +37,14 @@ function App() {
   const [notificationMessage, setNotificationMessage] = useState("");
 
   const ocultarNavbar =
-    location.pathname.startsWith("/admin") || 
-    location.pathname.startsWith("/asistente") || 
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/asistente") ||
     (usuario && rol === "cliente");
 
   useEffect(() => {
     if (usuario && rol === "asistente") {
       const db = getDatabase();
-      const chatsRef = ref(db, 'chats');
+      const chatsRef = ref(db, "chats");
 
       const unsubscribe = onValue(chatsRef, (snapshot) => {
         const chatsData = snapshot.val();
@@ -53,11 +54,13 @@ function App() {
           if (chat.needsAssistant && !notifications.includes(chatId)) {
             setNotificationMessage("¡Nuevo cliente necesita ayuda!");
             setShowNotification(true);
-            
-            const audio = new Audio('/notification-sound.mp3');
-            audio.play().catch(e => console.log('Error reproduciendo sonido:', e));
 
-            setNotifications(prev => [...prev, chatId]);
+            const audio = new Audio("/notification-sound.mp3");
+            audio
+              .play()
+              .catch((e) => console.log("Error reproduciendo sonido:", e));
+
+            setNotifications((prev) => [...prev, chatId]);
 
             setTimeout(() => {
               setShowNotification(false);
@@ -76,9 +79,7 @@ function App() {
 
       {showNotification && (
         <div className="notification-popup">
-          <div className="notification-content">
-            {notificationMessage}
-          </div>
+          <div className="notification-content">{notificationMessage}</div>
         </div>
       )}
 
@@ -131,21 +132,17 @@ function App() {
             </RutaProtegidaCliente>
           }
         />
-
-        {/* Rutas de asistente */}
-        <Route
-          path="/asistente/*"
-          element={
-            <RutaAsistente>
-              <Routes>
-                <Route index element={<Assistant />} />
-                <Route path="perfil" element={<Perfil />} />
-                <Route path="chats" element={<Assistant />} />
-              </Routes>
-            </RutaAsistente>
-          }
-        />
-
+  <Route
+  path="/asistente"
+  element={
+    <RutaAsistente>
+      <AssistantLayout />
+    </RutaAsistente>
+  }
+>
+  <Route index element={<Assistant />} />
+  <Route path="perfil" element={<Perfil />} />
+</Route>
         {/* Rutas de admin */}
         <Route
           path="/admin"

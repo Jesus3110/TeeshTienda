@@ -179,7 +179,7 @@ const HistorialPedidos = () => {
                         <span className={`status-badge ${getEstadoClass(p.estado)}`}>
                           {formatearEstado(p.estado)}
                         </span>
-                        {p.estado === "cancelado" && p.montoDevolucion !== undefined && (
+                        {p.estado === "cancelado" && p.montoDevolucion !== undefined && p.metodoPago && p.metodoPago.toLowerCase().includes('stripe') && (
                           <div className="info-devolucion">
                             <p>Devolución: ${typeof p.montoDevolucion === 'number' ? p.montoDevolucion.toFixed(2) : '0.00'}</p>
                             {p.porcentajeRetenido && (

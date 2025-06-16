@@ -400,10 +400,11 @@ const Perfil = () => {
   }
 
   if (rol === "asistente") {
-    return <AssistantLayout>{contenido}</AssistantLayout>;
+    return contenido
   }
 
   return <ClienteLayout>{contenido}</ClienteLayout>;
+
 };
 
 export default Perfil;

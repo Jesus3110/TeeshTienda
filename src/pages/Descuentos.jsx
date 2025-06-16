@@ -84,16 +84,33 @@ const unsubscribeDescuentos = onValue(descuentosRef, async (snapshot) => {
       
       // Actualizar productos que tenían este descuento
       const productosConDescuento = productos.filter(p => 
-        p.descuentoId && p.descuentoId.toString().trim() === id.toString().trim()
+        p.descuentoAplicado && p.descuentoAplicado.toString().trim() === id.toString().trim()
       );
-      
       if (productosConDescuento.length > 0) {
-        const updates = {};
-        productosConDescuento.forEach(p => {
-          updates[`productos/${p.idFirebase}/descuentoId`] = null;
-        });
-        await update(ref(db), updates);
+        for (const p of productosConDescuento) {
+          const refProducto = ref(db, `productos/${p.idFirebase}`);
+          await update(refProducto, {
+            descuentoAplicado: null,
+            precio: p.precioOriginal || p.precio,
+            precioOriginal: null
+          });
+        }
       }
+      // Limpiar banner relacionado si existe
+      const bannersRef = ref(db, "banners");
+      onValue(bannersRef, (snap) => {
+        const banners = snap.val() || {};
+        Object.entries(banners).forEach(([bannerId, banner]) => {
+          if (banner.descuentoId === id) {
+            const refBanner = ref(db, `banners/${bannerId}`);
+            update(refBanner, {
+              porcentaje: null,
+              titulo: null,
+              descuentoId: null,
+            });
+          }
+        });
+      }, { onlyOnce: true });
     } catch (error) {
       console.error("Error al eliminar descuento:", error);
     }

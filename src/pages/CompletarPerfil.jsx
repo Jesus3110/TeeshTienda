@@ -119,10 +119,14 @@ const CompletarPerfil = () => {
         const userData = userSnap.val();
         setUsuario({ uid: id, ...userData });
         localStorage.setItem("adminId", id);
+        let destino = "/";
+        if (userData.rol === "admin") destino = "/admin";
+        else if (userData.rol === "asistente") destino = "/asistente";
+        else if (userData.rol === "cliente") destino = "/carrrito";
+        setExito(true);
+        setTimeout(() => navigate(destino), 1000);
+        return;
       }
-
-      setExito(true);
-      setTimeout(() => navigate("/admin"), 1000);
     } catch (err) {
       console.error(err);
       setError("Error al actualizar el perfil.");

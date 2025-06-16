@@ -4,8 +4,23 @@ import { getDatabase, ref, onValue, get } from "firebase/database";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [usuario, setUsuario] = useState(null);
-  const [rol, setRol] = useState(null);
+  const [usuario, setUsuario] = useState(() => {
+    // Intenta restaurar usuario desde localStorage
+    const usuarioGuardado = localStorage.getItem("usuario");
+    return usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+  });
+  const [rol, setRol] = useState(() => {
+    const usuarioGuardado = localStorage.getItem("usuario");
+    if (usuarioGuardado) {
+      try {
+        const user = JSON.parse(usuarioGuardado);
+        return user.rol || null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
   const [actualizador, setActualizador] = useState(0);
 
@@ -29,14 +44,18 @@ export const AuthProvider = ({ children }) => {
           const perfil = snapshot.val();
           setUsuario({ uid: adminId, ...perfil });
           setRol(perfil.rol || null);
+          // Guarda usuario en localStorage
+          localStorage.setItem("usuario", JSON.stringify({ uid: adminId, ...perfil }));
         } else {
           localStorage.removeItem("adminId");
+          localStorage.removeItem("usuario");
           setUsuario(null);
           setRol(null);
         }
       } catch (error) {
         console.error("Error al cargar estado inicial:", error);
         localStorage.removeItem("adminId");
+        localStorage.removeItem("usuario");
         setUsuario(null);
         setRol(null);
       }
@@ -47,10 +66,29 @@ export const AuthProvider = ({ children }) => {
         (snapshot) => {
           if (snapshot.exists()) {
             const perfil = snapshot.val();
-            setUsuario({ uid: adminId, ...perfil });
-            setRol(perfil.rol || null);
+            const nuevoUsuario = { uid: adminId, ...perfil };
+            // Solo actualiza si realmente cambió
+            setUsuario(prev => {
+              if (!prev || JSON.stringify(prev) !== JSON.stringify(nuevoUsuario)) {
+                return nuevoUsuario;
+              }
+              return prev;
+            });
+            setRol(prevRol => {
+              const nuevoRol = perfil.rol || null;
+              if (prevRol !== nuevoRol) {
+                return nuevoRol;
+              }
+              return prevRol;
+            });
+            // Actualiza usuario en localStorage solo si cambió
+            const usuarioGuardado = localStorage.getItem("usuario");
+            if (!usuarioGuardado || usuarioGuardado !== JSON.stringify(nuevoUsuario)) {
+              localStorage.setItem("usuario", JSON.stringify(nuevoUsuario));
+            }
           } else {
             localStorage.removeItem("adminId");
+            localStorage.removeItem("usuario");
             setUsuario(null);
             setRol(null);
           }
@@ -71,11 +109,30 @@ export const AuthProvider = ({ children }) => {
     setActualizador(prev => prev + 1);
   };
 
-  const cerrarSesion = () => {
+ // En tu AuthContext.js
+const cerrarSesion = () => {
+  const db = getDatabase();
+  const adminId = localStorage.getItem("adminId");
+  
+  if (adminId) {
+    const userOnlineRef = ref(db, `usuarios/${adminId}/online`);
+    
+    // Marcar explícitamente como offline al cerrar sesión
+    set(userOnlineRef, false).then(() => {
+      localStorage.removeItem("adminId");
+      localStorage.removeItem("usuario");
+      setUsuario(null);
+      setRol(null);
+      navigate("/login"); // Redirigir al login
+    });
+  } else {
     localStorage.removeItem("adminId");
+    localStorage.removeItem("usuario");
     setUsuario(null);
     setRol(null);
-  };
+    navigate("/login");
+  }
+};
 
   return (
     <AuthContext.Provider
@@ -83,7 +140,14 @@ export const AuthProvider = ({ children }) => {
         usuario,
         rol,
         loading,
-        setUsuario,
+        setUsuario: (user) => {
+          setUsuario(user);
+          if (user) {
+            localStorage.setItem("usuario", JSON.stringify(user));
+          } else {
+            localStorage.removeItem("usuario");
+          }
+        },
         setRol,
         actualizarSesion,
         cerrarSesion

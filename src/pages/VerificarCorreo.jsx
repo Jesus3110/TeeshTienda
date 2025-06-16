@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { getDatabase, ref, get, update } from "firebase/database";
 import { useNavigate, useParams } from "react-router-dom";
 import "../styles/verificacion.css";
+import { AuthContext } from "../context/AuthContext";
 
 function VerificarCorreo() {
   const [codigoIngresado, setCodigoIngresado] = useState("");
@@ -9,6 +10,7 @@ function VerificarCorreo() {
   const [verificado, setVerificado] = useState(false);
   const navigate = useNavigate();
   const { uid } = useParams(); // <- el ID del usuario debe venir en la URL
+  const { setUsuario, setRol } = useContext(AuthContext);
 
   const handleVerificar = async () => {
     try {
@@ -38,6 +40,12 @@ function VerificarCorreo() {
         verificadoCorreo: true,
         codigoCorreo: null, // eliminar el código
       });
+
+      // Loguear automáticamente al usuario
+      localStorage.setItem("adminId", uid);
+      localStorage.setItem("usuario", JSON.stringify({ uid, ...datos, verificadoCorreo: true, codigoCorreo: null }));
+      setUsuario({ uid, ...datos, verificadoCorreo: true, codigoCorreo: null });
+      setRol(datos.rol || "cliente");
 
       setVerificado(true);
       setTimeout(() => navigate("/perfil"), 3000);

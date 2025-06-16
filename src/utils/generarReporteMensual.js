@@ -141,6 +141,56 @@ export const generarReporteMensual = async (mes = "mayo", anio = new Date().getF
     }
   });
 
+  // === NUEVA TABLA: Entregados y Cancelados (Desglose) ===
+  // Filtrar pedidos por mes y año
+  const pedidosMes = pedidos.filter(p => {
+    if (!p.creadoEn) return false;
+    const fecha = new Date(p.creadoEn);
+    return fecha.getMonth() === mesIndex && fecha.getFullYear() === anio;
+  });
+  const totalPedidos = pedidosMes.length;
+  const entregados = pedidosMes.filter(p => (p.estado || '').toLowerCase() === 'entregado');
+  const cancelados = pedidosMes.filter(p => (p.estado || '').toLowerCase() === 'cancelado');
+  const canceladosTarjeta = cancelados.filter(p => (p.metodoPago || '').toLowerCase().includes('stripe'));
+  const canceladosEfectivo = cancelados.filter(p => (p.metodoPago || '').toLowerCase() === 'efectivo');
+  const totalEntregados = entregados.length;
+  const totalCanceladosTarjeta = canceladosTarjeta.length;
+  const totalCanceladosEfectivo = canceladosEfectivo.length;
+  const sumaComisionTarjeta = canceladosTarjeta.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
+  const sumaReembolsadoTarjeta = canceladosTarjeta.reduce((acc, p) => acc + (Number(p.montoDevolucion) || 0), 0);
+  const porcentajeEntregados = totalPedidos > 0 ? (totalEntregados / totalPedidos) * 100 : 0;
+  const porcentajeCanceladosTarjeta = totalPedidos > 0 ? (totalCanceladosTarjeta / totalPedidos) * 100 : 0;
+  const porcentajeCanceladosEfectivo = totalPedidos > 0 ? (totalCanceladosEfectivo / totalPedidos) * 100 : 0;
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 15,
+    head: [["Tipo", "Cantidad", "% del total", "Comisión ($)", "Total reembolsado ($)"]],
+    body: [
+      [
+        "Entregados",
+        totalEntregados,
+        `${porcentajeEntregados.toFixed(1)}%`,
+        "-",
+        "-"
+      ],
+      [
+        "Cancelados (tarjeta)",
+        totalCanceladosTarjeta,
+        `${porcentajeCanceladosTarjeta.toFixed(1)}%`,
+        `$${sumaComisionTarjeta.toLocaleString(undefined, {maximumFractionDigits:2})}`,
+        `$${sumaReembolsadoTarjeta.toLocaleString(undefined, {maximumFractionDigits:2})}`
+      ],
+      [
+        "Cancelados (efectivo)",
+        totalCanceladosEfectivo,
+        `${porcentajeCanceladosEfectivo.toFixed(1)}%`,
+        "$0.00",
+        "$0.00"
+      ]
+    ],
+    headStyles: { fillColor: [200, 50, 50], textColor: 255, fontStyle: "bold" },
+    bodyStyles: { fillColor: [255, 245, 245], fontStyle: "bold" },
+  });
+
   const pageCount = doc.getNumberOfPages();
   const anioActual = new Date().getFullYear();
 

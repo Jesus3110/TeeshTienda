@@ -18,15 +18,37 @@ const calcularFechaEntregaPorPendientes = async () => {
 
   const snapshot = await get(refPedidos);
   const pedidos = snapshot.val() || {};
-  const pendientes = Object.values(pedidos).filter(
-    (pedido) => pedido.estado === "pendiente"
-  );
+  // Contar pedidos pendientes por fechaEntrega
+  const pendientesPorFecha = {};
+  Object.values(pedidos).forEach((pedido) => {
+    if (pedido.estado === "pendiente" && pedido.fechaEntrega) {
+      pendientesPorFecha[pedido.fechaEntrega] = (pendientesPorFecha[pedido.fechaEntrega] || 0) + 1;
+    }
+  });
 
-  const dias = pendientes.length < 5 ? 2 : 3;
-  const fecha = new Date();
-  fecha.setDate(fecha.getDate() + dias);
-
-  return fecha.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+  // Buscar el primer día disponible con menos de 5 pedidos
+  const hoy = new Date();
+  for (let i = 0; i < 10; i++) { // Busca hasta 10 días adelante
+    const fecha = new Date(hoy);
+    fecha.setDate(hoy.getDate() + i + 2); // +2 días mínimo de preparación
+    const fechaStr = fecha.toISOString().split("T")[0];
+    if ((pendientesPorFecha[fechaStr] || 0) < 5) {
+      return fechaStr;
+    }
+  }
+  // Si todos los días están saturados, asigna el primer día con menos saturación
+  let minPedidos = Infinity;
+  let mejorFecha = null;
+  for (let i = 0; i < 10; i++) {
+    const fecha = new Date(hoy);
+    fecha.setDate(hoy.getDate() + i + 2);
+    const fechaStr = fecha.toISOString().split("T")[0];
+    if ((pendientesPorFecha[fechaStr] || 0) < minPedidos) {
+      minPedidos = pendientesPorFecha[fechaStr] || 0;
+      mejorFecha = fechaStr;
+    }
+  }
+  return mejorFecha;
 };
 
 const Checkout = () => {

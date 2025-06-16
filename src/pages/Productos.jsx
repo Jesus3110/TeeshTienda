@@ -252,7 +252,7 @@ const Productos = () => {
                         </span>
                       </>
                     ) : (
-                      `$${prod.precio.toFixed(2)}`
+                      `$${(prod.precioOriginal ? prod.precioOriginal : prod.precio).toFixed(2)}`
                     )}
                   </td>
                   <td>

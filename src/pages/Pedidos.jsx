@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import Modal from "react-modal";
 import { AuthContext } from "../context/AuthContext";
-import { getDatabase, ref, onValue, update, remove, get } from "firebase/database";
+import { getDatabase, ref, onValue, update, remove, get, runTransaction } from "firebase/database";
 import ClienteLayout from "../components/ClienteLayout";
 import "../styles/pedidos.css";
 import "../styles/tables.css";
@@ -190,58 +190,100 @@ const Pedidos = () => {
     const db = getDatabase();
     const clienteUID = pedido.usuario;
 
-    // Si el método de pago es efectivo, solo marca como cancelado sin cargos ni detalles
-    if (pedido.metodoPago && pedido.metodoPago.toLowerCase() === "efectivo") {
-      try {
-        // Restaurar stock
-        await restaurarStock(pedido.productos);
+    // Detectar método de pago
+    const metodo = (pedido.metodoPago || '').toLowerCase();
+    const esTarjeta = metodo.includes('stripe');
+    const totalPedido = Number(pedido.total || 0);
+    const porcentajeRetenido = esTarjeta ? 15 : 0;
+    const comision = esTarjeta ? +(totalPedido * 0.15).toFixed(2) : 0;
+    const montoDevolucion = esTarjeta ? +(totalPedido - comision).toFixed(2) : totalPedido;
 
-        // Mover a historial del cliente
-        const refHistorialCliente = ref(
-          db,
-          `historialPedidos/${clienteUID}/${pedido.id}`
-        );
-        await update(refHistorialCliente, {
-          ...pedido,
-          estado: "cancelado",
-          fechaCancelacion: new Date().toISOString(),
-          montoDevolucion: null,
-          porcentajeRetenido: null,
-          descuentoAplicado: null,
+    try {
+      // Restaurar stock
+      await restaurarStock(pedido.productos);
+
+      // Guardar en historial del cliente
+      const refHistorialCliente = ref(
+        db,
+        `historialPedidos/${clienteUID}/${pedido.id}`
+      );
+      await update(refHistorialCliente, {
+        ...pedido,
+        estado: "cancelado",
+        fechaCancelacion: new Date().toISOString(),
+        total: comision, // Solo la comisión si es tarjeta, 0 si efectivo
+        montoDevolucion,
+        porcentajeRetenido,
+        descuentoAplicado: null,
+      });
+
+      // Guardar en historial del admin
+      const refHistorialAdmin = ref(
+        db,
+        `historialPedidosAdmin/${clienteUID}/${pedido.id}`
+      );
+      await update(refHistorialAdmin, {
+        productos: pedido.productos,
+        metodoPago: pedido.metodoPago,
+        total: comision, // Solo la comisión si es tarjeta, 0 si efectivo
+        usuario: pedido.usuario,
+        nombreCliente: pedido.nombre || "Sin nombre",
+        direccion: pedido.direccion || "",
+        estado: "cancelado",
+        fechaCancelacion: new Date().toISOString(),
+        montoDevolucion,
+        porcentajeRetenido,
+        descuentoAplicado: null,
+        creadoEn: pedido.creadoEn,
+      });
+
+      // Actualizar ingresos totales y del mes SOLO si es tarjeta
+      if (esTarjeta) {
+        const fecha = new Date(pedido.creadoEn);
+        const meses = [
+          "enero", "febrero", "marzo", "abril", "mayo", "junio",
+          "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+        ];
+        const mesActual = meses[fecha.getMonth()];
+        const anioActual = fecha.getFullYear();
+        // Ingresos totales
+        const ingresosRef = ref(db, "dashboard/ingresosTotales");
+        await runTransaction(ingresosRef, (valorActual) => {
+          // Restar el total original y sumar la comisión
+          return (valorActual || 0) - totalPedido + comision;
         });
-
-        // Mover a historial del admin
-        const refHistorialAdmin = ref(
-          db,
-          `historialPedidosAdmin/${clienteUID}/${pedido.id}`
-        );
-        await update(refHistorialAdmin, {
-          productos: pedido.productos,
-          metodoPago: pedido.metodoPago,
-          total: pedido.total,
-          usuario: pedido.usuario,
-          nombreCliente: pedido.nombre || "Sin nombre",
-          direccion: pedido.direccion || "",
-          estado: "cancelado",
-          fechaCancelacion: new Date().toISOString(),
-          montoDevolucion: null,
-          porcentajeRetenido: null,
-          descuentoAplicado: null,
-          creadoEn: pedido.creadoEn,
+        // Ingresos por mes/año
+        const ingresosMesAnioRef = ref(db, `dashboard/ingresosPorMes/${anioActual}/${mesActual}`);
+        await runTransaction(ingresosMesAnioRef, (valorActual) => {
+          return (valorActual || 0) - totalPedido + comision;
         });
-
-        // Eliminar el pedido activo
-        await remove(ref(db, `pedidos/${pedido.id}`));
-        setPedidoActivo(null);
-        setConfirmandoCancelacion(false);
-      } catch (error) {
-        console.error("Error al cancelar el pedido:", error);
-        setAlerta({ visible: true, mensaje: "Hubo un error al cancelar el pedido. Por favor, intenta de nuevo.", tipo: "error" });
+      } else {
+        // Si es efectivo, restar el total original (si ya estaba sumado)
+        const fecha = new Date(pedido.creadoEn);
+        const meses = [
+          "enero", "febrero", "marzo", "abril", "mayo", "junio",
+          "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+        ];
+        const mesActual = meses[fecha.getMonth()];
+        const anioActual = fecha.getFullYear();
+        const ingresosRef = ref(db, "dashboard/ingresosTotales");
+        await runTransaction(ingresosRef, (valorActual) => {
+          return (valorActual || 0) - totalPedido;
+        });
+        const ingresosMesAnioRef = ref(db, `dashboard/ingresosPorMes/${anioActual}/${mesActual}`);
+        await runTransaction(ingresosMesAnioRef, (valorActual) => {
+          return (valorActual || 0) - totalPedido;
+        });
       }
-      return;
-    }
 
-    // ... lógica original para otros métodos de pago ...
+      // Eliminar el pedido activo
+      await remove(ref(db, `pedidos/${pedido.id}`));
+      setPedidoActivo(null);
+      setConfirmandoCancelacion(false);
+    } catch (error) {
+      console.error("Error al cancelar el pedido:", error);
+      setAlerta({ visible: true, mensaje: "Hubo un error al cancelar el pedido. Por favor, intenta de nuevo.", tipo: "error" });
+    }
   };
 
   if (loading) return <div className="loading">Cargando...</div>;
@@ -358,7 +400,7 @@ const Pedidos = () => {
                     >
                       Ver detalles
                     </button>
-                    {pedido.estado !== 'cancelado' && pedido.estado !== 'entregado' && (
+                    {pedido.estado !== 'cancelado' && pedido.estado !== 'entregado' && pedido.estado !== 'en proceso' && (
                       <>
                         {rol === 'admin' && (
                           <button

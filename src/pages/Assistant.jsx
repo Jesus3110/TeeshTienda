@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
 import { AuthContext } from "../context/AuthContext";
 import { getDatabase, ref, onValue, set, push, remove, update, get, onDisconnect } from "firebase/database";
-import AssistantLayout from '../components/AssistantLayout';
 import '../styles/assistant.css';
+import AssistantLayout from '../components/AssistantLayout';
+import { FaTrashAlt } from 'react-icons/fa';
 
 const Assistant = () => {
   const { usuario } = useContext(AuthContext);
@@ -105,6 +106,7 @@ const Assistant = () => {
     return () => observer.disconnect();
   }, [selectedChat, messages]);
 
+  // Efecto para escuchar los chats activos asignados al asistente o que necesitan ayuda
   useEffect(() => {
     if (!usuario) return;
 
@@ -151,32 +153,22 @@ const Assistant = () => {
         // Luego por último mensaje
         return (b.lastMessage || 0) - (a.lastMessage || 0);
       }));
-
-      // Actualizar el chat seleccionado si existe y cambió
-      if (selectedChat) {
-        const updatedSelectedChat = chatsArray.find(chat => chat.id === selectedChat.id);
-        if (updatedSelectedChat && JSON.stringify(updatedSelectedChat) !== JSON.stringify(selectedChat)) {
-          setSelectedChat(updatedSelectedChat);
-        }
-      }
     });
 
     return () => unsubscribe();
-  }, [usuario, selectedChat?.id]);
-
-  useEffect(() => {
-    if (!usuario || usuario.rol !== 'asistente') return;
-    const db = getDatabase();
-    const userRef = ref(db, `usuarios/${usuario.uid}/online`);
-    // Marcar online: true
-    set(userRef, true);
-    // Configurar onDisconnect para poner online: false
-    onDisconnect(userRef).set(false);
-    // Cleanup: al salir de la vista, poner online: false
-    return () => {
-      set(userRef, false);
-    };
   }, [usuario]);
+
+  // Nuevo efecto: actualiza el chat seleccionado si cambia en activeChats
+  useEffect(() => {
+    if (!selectedChat) return;
+    const updatedSelectedChat = activeChats.find(chat => chat.id === selectedChat.id);
+    if (!updatedSelectedChat) return;
+  
+    // Comparación más estricta
+    if (JSON.stringify(updatedSelectedChat) !== JSON.stringify(selectedChat)) {
+      setSelectedChat(updatedSelectedChat);
+    }
+  }, [activeChats, selectedChat]);
 
   const handleChatSelect = async (chat) => {
     setSelectedChat(chat);
@@ -230,6 +222,26 @@ const Assistant = () => {
     scrollToBottom();
   }, [messages]);
 
+  // En tu componente Assistant, modifica el efecto que maneja el estado online
+// En tu componente Assistant, actualiza el efecto que maneja el estado online
+useEffect(() => {
+  if (!usuario || usuario.rol !== 'asistente') return;
+  
+  const db = getDatabase();
+  const userOnlineRef = ref(db, `usuarios/${usuario.uid}/online`);
+
+  // Marcar como online al conectarse
+  set(userOnlineRef, true);
+
+  // Configurar onDisconnect para marcar como offline al desconectarse
+  onDisconnect(userOnlineRef).set(false);
+
+  // Cleanup: al desmontar el componente
+  return () => {
+    // No necesitas hacer set(false) aquí porque onDisconnect se encargará
+  };
+}, [usuario]);
+
   const formatTimestamp = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString('es-MX', {
       hour: '2-digit',
@@ -244,20 +256,16 @@ const Assistant = () => {
 
     const db = getDatabase();
     const chatsRef = ref(db, 'chats');
-    const snapshot = await get(chatsRef);
+    const notificationsRef = ref(db, 'notifications');
     
-    if (snapshot.exists()) {
-      const updates = {};
-      Object.entries(snapshot.val()).forEach(([chatId, chat]) => {
-        if (chat.assignedTo === usuario.uid) {
-          updates[`chats/${chatId}`] = null;
-        }
-      });
-      
-      if (Object.keys(updates).length > 0) {
-        await update(ref(db), updates);
-      }
-    }
+    // Delete all chats directly
+    await set(chatsRef, null);
+    // Delete all notifications
+    await set(notificationsRef, null);
+    
+    // Clear the current chat selection
+    setSelectedChat(null);
+    setMessages([]);
   };
 
   const handleDeleteChat = async (chatId, e) => {
@@ -279,91 +287,91 @@ const Assistant = () => {
   };
 
   return (
-    <AssistantLayout>
-      <div className="assistant-chat-container">
-        <div className="chat-list">
-          <div className="chat-list-header">
-            <h2>Chats Activos {notifications.length > 0 && <span className="notification-badge">{notifications.length}</span>}</h2>
-            <button onClick={handleDeleteAllChats} className="delete-all-chats-btn">
-              🗑️ Borrar todos
-            </button>
-          </div>
-          {activeChats.map((chat) => (
-            <div
-              key={chat.id}
-              className={`chat-item ${selectedChat?.id === chat.id ? 'active' : ''} ${chat.needsAssistant ? 'needs-help' : ''}`}
-              onClick={() => handleChatSelect(chat)}
-            >
-              <div className="chat-item-content">
-                <div className="chat-item-header">
-                  <span className="chat-user">{chat.userName}</span>
-                  {chat.unreadCount > 0 && (
-                    <span className="unread-badge">{chat.unreadCount}</span>
-                  )}
-                  {chat.needsAssistant && (
-                    <span className="needs-assistance-badge">Necesita ayuda</span>
-                  )}
-                </div>
-                {chat.messages && Object.values(chat.messages).length > 0 && (
-                  <div className="chat-last-message">
-                    {Object.values(chat.messages).slice(-1)[0].text.substring(0, 30)}...
-                  </div>
+    <div className="assistant-chat-container">
+      <div className="chat-list">
+        <div className="chat-list-header">
+          <h2>Chats Activos {notifications.length > 0 && <span className="notification-badge">{notifications.length}</span>}</h2>
+          <button onClick={handleDeleteAllChats} className="delete-all-chats-btn">
+            <FaTrashAlt style={{ marginRight: 6 }} /> Borrar todos
+          </button>
+        </div>
+        {activeChats.map((chat) => (
+          <div
+            key={chat.id}
+            className={`chat-item ${selectedChat?.id === chat.id ? 'active' : ''} ${chat.needsAssistant ? 'needs-help' : ''}`}
+            onClick={() => handleChatSelect(chat)}
+          >
+            <div className="chat-item-content">
+              <div className="chat-item-header">
+                <span className="chat-user">{chat.userName}</span>
+                {chat.unreadCount > 0 && (
+                  <span className="unread-badge">{chat.unreadCount}</span>
+                )}
+                {chat.needsAssistant && (
+                  <span className="needs-assistance-badge">Necesita ayuda</span>
                 )}
               </div>
-              <button 
-                className="delete-chat-btn"
-                onClick={(e) => handleDeleteChat(chat.id, e)}
-                title="Eliminar chat"
-              >
-                🗑️
-              </button>
+              {chat.messages && Object.values(chat.messages).length > 0 && (
+                <div className="chat-last-message">
+                  {Object.values(chat.messages).slice(-1)[0].text.substring(0, 30)}...
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-
-        <div className="chat-messages">
-          {selectedChat ? (
-            <>
-              <div className="messages-container" ref={messagesContainerRef}>
-                {messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`message ${!msg.isAssistant ? 'bot' : 'assistant'}`}
-                  >
-                    <div className="message-content">
-                      <span className="message-sender">{msg.senderName}</span>
-                      <p>{msg.text}</p>
-                      <span className="message-time">
-                        {formatTimestamp(msg.timestamp)}
-                        {msg.read && msg.isAssistant && <span className="read-status">✓</span>}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-              <form onSubmit={handleSendMessage} className="message-form">
-                <input
-                  type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Escribe un mensaje..."
-                  className="message-input"
-                />
-                <button type="submit" className="send-button">
-                  Enviar
-                </button>
-              </form>
-            </>
-          ) : (
-            <div className="no-chat-selected">
-              <p>Selecciona un chat para comenzar</p>
-            </div>
-          )}
-        </div>
+            <button 
+              className="delete-chat-btn"
+              onClick={(e) => handleDeleteChat(chat.id, e)}
+              title="Eliminar chat"
+            >
+              <FaTrashAlt />
+            </button>
+          </div>
+        ))}
       </div>
-    </AssistantLayout>
+  
+      <div className="chat-messages">
+        {selectedChat ? (
+          <>
+            <div className="messages-container" ref={messagesContainerRef}>
+              {messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`message ${!msg.isAssistant ? 'bot' : 'assistant'}`}
+                >
+                  <div className="message-content">
+                    <span className="message-sender">{msg.senderName}</span>
+                    <p>{msg.text}</p>
+                    <span className="message-time">
+                      {formatTimestamp(msg.timestamp)}
+                      {msg.read && msg.isAssistant && <span className="read-status">✓</span>}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+            <form onSubmit={handleSendMessage} className="message-form">
+              <input
+                type="text"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Escribe un mensaje..."
+                className="message-input"
+              />
+              <button type="submit" className="send-button">
+                Enviar
+              </button>
+            </form>
+          </>
+        ) : (
+          <div className="no-chat-selected">
+            <p>Selecciona un chat para comenzar</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
+
+  
 
 export default Assistant; 

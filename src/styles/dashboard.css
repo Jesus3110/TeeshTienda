@@ -246,3 +246,20 @@
   object-fit: cover;
   margin: 0 auto;
 }
+
+.modal-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: #e74c3c #f9f9f9;
+}
+
+.modal-scrollable::-webkit-scrollbar {
+  width: 10px;
+}
+.modal-scrollable::-webkit-scrollbar-thumb {
+  background: #e74c3c;
+  border-radius: 8px;
+}
+.modal-scrollable::-webkit-scrollbar-track {
+  background: #f9f9f9;
+  border-radius: 8px;
+}
