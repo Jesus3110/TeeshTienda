@@ -9,6 +9,8 @@ import "../styles/dashboard.css";
 import { useNavigate } from "react-router-dom";
 
 
+
+
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { usuario, cerrarSesion } = useContext(AuthContext);
@@ -17,10 +19,10 @@ const AdminLayout = ({ children }) => {
   const toggleSidebar = () => setSidebarOpen(true);
   const closeSidebar = () => setSidebarOpen(false);
 
-  const handleCerrarSesion = () => {
-    cerrarSesion();
-    navigate("/login");
-  };
+  const handleCerrarSesion = async () => {
+  await cerrarSesion();
+  window.location.href = "/";
+};  
 
   const privilegios = usuario?.privilegios || "";
 
@@ -86,9 +88,10 @@ const AdminLayout = ({ children }) => {
             </Link>
           )}
 
-          <Link to="/login" onClick={handleCerrarSesion}>
-            <FaSignOutAlt /> {sidebarOpen && <span>Salir</span>}
-          </Link>
+        <button onClick={handleCerrarSesion} className="logout-button">
+  <FaSignOutAlt /> {sidebarOpen && <span>Salir</span>}
+</button>
+
         </nav>
       </aside>
 

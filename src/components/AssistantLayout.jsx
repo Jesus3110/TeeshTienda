@@ -2,34 +2,15 @@ import React, { useContext } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { FaComments, FaUser, FaSignOutAlt } from "react-icons/fa";
-import { getDatabase, ref, set } from "firebase/database";
-import { getAuth, signOut } from "firebase/auth";
 import "../styles/assistantLayout.css";
 
 const AssistantLayout = ({ children }) => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { usuario } = useContext(AuthContext);
+  const { usuario, cerrarSesion } = useContext(AuthContext);
 
   const handleLogout = async () => {
-    const db = getDatabase();
-    const auth = getAuth();
-  
-    try {
-      // 🔴 Marcar como offline en la base de datos
-      if (usuario?.uid) {
-        await set(ref(db, `usuarios/${usuario.uid}/online`), false);
-      }
-  
-      // 🔐 Cerrar sesión de Firebase Auth
-      await signOut(auth);
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-    }
-  
-    // 🧹 Limpiar localStorage y redirigir
-    localStorage.removeItem("adminId");
-    navigate("/login");
+    await cerrarSesion();         // Marca como offline y limpia contexto
+    window.location.href = "/";   // Recarga limpia y asegura el Navbar
   };
 
   return (
@@ -71,4 +52,4 @@ const AssistantLayout = ({ children }) => {
   );
 };
 
-export default AssistantLayout; 
+export default AssistantLayout;

@@ -242,3 +242,21 @@ body {
     transform: translate(-50%, -50%);
   }
 }
+
+.btn-search{
+  background-color: #e93636;
+  color: white;
+  border: none;
+  padding: 15px 25px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+
+
+}

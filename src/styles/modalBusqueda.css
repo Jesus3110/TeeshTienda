@@ -1,0 +1,121 @@
+.modal-busqueda-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(20, 20, 20, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-busqueda {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  padding: 20px;
+  position: relative;
+  box-shadow: 0 6px 18px rgba(224, 21, 21, 0.2);
+}
+
+.cerrar-modal-busqueda {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.input-busqueda-modal {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.resultados-container {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.resultado-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+
+.resultado-item:hover {
+  background-color: #f02828;
+}
+
+.mensaje-estado {
+  text-align: center;
+  color: #777;
+  padding: 20px 0;
+}
+
+.resultados-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.card-producto-modal {
+  width: 160px;
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.img-producto-modal {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.nombre-producto-modal {
+  margin: 8px 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.estrellas-modal {
+  color: #ffc107;
+  font-size: 14px;
+}
+
+.precio-producto-modal {
+  font-size: 18px;
+  font-weight: bold;
+  color: #f02828;
+  margin: 6px 0;
+}
+
+.btn-agregar-modal {
+  background-color: #f02828;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn-agregar-modal:hover {
+  background-color: #e25050;
+}

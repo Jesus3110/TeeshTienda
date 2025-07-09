@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import {
   FiUser,
@@ -9,15 +9,21 @@ import {
   FiMenu,
   FiX
 } from "react-icons/fi";
+import { AuthContext } from "../context/AuthContext";
 import "../styles/sidebarCliente.css";
 
 const ClienteLayout = ({ children }) => {
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const { cerrarSesion } = useContext(AuthContext);
 
   const toggleMenu = () => setMenuAbierto(!menuAbierto);
 
+  const handleLogout = async () => {
+    await cerrarSesion();             // 🔴 Marca offline, limpia contexto
+    window.location.href = "/";       // 🔄 Redirige y recarga
+  };
+
   useEffect(() => {
-    // Cierra el menú si se hace resize a escritorio
     const handleResize = () => {
       if (window.innerWidth > 768) setMenuAbierto(false);
     };
@@ -35,14 +41,24 @@ const ClienteLayout = ({ children }) => {
       <aside className={`sidebar-cliente ${menuAbierto ? "mostrar" : ""}`}>
         <div className="cliente-logo">🛍️ M&J</div>
         <nav>
-          <Link to="/" onClick={() => setMenuAbierto(false)}><FiShoppingCart /> Tienda</Link>
-          <Link to="/perfil" onClick={() => setMenuAbierto(false)}><FiUser /> Perfil</Link>
-          <Link to="/carrito" onClick={() => setMenuAbierto(false)}><FiShoppingCart /> Carrito</Link>
-          <Link to="/pedidos" onClick={() => setMenuAbierto(false)}><FiPackage /> Pedidos</Link>
-          <Link to="/historial" onClick={() => setMenuAbierto(false)}><FiClock /> Historial</Link>
-          <Link to="/login" onClick={() => { localStorage.removeItem("adminId"); setMenuAbierto(false); }}>
-            <FiLogOut /> Cerrar sesión
+          <Link to="/" onClick={() => setMenuAbierto(false)}>
+            <FiShoppingCart /> Tienda
           </Link>
+          <Link to="/perfil" onClick={() => setMenuAbierto(false)}>
+            <FiUser /> Perfil
+          </Link>
+          <Link to="/carrito" onClick={() => setMenuAbierto(false)}>
+            <FiShoppingCart /> Carrito
+          </Link>
+          <Link to="/pedidos" onClick={() => setMenuAbierto(false)}>
+            <FiPackage /> Pedidos
+          </Link>
+          <Link to="/historial" onClick={() => setMenuAbierto(false)}>
+            <FiClock /> Historial
+          </Link>
+          <button className="logout-link" onClick={handleLogout}>
+            <FiLogOut /> Cerrar sesión
+          </button>
         </nav>
       </aside>
 

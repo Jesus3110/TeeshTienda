@@ -12,7 +12,7 @@ body {
   padding: 1rem;
 }
 
-.nav-links {
+.nav-links button {
   display: flex;
   gap: 1rem;
   align-items: center;
@@ -20,7 +20,7 @@ body {
 
 .nav-links a,
 .nav-links button {
-  color: white;
+  color: rgb(0, 0, 0);
   text-decoration: none;
   background: none;
   border: none;

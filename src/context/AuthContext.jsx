@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState } from "react";
-import { getDatabase, ref, onValue, get } from "firebase/database";
+import { getDatabase, ref, onValue, get, set } from "firebase/database";
 
 export const AuthContext = createContext();
 
@@ -111,28 +111,30 @@ export const AuthProvider = ({ children }) => {
 
  // En tu AuthContext.js
 const cerrarSesion = () => {
-  const db = getDatabase();
-  const adminId = localStorage.getItem("adminId");
-  
-  if (adminId) {
-    const userOnlineRef = ref(db, `usuarios/${adminId}/online`);
-    
-    // Marcar explícitamente como offline al cerrar sesión
-    set(userOnlineRef, false).then(() => {
+  return new Promise((resolve) => {
+    const db = getDatabase();
+    const adminId = localStorage.getItem("adminId");
+
+    if (adminId) {
+      const userOnlineRef = ref(db, `usuarios/${adminId}/online`);
+      set(userOnlineRef, false).finally(() => {
+        localStorage.removeItem("adminId");
+        localStorage.removeItem("usuario");
+        setUsuario(null);
+        setRol(null);
+        resolve(); // <-- ✅ importante
+      });
+    } else {
       localStorage.removeItem("adminId");
       localStorage.removeItem("usuario");
       setUsuario(null);
       setRol(null);
-      navigate("/login"); // Redirigir al login
-    });
-  } else {
-    localStorage.removeItem("adminId");
-    localStorage.removeItem("usuario");
-    setUsuario(null);
-    setRol(null);
-    navigate("/login");
-  }
+      resolve(); // <-- ✅ importante
+    }
+  });
 };
+
+
 
   return (
     <AuthContext.Provider

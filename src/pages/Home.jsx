@@ -15,6 +15,9 @@ import ClienteLayout from "../components/ClienteLayout";
 import ChatBot from "../components/ChatBot";
 import BannerCarousel from "../components/BannerCarousel";
 import ModalAlerta from "../components/ModalAlerta";
+import ModalBusqueda from "../components/ModalBusqueda";
+import { FiSearch } from "react-icons/fi";
+
 
 
 function Home() {
@@ -31,6 +34,11 @@ function Home() {
   const [productosVendidos, setProductosVendidos] = useState({});
   const [carrito, setCarrito] = useState([]);
   const [alerta, setAlerta] = useState({ visible: false, mensaje: "", tipo: "success" });
+  const [terminoBusqueda, setTerminoBusqueda] = useState("");
+  const [resultadosBusqueda, setResultadosBusqueda] = useState([]);
+const [mostrarModalBusqueda, setMostrarModalBusqueda] = useState(false);
+
+
 
 
   const obtenerDescuentoProducto = (producto) => {
@@ -159,6 +167,21 @@ function Home() {
     };
   }, []);
 
+
+  useEffect(() => {
+  if (terminoBusqueda.trim() === "") {
+    setResultadosBusqueda([]);
+    return;
+  }
+
+  const resultados = productos.filter((producto) =>
+    producto.nombre?.toLowerCase().includes(terminoBusqueda.toLowerCase())
+  );
+
+  setResultadosBusqueda(resultados);
+}, [terminoBusqueda, productos]);
+
+
   useEffect(() => {
   if (!usuario) return;
 
@@ -234,11 +257,19 @@ function Home() {
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 5000,
-    arrows: true,
+    arrows: true, 
   };
 
   const renderContenido = () => (
   <div className="home-container">
+
+   <div className="search">
+       <button className="btn-search" onClick={() => setMostrarModalBusqueda(true)}>
+  <FiSearch size={18} style={{ marginRight: 6 }} />
+  Buscar
+</button>
+   </div>
+
     {/* Carrusel de Banners */}
     {banners.length > 0 && (
       <div className="banner-carousel">
@@ -329,6 +360,7 @@ function Home() {
         onClose={() => setAlerta({ ...alerta, visible: false })}
       />
     )}
+
   </div>
 );
 
@@ -343,9 +375,22 @@ return (
       <>
         {renderContenido()}
         <ChatBot />
-      </>
+      </> 
     )}
+    <ModalBusqueda
+  visible={mostrarModalBusqueda}
+  onClose={() => setMostrarModalBusqueda(false)}
+  resultados={resultadosBusqueda}
+  termino={terminoBusqueda}
+  setTermino={setTerminoBusqueda}
+  onSeleccionar={(producto) => {
+    setMostrarModalBusqueda(false);
+    verDetalles(producto);
+  }}
+/>
+
   </>
+  
 );
 }
 
