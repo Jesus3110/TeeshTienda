@@ -154,7 +154,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1.4rem;
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: rgba(255, 255, 255, 0.03);
   border: none;
   border-radius: 8px;
   text-decoration: none;
@@ -163,7 +163,7 @@
 }
 
 .btn-login:hover {
-  background-color: rgba(0, 0, 0, 0.07);
+  background-color: rgba(255, 255, 255, 0.07);
 }
 
 
@@ -177,37 +177,111 @@
   justify-content: center;
 }
 
-
-/* Responsive para móvil */
+/* Ocultar el menú principal y mostrar el hamburger solo en móviles */
 @media (max-width: 768px) {
-  .menu-principal {
-    display: none;
-  }
-  .hamburguesa {
-    display: block;
-  }
-}
-
-
-.btn-group-navbar {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-@media (max-width: 768px) {
-  .btn-group-navbar {
+  .menu-principal, .menu-usuario {
     display: none;
   }
 
-  .hamburguesa {
+  .navbar-cliente {
+    display: flex;
+    justify-content: space-between; /* Distribuye espacio entre logo y hamburguesa */
+    align-items: center;
+    padding: 10px 15px;
+    position: relative;
+  }
+
+  .hamburger-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 25px;
+    height: 20px;
+    cursor: pointer;
+    /* No necesita margin-left: auto porque justify-content: space-between ya lo coloca a la derecha */
+  }
+
+  .bar {
+    width: 100%;
+    height: 3px;
+    background-color: #333;
+    transition: 0.4s;
+    /* Asegurar que las barras estén alineadas a la derecha */
+    margin-left: auto;
+  }
+
+  /* Animación para cambiar a cruz */
+  .hamburger-menu .bar.change:nth-child(1) {
+    transform: rotate(-45deg) translate(-5px, 6px);
+  }
+  .hamburger-menu .bar.change:nth-child(2) {
+    opacity: 0;
+  }
+  .hamburger-menu .bar.change:nth-child(3) {
+    transform: rotate(45deg) translate(-5px, -6px);
+  }
+
+  /* Menú desplegable móvil - alineado a la derecha */
+  .menu-cliente {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 0 0 8px 8px;
+    padding: 10px 0;
+    z-index: 100;
+    width: 200px;
+  }
+
+  .menu-cliente.abierto {
     display: block;
+  }
+
+  .menu-cliente li {
+    padding: 12px 20px;
+  }
+
+  .menu-cliente li:hover {
+    background-color: #f5f5f5;
+  }
+
+  .mobile-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #333;
+    text-decoration: none;
+    font-size: 16px;
   }
 }
 
+/* Estilos para desktop */
 @media (min-width: 769px) {
-  .hamburguesa {
+  .hamburger-menu {
     display: none;
   }
+  
+  .menu-cliente {
+    display: none !important;
+  }
+  
+  .navbar-cliente {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+  }
+  
+  .menu-principal {
+    display: flex;
+    gap: 20px;
+    margin-left: 40px;
+  }
+  
+  .menu-usuario {
+    display: flex;
+    gap: 15px;
+  }
 }
-

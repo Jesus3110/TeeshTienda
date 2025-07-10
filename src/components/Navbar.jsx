@@ -112,77 +112,82 @@
     const categoriasRestantes = categorias.slice(7);
 
     return (
-      <nav className="navbar-cliente">
-        <div className="logo-y-menu">
-          <div className="logo-navbar">
-            <Link to="/" className="logo-link">
-              <span>M&J</span>
-            </Link>
-          </div>
-
-          <div className="menu-principal">
-            {categoriasPrincipales.map((categoria) => (
-              <button
-                key={categoria.idFirebase}
-                className="categoria-btn"
-                onClick={() => handleCategoriaClick(categoria)}
-              >
-                {categoria.nombre}
-              </button>
-            ))}
-
-            {categoriasRestantes.length > 0 && (
-              <button
-                className="ver-mas-btn"
-                onClick={() => setMostrarModalTodasCategorias(true)}
-              >
-                Ver más ({categoriasRestantes.length})
-              </button>
-            )}
-          </div>
-        </div>
-
-       <div className="menu-usuario">
-  {!usuario && (
-    <div className="btn-group-navbar">
-      <Link to="/login" className="btn-login">
-        <FiLock size={18} /> 
-        Iniciar sesión
-      </Link>
-      <Link to="/about" className="btn-login">
-        <FiInfo size={18} />
-        Sobre nosotros
-      </Link>
-      <Link to="/help" className="btn-login">
-        <FiHelpCircle size={18} />
-        Ayuda
-      </Link>
+  <nav className="navbar-cliente">
+    {/* Hamburger a la izquierda */}
+    <div className="hamburger-menu left" onClick={() => setMenuAbierto(!menuAbierto)}>
+      <div className={`bar ${menuAbierto ? "change" : ""}`}></div>
+      <div className={`bar ${menuAbierto ? "change" : ""}`}></div>
+      <div className={`bar ${menuAbierto ? "change" : ""}`}></div>
     </div>
-  )}
-</div>
 
+    <div className="logo-y-menu">
+      <div className="logo-navbar">
+        <Link to="/" className="logo-link">
+          <span>M&J</span>
+        </Link>
+      </div>
 
-        {menuAbierto && (
-          <ul className={`menu-cliente ${menuAbierto ? "abierto" : ""}`}>
-            {!usuario && (
-              <li>
-                <div
-                  className="card-login-wrapper"
-                >
-                  <Link
-                    to="/login"
-                    className="btn-login"
-                    onClick={() => setMenuAbierto(false)}
-                  >
-                    <FiLock size={18} />
-                    Iniciar sesión
-                  </Link>
-                </div>
-              </li>
-            )}
-          </ul>
+      {/* Menú principal (oculto en móviles) */}
+      <div className="menu-principal">
+        {categoriasPrincipales.map((categoria) => (
+          <button
+            key={categoria.idFirebase}
+            className="categoria-btn"
+            onClick={() => handleCategoriaClick(categoria)}
+          >
+            {categoria.nombre}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* Menú de usuario (oculto en móviles) */}
+    <div className="menu-usuario">
+      {!usuario && (
+        <div className="btn-group-navbar">
+          <Link to="/login" className="btn-login">
+            <FiLock size={18} /> 
+            Iniciar sesión
+          </Link>
+          <Link to="/about" className="btn-login">
+            <FiInfo size={18} />
+            Sobre nosotros
+          </Link>
+          <Link to="/help" className="btn-login">
+            <FiHelpCircle size={18} />
+            Ayuda
+          </Link>
+        </div>
+      )}
+    </div>
+
+    {/* Menú desplegable móvil */}
+    {menuAbierto && (
+      <ul className={`menu-cliente ${menuAbierto ? "abierto" : ""}`}>
+        {!usuario && (
+          <>
+            <li>
+              <Link to="/login" className="mobile-menu-link" onClick={() => setMenuAbierto(false)}>
+                <FiLock size={18} />
+                Iniciar sesión
+              </Link>
+            </li>
+            <li>
+              <Link to="/about" className="mobile-menu-link" onClick={() => setMenuAbierto(false)}>
+                <FiInfo size={18} />
+                Sobre nosotros
+              </Link>
+            </li>
+            <li>
+              <Link to="/help" className="mobile-menu-link" onClick={() => setMenuAbierto(false)}>
+                <FiHelpCircle size={18} />
+                Ayuda
+              </Link>
+            </li>
+          </>
         )}
-
+      </ul>
+    )}
         {mostrarModalTodasCategorias && (
           <div className="modal-categorias-overlay">
             <div className="modal-categorias">
