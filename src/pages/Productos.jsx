@@ -153,6 +153,15 @@ const Productos = () => {
     );
   };
 
+  function calcularPrecioConComision(precioNeto) {
+    const porcentajeStripe = 0.036;
+    const fijoStripe = 3.0;
+    const iva = 0.16;
+    const base = (precioNeto + fijoStripe) / (1 - porcentajeStripe);
+    const ivaTotal = (base - precioNeto) * iva;
+    return base + ivaTotal;
+  }
+
   const calcularPrecioConDescuento = (
     precio,
     descuento,
@@ -280,8 +289,12 @@ const Productos = () => {
                     {esDescuentoValido && prod.precioOriginal ? (
                       <>
                         <span className="price-original tachado">
-                          ${Number(prod.precioOriginal).toFixed(2)}
+                          $
+                          {Number(
+                            prod.precio / (1 - descuento.porcentaje / 100)
+                          ).toFixed(2)}
                         </span>
+
                         <span className="price-discount">
                           ${Number(prod.precio).toFixed(2)}
                         </span>

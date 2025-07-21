@@ -39,40 +39,38 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
 
   useEffect(() => {
     const precioNeto = parseFloat(producto.precioOriginal || producto.precio);
-  const precioConComision = calcularPrecioConComision(precioNeto);
+    const precioConComision = calcularPrecioConComision(precioNeto);
 
-  setFormData({
-    ...producto,
-    precio: precioConComision.toFixed(2), // este es el que se mostrará en el input
-    precioOriginal: precioNeto.toFixed(2), // se guarda como base del cálculo
-  });
-    
+    const aplicar = !!producto.descuentoAplicado;
+    const descuento = aplicar
+      ? descuentos.find((d) => d.id === producto.descuentoAplicado)
+      : null;
 
-    // Mostrar todos o solo válidos
+    const precioFinal =
+      aplicar && descuento
+        ? calcularPrecioConDescuento(precioConComision, descuento.porcentaje)
+        : precioConComision;
+
+    setFormData({
+      ...producto,
+      precio: precioFinal.toFixed(2),
+      precioOriginal: precioNeto.toFixed(2),
+      precioConComision: precioConComision.toFixed(2),
+    });
+
+    setAplicarDescuento(aplicar);
+    setDescuentoSeleccionado(descuento);
+    setPrecioConDescuento(precioFinal);
+
+    // Descuentos válidos
     const ahora = Date.now();
     const descuentosValidos = descuentos.filter(
       (desc) =>
         desc.validoHasta instanceof Date && desc.validoHasta.getTime() > ahora
     );
-
     setDescuentosDisponibles(descuentosValidos);
 
-    // Si el producto ya tiene un descuento aplicado
-    if (producto.descuentoAplicado) {
-      const descuentoActual = descuentosValidos.find(
-        (d) => d.id === producto.descuentoAplicado
-      );
-      setDescuentoSeleccionado(descuentoActual);
-
-      if (descuentoActual && producto.precioOriginal) {
-        setPrecioConDescuento(
-          producto.precioOriginal -
-            producto.precioOriginal * (descuentoActual.porcentaje / 100)
-        );
-      }
-    }
-
-    // Cargar categorías desde Firebase
+    // Categorías
     const db = getDatabase();
     const refCategorias = ref(db, "categorias");
     const unsubscribeCategorias = onValue(refCategorias, (snapshot) => {
@@ -87,18 +85,16 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
   }, [producto, descuentos]);
 
   useEffect(() => {
-    if (!aplicarDescuento && formData.precioOriginal) {
+    if (!aplicarDescuento && formData.precioConComision) {
       setFormData((prev) => ({
         ...prev,
-        precio: prev.precioOriginal,
-        precioOriginal: null,
-        descuentoAplicado: null
+        precio: prev.precioConComision,
+        descuentoAplicado: null,
       }));
       setDescuentoSeleccionado(null);
-      setPrecioConDescuento(0);
+      setPrecioConDescuento(parseFloat(formData.precioConComision));
     }
   }, [aplicarDescuento]);
-  
 
   const calcularPrecioConDescuento = (precio, porcentaje) => {
     return precio - precio * (porcentaje / 100);
@@ -108,17 +104,24 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
     const descuentoId = e.target.value;
     if (descuentoId === "") {
       setDescuentoSeleccionado(null);
-      setPrecioConDescuento(0);
+      setPrecioConDescuento(parseFloat(formData.precioConComision));
+      setFormData((prev) => ({
+        ...prev,
+        precio: prev.precioConComision,
+      }));
     } else {
       const descuento = descuentosDisponibles.find((d) => d.id === descuentoId);
-      setDescuentoSeleccionado(descuento);
-      if (descuento && formData.precioOriginal) {
-        setPrecioConDescuento(
-          calcularPrecioConDescuento(
-            formData.precioOriginal,
-            descuento.porcentaje
-          )
+      if (descuento) {
+        const precioFinal = calcularPrecioConDescuento(
+          parseFloat(formData.precioConComision),
+          descuento.porcentaje
         );
+        setDescuentoSeleccionado(descuento);
+        setPrecioConDescuento(precioFinal);
+        setFormData((prev) => ({
+          ...prev,
+          precio: precioFinal.toFixed(2),
+        }));
       }
     }
   };
@@ -129,14 +132,24 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
     if (name === "imagen" && files.length > 0) {
       setNuevaImagen(files[0]);
     } else if (name === "precio") {
+  const precioNeto = parseFloat(value || 0);
+  const conComision = calcularPrecioConComision(precioNeto);
+  const conDescuento =
+    aplicarDescuento && descuentoSeleccionado
+      ? calcularPrecioConDescuento(conComision, descuentoSeleccionado.porcentaje)
+      : conComision;
+
   setFormData((prev) => ({
     ...prev,
-    precio: value,
+    precioOriginal: precioNeto,
+    precio: conComision.toFixed(2),
+    precioConComision: conComision.toFixed(2),
   }));
-      if (aplicarDescuento && descuentoSeleccionado) {
-        setPrecioConDescuento(calcularPrecioConDescuento(parseFloat(value), descuentoSeleccionado.porcentaje));
-      }
-    } else {
+
+  setPrecioConDescuento(parseFloat(conDescuento.toFixed(2)));
+}
+
+ else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
@@ -156,13 +169,13 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (aplicarDescuento && !descuentoSeleccionado) {
       setErrores({ ...errores, descuento: "Debes seleccionar un descuento" });
       return;
     }
     if (!validar()) return;
 
-    // Verifica si hay cambios
     const comparacion = {
       ...formData,
       imagen: nuevaImagen ? "" : formData.imagen,
@@ -200,24 +213,18 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
       const db = getDatabase();
       const productoRef = ref(db, `productos/${producto.idFirebase}`);
 
-      const descuentoAplicado =
-        aplicarDescuento && descuentoSeleccionado
-          ? descuentoSeleccionado.id
-          : null;
+      const precioNeto = parseFloat(formData.precioOriginal);
+const precioComision = calcularPrecioConComision(precioNeto);
+const precioFinal = aplicarDescuento && descuentoSeleccionado
+  ? calcularPrecioConDescuento(precioComision, descuentoSeleccionado.porcentaje)
+  : precioComision;
 
-      const precioOriginal = aplicarDescuento
-        ? formData.precioOriginal
-        : parseFloat(formData.precio);
-      const precioFinal = aplicarDescuento && descuentoSeleccionado
-        ? calcularPrecioConDescuento(parseFloat(precioOriginal), descuentoSeleccionado.porcentaje)
-        : parseFloat(precioOriginal);
 
       await update(productoRef, {
         ...formData,
         imagen: urlImagen,
-        precio: precioFinal,
-        precioOriginal: precioOriginal,
-        descuentoAplicado,
+        precio: parseFloat(precioFinal.toFixed(2)),
+        descuentoAplicado: aplicarDescuento ? descuentoSeleccionado.id : null,
         updatedAt: Date.now(),
       });
 
@@ -237,14 +244,18 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
         <div className="modal-backdrop">
           <div className="modal-form">
             <h3>✅ Producto actualizado correctamente</h3>
-            <button className="btn-red" onClick={onClose}>Aceptar</button>
+            <button className="btn-red" onClick={onClose}>
+              Aceptar
+            </button>
           </div>
         </div>
       ) : errorVisible ? (
         <div className="modal-backdrop">
           <div className="modal-form">
             <h3 className="form-error">❌ {errorMensaje}</h3>
-            <button className="btn-table btn-delete" onClick={onClose}>Cerrar</button>
+            <button className="btn-table btn-delete" onClick={onClose}>
+              Cerrar
+            </button>
           </div>
         </div>
       ) : (
@@ -259,7 +270,7 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
                   value={formData.nombre}
                   onChange={handleChange}
                   placeholder="Nombre del producto"
-                  className={`form-input${errores.nombre ? ' error' : ''}`}
+                  className={`form-input${errores.nombre ? " error" : ""}`}
                 />
                 {errores.nombre && (
                   <div className="form-error">{errores.nombre}</div>
@@ -273,7 +284,7 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
                   value={formData.descripcion}
                   onChange={handleChange}
                   placeholder="Descripción del producto"
-                  className={`form-input${errores.descripcion ? ' error' : ''}`}
+                  className={`form-input${errores.descripcion ? " error" : ""}`}
                 />
                 {errores.descripcion && (
                   <div className="form-error">{errores.descripcion}</div>
@@ -283,13 +294,15 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
               <div className="form-group">
                 <label className="form-label">Precio:</label>
                 <input
-                  name="precio"
-                  type="number"
-                  value={formData.precio}
-                  onChange={handleChange}
-                  placeholder="Precio del producto"
-                  className={`form-input${errores.precio ? ' error' : ''}`}
-                />
+  name="precio"
+  type="number"
+  value={formData.precioOriginal}
+  onChange={handleChange}
+  placeholder="Precio neto deseado"
+  className={`form-input${errores.precio ? " error" : ""}`}
+/>
+
+
                 {errores.precio && (
                   <div className="form-error">{errores.precio}</div>
                 )}
@@ -327,16 +340,24 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
                     <option value="">-- Seleccione un descuento --</option>
                     {descuentosDisponibles.map((descuento) => (
                       <option key={descuento.id} value={descuento.id}>
-                        {descuento.porcentaje}% - Válido hasta {new Date(descuento.validoHasta).toLocaleDateString()}
+                        {descuento.porcentaje}% - Válido hasta{" "}
+                        {new Date(descuento.validoHasta).toLocaleDateString()}
                       </option>
                     ))}
                   </select>
 
                   {descuentoSeleccionado && formData.precioOriginal && (
                     <div className="descuento-info">
-                      <p><strong>Precio original:</strong> ${Number(formData.precioOriginal || 0).toFixed(2)}</p>
-                      <p><strong>Descuento:</strong> {descuentoSeleccionado.porcentaje}%</p>
-                      <p><strong>Precio final:</strong> ${precioConDescuento.toFixed(2)}</p>
+                      <p><strong>Precio original:</strong> ${Number(formData.precioConComision || formData.precio).toFixed(2)}</p>
+
+                      <p>
+                        <strong>Descuento:</strong>{" "}
+                        {descuentoSeleccionado.porcentaje}%
+                      </p>
+                      <p>
+                        <strong>Precio final:</strong> $
+                        {precioConDescuento.toFixed(2)}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -350,7 +371,7 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
                   value={formData.stock}
                   onChange={handleChange}
                   placeholder="Cantidad en stock"
-                  className={`form-input${errores.stock ? ' error' : ''}`}
+                  className={`form-input${errores.stock ? " error" : ""}`}
                 />
                 {errores.stock && (
                   <div className="form-error">{errores.stock}</div>
@@ -363,11 +384,13 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
                   name="categoria"
                   value={formData.categoria}
                   onChange={handleChange}
-                  className={`form-input${errores.categoria ? ' error' : ''}`}
+                  className={`form-input${errores.categoria ? " error" : ""}`}
                 >
                   <option value="">-- Selecciona una categoría --</option>
                   {categorias.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
                   ))}
                 </select>
                 {errores.categoria && (
@@ -396,7 +419,11 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
                 <button type="submit" disabled={subiendo} className="btn-red">
                   {subiendo ? "Guardando..." : "Guardar Cambios"}
                 </button>
-                <button type="button" onClick={onClose} className="btn-table btn-delete">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="btn-table btn-delete"
+                >
                   Cancelar
                 </button>
               </div>
@@ -408,7 +435,10 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
                   <h3 className="form-error" style={{ color: "#555" }}>
                     ⚠️ No se detectaron cambios en el producto
                   </h3>
-                  <button className="btn-red" onClick={() => setSinCambiosVisible(false)}>
+                  <button
+                    className="btn-red"
+                    onClick={() => setSinCambiosVisible(false)}
+                  >
                     Aceptar
                   </button>
                 </div>
