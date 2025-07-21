@@ -1,7 +1,15 @@
 import React, { useContext, useEffect, useState } from "react";
 import Modal from "react-modal";
 import { AuthContext } from "../context/AuthContext";
-import { getDatabase, ref, onValue, update, remove, get, runTransaction } from "firebase/database";
+import {
+  getDatabase,
+  ref,
+  onValue,
+  update,
+  remove,
+  get,
+  runTransaction,
+} from "firebase/database";
 import ClienteLayout from "../components/ClienteLayout";
 import "../styles/pedidos.css";
 import "../styles/tables.css";
@@ -10,7 +18,6 @@ import ModalAlerta from "../components/ModalAlerta";
 Modal.setAppElement("#root");
 
 const Pedidos = () => {
-
   const { usuario, rol, loading } = useContext(AuthContext);
   const [pedidos, setPedidos] = useState([]);
   const [pedidoActivo, setPedidoActivo] = useState(null);
@@ -19,7 +26,11 @@ const Pedidos = () => {
   const [confirmandoCancelacion, setConfirmandoCancelacion] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
-  const [alerta, setAlerta] = useState({ visible: false, mensaje: "", tipo: "error" });
+  const [alerta, setAlerta] = useState({
+    visible: false,
+    mensaje: "",
+    tipo: "error",
+  });
 
   useEffect(() => {
     if (!usuario) return;
@@ -127,54 +138,56 @@ const Pedidos = () => {
   };
 
   const restaurarStock = async (productos) => {
-    console.log('Iniciando restauración de stock:', productos);
+    console.log("Iniciando restauración de stock:", productos);
     if (!productos || productos.length === 0) {
-      console.log('No hay productos para restaurar');
+      console.log("No hay productos para restaurar");
       return;
     }
 
     const db = getDatabase();
-    const productosRef = ref(db, 'productos');
-    
+    const productosRef = ref(db, "productos");
+
     try {
-      console.log('Obteniendo datos actuales de productos...');
+      console.log("Obteniendo datos actuales de productos...");
       const snapshot = await get(productosRef);
       const productosData = snapshot.val() || {};
-      console.log('Datos actuales de productos:', productosData);
-      
+      console.log("Datos actuales de productos:", productosData);
+
       const updates = {};
 
-      productos.forEach(item => {
-        console.log('Procesando item:', item);
+      productos.forEach((item) => {
+        console.log("Procesando item:", item);
         if (!item.id || !item.cantidad) {
-          console.log('Item inválido - sin ID o cantidad:', item);
+          console.log("Item inválido - sin ID o cantidad:", item);
           return;
         }
-        
+
         const productoActual = productosData[item.id];
-        console.log('Producto actual en DB:', productoActual);
-        
+        console.log("Producto actual en DB:", productoActual);
+
         if (productoActual) {
           const stockActual = parseInt(productoActual.stock) || 0;
           const cantidadARestaurar = parseInt(item.cantidad) || 0;
           const nuevoStock = stockActual + cantidadARestaurar;
           updates[`${item.id}/stock`] = nuevoStock;
-          console.log(`Producto ${item.id}: Stock actual ${stockActual} + ${cantidadARestaurar} = Nuevo stock ${nuevoStock}`);
+          console.log(
+            `Producto ${item.id}: Stock actual ${stockActual} + ${cantidadARestaurar} = Nuevo stock ${nuevoStock}`
+          );
         } else {
           console.log(`Producto ${item.id} no encontrado en la base de datos`);
         }
       });
 
-      console.log('Actualizaciones a realizar:', updates);
+      console.log("Actualizaciones a realizar:", updates);
       if (Object.keys(updates).length > 0) {
         await update(productosRef, updates);
-        console.log('Stock restaurado exitosamente');
+        console.log("Stock restaurado exitosamente");
       } else {
-        console.log('No hay actualizaciones para realizar');
+        console.log("No hay actualizaciones para realizar");
       }
     } catch (error) {
-      console.error('Error al restaurar el stock:', error);
-      throw new Error('No se pudo restaurar el stock de los productos');
+      console.error("Error al restaurar el stock:", error);
+      throw new Error("No se pudo restaurar el stock de los productos");
     }
   };
 
@@ -191,12 +204,14 @@ const Pedidos = () => {
     const clienteUID = pedido.usuario;
 
     // Detectar método de pago
-    const metodo = (pedido.metodoPago || '').toLowerCase();
-    const esTarjeta = metodo.includes('stripe');
+    const metodo = (pedido.metodoPago || "").toLowerCase();
+    const esTarjeta = metodo.includes("stripe");
     const totalPedido = Number(pedido.total || 0);
     const porcentajeRetenido = esTarjeta ? 15 : 0;
     const comision = esTarjeta ? +(totalPedido * 0.15).toFixed(2) : 0;
-    const montoDevolucion = esTarjeta ? +(totalPedido - comision).toFixed(2) : totalPedido;
+    const montoDevolucion = esTarjeta
+      ? +(totalPedido - comision).toFixed(2)
+      : totalPedido;
 
     try {
       // Restaurar stock
@@ -241,8 +256,18 @@ const Pedidos = () => {
       if (esTarjeta) {
         const fecha = new Date(pedido.creadoEn);
         const meses = [
-          "enero", "febrero", "marzo", "abril", "mayo", "junio",
-          "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+          "enero",
+          "febrero",
+          "marzo",
+          "abril",
+          "mayo",
+          "junio",
+          "julio",
+          "agosto",
+          "septiembre",
+          "octubre",
+          "noviembre",
+          "diciembre",
         ];
         const mesActual = meses[fecha.getMonth()];
         const anioActual = fecha.getFullYear();
@@ -253,7 +278,10 @@ const Pedidos = () => {
           return (valorActual || 0) - totalPedido + comision;
         });
         // Ingresos por mes/año
-        const ingresosMesAnioRef = ref(db, `dashboard/ingresosPorMes/${anioActual}/${mesActual}`);
+        const ingresosMesAnioRef = ref(
+          db,
+          `dashboard/ingresosPorMes/${anioActual}/${mesActual}`
+        );
         await runTransaction(ingresosMesAnioRef, (valorActual) => {
           return (valorActual || 0) - totalPedido + comision;
         });
@@ -261,8 +289,18 @@ const Pedidos = () => {
         // Si es efectivo, restar el total original (si ya estaba sumado)
         const fecha = new Date(pedido.creadoEn);
         const meses = [
-          "enero", "febrero", "marzo", "abril", "mayo", "junio",
-          "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+          "enero",
+          "febrero",
+          "marzo",
+          "abril",
+          "mayo",
+          "junio",
+          "julio",
+          "agosto",
+          "septiembre",
+          "octubre",
+          "noviembre",
+          "diciembre",
         ];
         const mesActual = meses[fecha.getMonth()];
         const anioActual = fecha.getFullYear();
@@ -270,7 +308,10 @@ const Pedidos = () => {
         await runTransaction(ingresosRef, (valorActual) => {
           return (valorActual || 0) - totalPedido;
         });
-        const ingresosMesAnioRef = ref(db, `dashboard/ingresosPorMes/${anioActual}/${mesActual}`);
+        const ingresosMesAnioRef = ref(
+          db,
+          `dashboard/ingresosPorMes/${anioActual}/${mesActual}`
+        );
         await runTransaction(ingresosMesAnioRef, (valorActual) => {
           return (valorActual || 0) - totalPedido;
         });
@@ -282,7 +323,12 @@ const Pedidos = () => {
       setConfirmandoCancelacion(false);
     } catch (error) {
       console.error("Error al cancelar el pedido:", error);
-      setAlerta({ visible: true, mensaje: "Hubo un error al cancelar el pedido. Por favor, intenta de nuevo.", tipo: "error" });
+      setAlerta({
+        visible: true,
+        mensaje:
+          "Hubo un error al cancelar el pedido. Por favor, intenta de nuevo.",
+        tipo: "error",
+      });
     }
   };
 
@@ -291,46 +337,50 @@ const Pedidos = () => {
   const esAdmin = rol === "admin";
 
   const pedidosFiltrados = pedidos.filter((pedido) => {
-    const matchesBusqueda = pedido.id.includes(busqueda) || pedido.nombre.includes(busqueda);
-    const matchesEstado = estadoFiltro === "todos" || pedido.estado === estadoFiltro;
+    const matchesBusqueda =
+      pedido.id.includes(busqueda) || pedido.nombre.includes(busqueda);
+    const matchesEstado =
+      estadoFiltro === "todos" || pedido.estado === estadoFiltro;
     return matchesBusqueda && matchesEstado;
   });
 
   // Función auxiliar para obtener la clase CSS según el estado
   const getEstadoClass = (estado) => {
     switch (estado) {
-      case 'pendiente':
-        return 'status-pending';
-      case 'en_proceso':
-        return 'status-processing';
-      case 'enviado':
-        return 'status-shipped';
-      case 'entregado':
-        return 'status-delivered';
-      case 'cancelado':
-        return 'status-cancelled';
+      case "pendiente":
+        return "status-pending";
+      case "en_proceso":
+        return "status-processing";
+      case "enviado":
+        return "status-shipped";
+      case "entregado":
+        return "status-delivered";
+      case "cancelado":
+        return "status-cancelled";
       default:
-        return '';
+        return "";
     }
   };
 
   // Función auxiliar para formatear el estado
   const formatearEstado = (estado) => {
     switch (estado) {
-      case 'pendiente':
-        return 'Pendiente';
-      case 'en_proceso':
-        return 'En proceso';
-      case 'enviado':
-        return 'Enviado';
-      case 'entregado':
-        return 'Entregado';
-      case 'cancelado':
-        return 'Cancelado';
+      case "pendiente":
+        return "Pendiente";
+      case "en_proceso":
+        return "En proceso";
+      case "enviado":
+        return "Enviado";
+      case "entregado":
+        return "Entregado";
+      case "cancelado":
+        return "Cancelado";
       default:
         return estado;
     }
   };
+
+
 
   const obtenerFechaPedido = (pedido) => {
     if (pedido.creadoEn && !isNaN(new Date(pedido.creadoEn))) {
@@ -338,7 +388,7 @@ const Pedidos = () => {
     } else if (pedido.fecha && !isNaN(new Date(pedido.fecha))) {
       return new Date(pedido.fecha).toLocaleDateString();
     } else {
-      return 'Sin fecha';
+      return "Sin fecha";
     }
   };
 
@@ -388,7 +438,9 @@ const Pedidos = () => {
                 <td>{obtenerFechaPedido(pedido)}</td>
                 <td>${pedido.total.toFixed(2)}</td>
                 <td>
-                  <span className={`status-badge ${getEstadoClass(pedido.estado)}`}>
+                  <span
+                    className={`status-badge ${getEstadoClass(pedido.estado)}`}
+                  >
                     {formatearEstado(pedido.estado)}
                   </span>
                 </td>
@@ -400,29 +452,31 @@ const Pedidos = () => {
                     >
                       Ver detalles
                     </button>
-                    {pedido.estado !== 'cancelado' && pedido.estado !== 'entregado' && pedido.estado !== 'en proceso' && (
-                      <>
-                        {rol === 'admin' && (
-                          <button
-                            className="btn-table btn-toggle"
-                            onClick={() => cambiarEstado(pedido)}
-                          >
-                            Actualizar estado
-                          </button>
-                        )}
-                        {rol === 'cliente' && (
-                          <button
-                            className="btn-table btn-delete"
-                            onClick={() => {
-                              setPedidoActivo(pedido);
-                              setConfirmandoCancelacion(true);
-                            }}
-                          >
-                            Cancelar
-                          </button>
-                        )}
-                      </>
-                    )}
+                    {pedido.estado !== "cancelado" &&
+                      pedido.estado !== "entregado" &&
+                      pedido.estado !== "en proceso" && (
+                        <>
+                          {rol === "admin" && (
+                            <button
+                              className="btn-table btn-toggle"
+                              onClick={() => cambiarEstado(pedido)}
+                            >
+                              Actualizar estado
+                            </button>
+                          )}
+                          {rol === "cliente" && (
+                            <button
+                              className="btn-table btn-delete"
+                              onClick={() => {
+                                setPedidoActivo(pedido);
+                                setConfirmandoCancelacion(true);
+                              }}
+                            >
+                              Cancelar
+                            </button>
+                          )}
+                        </>
+                      )}
                   </div>
                 </td>
               </tr>
@@ -444,7 +498,8 @@ const Pedidos = () => {
         >
           <div className="modal-content">
             <h3>⚠️ Aviso de Cancelación</h3>
-            {pedidoActivo.metodoPago && pedidoActivo.metodoPago.toLowerCase() === "efectivo" ? (
+            {pedidoActivo.metodoPago &&
+            pedidoActivo.metodoPago.toLowerCase() === "efectivo" ? (
               <div className="cancelacion-info">
                 <p className="aviso-importante">
                   ¿Estás seguro de que deseas cancelar este pedido?
@@ -453,21 +508,40 @@ const Pedidos = () => {
               </div>
             ) : (
               <div className="cancelacion-info">
-                <p className="aviso-importante">IMPORTANTE: Al cancelar este pedido se aplicarán los siguientes cargos:</p>
+                <p className="aviso-importante">
+                  IMPORTANTE: Al cancelar este pedido se aplicarán los
+                  siguientes cargos:
+                </p>
                 <ul>
-                  <li>💰 <strong>Cargo por cancelación:</strong> 15% del valor total del pedido</li>
-                  <li>🧾 <strong>Total del pedido:</strong> ${pedidoActivo.total.toFixed(2)}</li>
-                  <li>📊 <strong>Cargo a retener:</strong> ${(pedidoActivo.total * 0.15).toFixed(2)}</li>
-                  <li>💵 <strong>Monto a devolver:</strong> ${calcularMontoDevolucion(pedidoActivo.total).toFixed(2)}</li>
+                  <li>
+                    💰 <strong>Cargo por cancelación:</strong> 15% del valor
+                    total del pedido
+                  </li>
+                  <li>
+                    🧾 <strong>Total del pedido:</strong> $
+                    {pedidoActivo.total.toFixed(2)}
+                  </li>
+                  <li>
+                    📊 <strong>Cargo a retener:</strong> $
+                    {(pedidoActivo.total * 0.15).toFixed(2)}
+                  </li>
+                  <li>
+                    💵 <strong>Monto a devolver:</strong> $
+                    {calcularMontoDevolucion(pedidoActivo.total).toFixed(2)}
+                  </li>
                 </ul>
                 <div className="advertencia-box">
-                  <p className="advertencia">⚠️ Este cargo es necesario debido a:</p>
+                  <p className="advertencia">
+                    ⚠️ Este cargo es necesario debido a:
+                  </p>
                   <ul>
                     <li>Comisiones bancarias no reembolsables</li>
                     <li>Gastos administrativos y operativos</li>
                     <li>Costos de procesamiento de la devolución</li>
                   </ul>
-                  <p className="nota-final">Esta acción no se puede deshacer una vez confirmada.</p>
+                  <p className="nota-final">
+                    Esta acción no se puede deshacer una vez confirmada.
+                  </p>
                 </div>
               </div>
             )}
@@ -503,31 +577,49 @@ const Pedidos = () => {
           <div className="modal-content">
             <h3>Pedido #{pedidoActivo.id.slice(0, 6)}</h3>
             <div className="info-section">
-              <p><strong>Estado:</strong> {pedidoActivo.estado}</p>
-              <p><strong>Pago:</strong> {pedidoActivo.metodoPago}</p>
+              <p>
+                <strong>Estado:</strong> {pedidoActivo.estado}
+              </p>
+              <p>
+                <strong>Pago:</strong> {pedidoActivo.metodoPago}
+              </p>
               {/* Si está cancelado y es efectivo, solo muestra cancelado */}
-              {pedidoActivo.estado === "cancelado" && pedidoActivo.metodoPago && pedidoActivo.metodoPago.toLowerCase() === "efectivo" ? (
+              {pedidoActivo.estado === "cancelado" &&
+              pedidoActivo.metodoPago &&
+              pedidoActivo.metodoPago.toLowerCase() === "efectivo" ? (
                 <div className="estado-cancelado">Pedido Cancelado</div>
               ) : (
                 <>
                   {pedidoActivo.fechaEntrega && (
                     <>
-                      <p><strong>Entrega estimada:</strong> {formatearFechaLarga(pedidoActivo.fechaEntrega)}</p>
-                      <p><strong>Tiempo restante:</strong> {tiempoRestante}</p>
+                      <p>
+                        <strong>Entrega estimada:</strong>{" "}
+                        {formatearFechaLarga(pedidoActivo.fechaEntrega)}
+                      </p>
+                      <p>
+                        <strong>Tiempo restante:</strong> {tiempoRestante}
+                      </p>
                     </>
                   )}
 
                   {pedidoActivo.direccion && (
                     <>
-                      <p><strong>Dirección:</strong></p>
-                      <button className="btn-ver-maps" onClick={() => setModalMapaAbierto(true)}>
+                      <p>
+                        <strong>Dirección:</strong>
+                      </p>
+                      <button
+                        className="btn-ver-maps"
+                        onClick={() => setModalMapaAbierto(true)}
+                      >
                         📍 Ver en Google Maps
                       </button>
                     </>
                   )}
 
                   {rol !== "cliente" && (
-                    <p><strong>Cliente:</strong> {pedidoActivo.nombre}</p>
+                    <p>
+                      <strong>Cliente:</strong> {pedidoActivo.nombre}
+                    </p>
                   )}
                 </>
               )}
@@ -537,8 +629,31 @@ const Pedidos = () => {
               <h4>Productos:</h4>
               <ul>
                 {pedidoActivo.productos.map((prod, i) => (
-                  <li key={i}>
-                    {prod.nombre} × {prod.cantidad} — ${prod.precio * prod.cantidad}
+                  <li
+                    key={i}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    {/* Círculo de color */}
+                    {prod.color && (
+                      <div
+                        style={{
+                          width: "16px",
+                          height: "16px",
+                          borderRadius: "50%",
+                          backgroundColor: prod.color,
+                          border: "1px solid #ccc",
+                        }}
+                        title={prod.color}
+                      ></div>
+                    )}
+                    <span>
+                      {prod.nombre} × {prod.cantidad} — $
+                      {prod.precio * prod.cantidad}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -546,8 +661,14 @@ const Pedidos = () => {
 
             {pedidoActivo.calificacion && (
               <div className="calificacion-section">
-                <p><strong>Calificación:</strong> {"★".repeat(pedidoActivo.calificacion.estrellas)}</p>
-                <p><strong>Comentario:</strong> {pedidoActivo.calificacion.comentario || "Sin comentario."}</p>
+                <p>
+                  <strong>Calificación:</strong>{" "}
+                  {"★".repeat(pedidoActivo.calificacion.estrellas)}
+                </p>
+                <p>
+                  <strong>Comentario:</strong>{" "}
+                  {pedidoActivo.calificacion.comentario || "Sin comentario."}
+                </p>
               </div>
             )}
 
@@ -562,7 +683,10 @@ const Pedidos = () => {
                     : "Marcar como Entregado"}
                 </button>
               )}
-              <button className="btn btn-cerrar" onClick={() => setPedidoActivo(null)}>
+              <button
+                className="btn btn-cerrar"
+                onClick={() => setPedidoActivo(null)}
+              >
                 Cerrar
               </button>
             </div>
@@ -580,14 +704,19 @@ const Pedidos = () => {
         >
           <h3>Ubicación del Pedido</h3>
           <iframe
-            src={`https://www.google.com/maps?q=${encodeURIComponent(pedidoActivo?.direccion || "")}&output=embed`}
+            src={`https://www.google.com/maps?q=${encodeURIComponent(
+              pedidoActivo?.direccion || ""
+            )}&output=embed`}
             width="100%"
             height="400"
             style={{ borderRadius: "12px", border: "none" }}
             loading="lazy"
             allowFullScreen
           ></iframe>
-          <button className="btn-cerrar-maps" onClick={() => setModalMapaAbierto(false)}>
+          <button
+            className="btn-cerrar-maps"
+            onClick={() => setModalMapaAbierto(false)}
+          >
             Cerrar Mapa
           </button>
         </Modal>
@@ -601,7 +730,12 @@ const Pedidos = () => {
         />
       )}
     </div>
+    
   );
+    
+
+  console.log("Productos del pedido activo:", pedidoActivo?.productos);
+
 
   // 👇 Este es el return final:
   return rol === "cliente" ? (
@@ -609,6 +743,6 @@ const Pedidos = () => {
   ) : (
     contenido
   );
-}
+};
 
 export default Pedidos;

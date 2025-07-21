@@ -359,6 +359,46 @@
 }
 
 
+.color-picker-modal {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.color-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.color-dot.seleccionado {
+  border: 2px solid #333;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
+.miniaturas-modal {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.miniatura-img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.miniatura-img.activa {
+  border: 2px solid #d72638;
+}
+
+
 /* Responsive */
 @media (max-width: 768px) {
   .modal-main-section {

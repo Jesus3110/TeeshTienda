@@ -219,12 +219,14 @@ const [mostrarModalBusqueda, setMostrarModalBusqueda] = useState(false);
           carritoActual[index].cantidad += cantidad;
         } else {
           carritoActual.push({
-            idFirebase: producto.idFirebase,
-            nombre: producto.nombre,
-            precio: producto.precio,
-            cantidad,
-            categoria: producto.categoria || "Sin categoría", // 👈 Nuevo campo agregado
-          });
+  idFirebase: producto.idFirebase,
+  nombre: producto.nombre,
+  precio: producto.precio,
+  cantidad,
+  categoria: producto.categoria || "Sin categoría",
+  ...(producto.color && { color: producto.color }), // ✅ Agrega el color si existe
+});
+
         }
 
         set(carritoRef, carritoActual);

@@ -135,13 +135,15 @@ if (typeof data.direccion === "object") {
     // 🆕 Fecha dinámica basada en pedidos pendientes
     const fechaEntrega = await calcularFechaEntregaPorPendientes();
   
-    const productosProcesados = carrito.map((p) => ({
-      nombre: p.nombre,
-      precio: p.precio,
-      cantidad: p.cantidad,
-      categoria: p.categoria || "Sin categoría",
-      id: p.idFirebase
-    }));
+   const productosProcesados = carrito.map((p) => ({
+  nombre: p.nombre,
+  precio: p.precio,
+  cantidad: p.cantidad,
+  categoria: p.categoria || "Sin categoría",
+  id: p.idFirebase,
+  color: p.color || null, // ✅ AÑADIDO
+}));
+
   
     await set(pedidoRef, {
   usuario: usuario.uid,

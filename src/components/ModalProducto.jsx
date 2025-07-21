@@ -11,6 +11,10 @@ function ModalProducto({
   descuentos = [],
   carrito = [],
 }) {
+  const [imagenSeleccionada, setImagenSeleccionada] = useState(producto.imagen);
+  const [colorSeleccionado, setColorSeleccionado] = useState(
+    producto.colores?.[0] || null
+  );
   const [cantidad, setCantidad] = useState(1);
   const [alerta, setAlerta] = useState({
     visible: false,
@@ -62,7 +66,7 @@ function ModalProducto({
             <div className="modal-producto-imagen">
               <div className="zoom-lupa">
                 <img
-                  src={producto.imagen}
+                  src={imagenSeleccionada}
                   alt={producto.nombre}
                   className="img-producto-modal"
                 />
@@ -98,7 +102,6 @@ function ModalProducto({
                   )}
                 </div>
               </div>
-
               <div className="producto-descripcion-modal">
                 <p>{producto.descripcion || "Descripción no disponible"}</p>
                 <div className="shipping-info">
@@ -107,6 +110,39 @@ function ModalProducto({
                   </span>
                 </div>
               </div>
+              {producto.imagenes && producto.imagenes.length > 1 && (
+                <div className="miniaturas-modal">
+                  {producto.imagenes.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={`img-${idx}`}
+                      className={`miniatura-img ${
+                        img === imagenSeleccionada ? "activa" : ""
+                      }`}
+                      onClick={() => setImagenSeleccionada(img)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {producto.colores?.length > 0 && (
+                <div className="form-group">
+                  <label style={{ fontWeight: "bold" }}>Color:</label>
+                  <div className="color-picker-modal">
+                    {producto.colores.map((hex, idx) => (
+                      <button
+                        key={idx}
+                        className={`color-dot ${
+                          colorSeleccionado === hex ? "seleccionado" : ""
+                        }`}
+                        style={{ backgroundColor: hex }}
+                        onClick={() => setColorSeleccionado(hex)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="quantity-selector">
                 <span>Cantidad</span>
@@ -184,7 +220,22 @@ function ModalProducto({
                       });
                       return;
                     }
-                    onAddToCart(producto, cantidad);
+                    if (producto.colores?.length > 0 && !colorSeleccionado) {
+                      setAlerta({
+                        visible: true,
+                        mensaje:
+                          "❌ Debes seleccionar un color antes de continuar.",
+                        tipo: "error",
+                      });
+                      return;
+                    }
+                    
+                    console.log("Color seleccionado antes de enviar al carrito:", colorSeleccionado);
+                    onAddToCart(
+                      { ...producto, color: colorSeleccionado },
+                      cantidad
+                    );
+
                     onClose();
                   }}
                   disabled={stockDisponible === 0}
@@ -258,6 +309,7 @@ function ModalProducto({
                           alt={productoRel.nombre}
                           className="img-producto-relacionado"
                         />
+
                         {descuentoRel && (
                           <div className="descuento-badge-relacionado">
                             -{descuentoRel.porcentaje}%

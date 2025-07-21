@@ -36,6 +36,13 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
   const [descuentoSeleccionado, setDescuentoSeleccionado] = useState(null);
   const [precioConDescuento, setPrecioConDescuento] = useState(0);
   const [sinCambiosVisible, setSinCambiosVisible] = useState(false);
+  const [imagenes, setImagenes] = useState([]);
+  const [imagenPrincipal, setImagenPrincipal] = useState(0);
+  const [tieneColores, setTieneColores] = useState(
+    (producto.colores?.length || 0) > 0
+  );
+  const [colores, setColores] = useState(producto.colores || []);
+  const [colorNuevo, setColorNuevo] = useState("#000000");
 
   useEffect(() => {
     const precioNeto = parseFloat(producto.precioOriginal || producto.precio);
@@ -61,6 +68,8 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
     setAplicarDescuento(aplicar);
     setDescuentoSeleccionado(descuento);
     setPrecioConDescuento(precioFinal);
+    setImagenes(producto.imagenes || [producto.imagen]);
+    setImagenPrincipal(producto.imagenes?.indexOf(producto.imagen) || 0);
 
     // Descuentos válidos
     const ahora = Date.now();
@@ -132,24 +141,25 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
     if (name === "imagen" && files.length > 0) {
       setNuevaImagen(files[0]);
     } else if (name === "precio") {
-  const precioNeto = parseFloat(value || 0);
-  const conComision = calcularPrecioConComision(precioNeto);
-  const conDescuento =
-    aplicarDescuento && descuentoSeleccionado
-      ? calcularPrecioConDescuento(conComision, descuentoSeleccionado.porcentaje)
-      : conComision;
+      const precioNeto = parseFloat(value || 0);
+      const conComision = calcularPrecioConComision(precioNeto);
+      const conDescuento =
+        aplicarDescuento && descuentoSeleccionado
+          ? calcularPrecioConDescuento(
+              conComision,
+              descuentoSeleccionado.porcentaje
+            )
+          : conComision;
 
-  setFormData((prev) => ({
-    ...prev,
-    precioOriginal: precioNeto,
-    precio: conComision.toFixed(2),
-    precioConComision: conComision.toFixed(2),
-  }));
+      setFormData((prev) => ({
+        ...prev,
+        precioOriginal: precioNeto,
+        precio: conComision.toFixed(2),
+        precioConComision: conComision.toFixed(2),
+      }));
 
-  setPrecioConDescuento(parseFloat(conDescuento.toFixed(2)));
-}
-
- else {
+      setPrecioConDescuento(parseFloat(conDescuento.toFixed(2)));
+    } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
@@ -198,31 +208,38 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
 
     setSubiendo(true);
     try {
-      let urlImagen = formData.imagen;
+      const urlImagenesFinales = [];
 
-      if (nuevaImagen) {
-        const storage = getStorage();
-        const imagenRef = sRef(
-          storage,
-          `productos/${uuidv4()}_${nuevaImagen.name}`
-        );
-        await uploadBytes(imagenRef, nuevaImagen);
-        urlImagen = await getDownloadURL(imagenRef);
+      for (const img of imagenes) {
+        if (img instanceof File) {
+          const storage = getStorage();
+          const imgRef = sRef(storage, `productos/${uuidv4()}_${img.name}`);
+          await uploadBytes(imgRef, img);
+          const url = await getDownloadURL(imgRef);
+          urlImagenesFinales.push(url);
+        } else {
+          urlImagenesFinales.push(img); // ya es URL existente
+        }
       }
 
       const db = getDatabase();
       const productoRef = ref(db, `productos/${producto.idFirebase}`);
 
       const precioNeto = parseFloat(formData.precioOriginal);
-const precioComision = calcularPrecioConComision(precioNeto);
-const precioFinal = aplicarDescuento && descuentoSeleccionado
-  ? calcularPrecioConDescuento(precioComision, descuentoSeleccionado.porcentaje)
-  : precioComision;
-
+      const precioComision = calcularPrecioConComision(precioNeto);
+      const precioFinal =
+        aplicarDescuento && descuentoSeleccionado
+          ? calcularPrecioConDescuento(
+              precioComision,
+              descuentoSeleccionado.porcentaje
+            )
+          : precioComision;
 
       await update(productoRef, {
         ...formData,
-        imagen: urlImagen,
+        imagen: urlImagenesFinales[imagenPrincipal],
+        imagenes: urlImagenesFinales,
+        colores: tieneColores ? colores : [],
         precio: parseFloat(precioFinal.toFixed(2)),
         descuentoAplicado: aplicarDescuento ? descuentoSeleccionado.id : null,
         updatedAt: Date.now(),
@@ -294,14 +311,13 @@ const precioFinal = aplicarDescuento && descuentoSeleccionado
               <div className="form-group">
                 <label className="form-label">Precio:</label>
                 <input
-  name="precio"
-  type="number"
-  value={formData.precioOriginal}
-  onChange={handleChange}
-  placeholder="Precio neto deseado"
-  className={`form-input${errores.precio ? " error" : ""}`}
-/>
-
+                  name="precio"
+                  type="number"
+                  value={formData.precioOriginal}
+                  onChange={handleChange}
+                  placeholder="Precio neto deseado"
+                  className={`form-input${errores.precio ? " error" : ""}`}
+                />
 
                 {errores.precio && (
                   <div className="form-error">{errores.precio}</div>
@@ -348,7 +364,12 @@ const precioFinal = aplicarDescuento && descuentoSeleccionado
 
                   {descuentoSeleccionado && formData.precioOriginal && (
                     <div className="descuento-info">
-                      <p><strong>Precio original:</strong> ${Number(formData.precioConComision || formData.precio).toFixed(2)}</p>
+                      <p>
+                        <strong>Precio original:</strong> $
+                        {Number(
+                          formData.precioConComision || formData.precio
+                        ).toFixed(2)}
+                      </p>
 
                       <p>
                         <strong>Descuento:</strong>{" "}
@@ -362,6 +383,17 @@ const precioFinal = aplicarDescuento && descuentoSeleccionado
                   )}
                 </div>
               )}
+              <div className="form-group">
+                <label className="form-label">Marca:</label>
+                <input
+                  name="marca"
+                  type="text"
+                  value={formData.marca || ""}
+                  onChange={handleChange}
+                  placeholder="Marca del producto"
+                  className="form-input"
+                />
+              </div>
 
               <div className="form-group">
                 <label className="form-label">Stock:</label>
@@ -397,23 +429,141 @@ const precioFinal = aplicarDescuento && descuentoSeleccionado
                   <div className="form-error">{errores.categoria}</div>
                 )}
               </div>
+              <div className="form-group">
+                <label className="switch-label">
+                  <input
+                    type="checkbox"
+                    checked={tieneColores}
+                    onChange={() => setTieneColores(!tieneColores)}
+                    className="custom-checkbox"
+                  />
+                  ¿Este producto tiene varios colores?
+                </label>
+              </div>
+
+              {tieneColores && (
+                <div className="form-group">
+                  <label className="form-label">Colores disponibles:</label>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "1rem",
+                    }}
+                  >
+                    <input
+                      type="color"
+                      value={colorNuevo}
+                      onChange={(e) => setColorNuevo(e.target.value)}
+                      style={{ width: "50px", height: "40px", border: "none" }}
+                    />
+                    <button
+                      type="button"
+                      className="btn-table"
+                      onClick={() => {
+                        if (!colores.includes(colorNuevo)) {
+                          setColores([...colores, colorNuevo]);
+                        }
+                      }}
+                    >
+                      Agregar color
+                    </button>
+                  </div>
+
+                  {colores.length > 0 && (
+                    <div
+                      className="color-list"
+                      style={{
+                        marginTop: "0.5rem",
+                        display: "flex",
+                        gap: "1rem",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {colores.map((hex, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: "30px",
+                              height: "30px",
+                              backgroundColor: hex,
+                              borderRadius: "50%",
+                              border: "1px solid #ccc",
+                            }}
+                          />
+                          <span>{hex}</span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setColores(colores.filter((_, i) => i !== idx))
+                            }
+                          >
+                            ❌
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="form-group">
-                <label className="form-label">Imagen:</label>
-                {formData.imagen && (
-                  <div style={{ marginBottom: "10px" }}>
-                    <p>Imagen actual:</p>
-                    <img src={formData.imagen} alt="Vista previa" width="100" />
-                  </div>
-                )}
+                <label className="form-label">Agregar más imágenes:</label>
                 <input
-                  name="imagen"
+                  name="nuevasImagenes"
                   type="file"
                   accept="image/*"
-                  onChange={handleChange}
+                  multiple
+                  onChange={(e) => {
+                    const nuevosArchivos = Array.from(e.target.files);
+                    setImagenes((prev) => [...prev, ...nuevosArchivos]);
+                  }}
                   className="form-input"
                 />
               </div>
+
+              {imagenes.length > 0 && (
+  <div className="preview-grid">
+    {imagenes.map((imgUrl, index) => (
+      <div
+        key={index}
+        className={`preview-img-container ${imagenPrincipal === index ? "principal" : ""}`}
+      >
+        <img
+          src={imgUrl instanceof File ? URL.createObjectURL(imgUrl) : imgUrl}
+          alt={`img-${index}`}
+          onClick={() => setImagenPrincipal(index)}
+        />
+        <button
+          type="button"
+          className="btn-remove-img"
+          onClick={() => {
+            const nuevas = [...imagenes];
+            nuevas.splice(index, 1);
+            setImagenes(nuevas);
+
+            // si se elimina la principal, actualizar el índice
+            if (imagenPrincipal === index) {
+              setImagenPrincipal(0);
+            } else if (imagenPrincipal > index) {
+              setImagenPrincipal(imagenPrincipal - 1);
+            }
+          }}
+        >
+          ❌
+        </button>
+      </div>
+    ))}
+  </div>
+)}
+
 
               <div className="form-actions">
                 <button type="submit" disabled={subiendo} className="btn-red">
