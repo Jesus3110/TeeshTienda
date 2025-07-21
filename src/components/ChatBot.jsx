@@ -149,8 +149,8 @@ const ChatBot = () => {
   const menuOpciones = {
     "1": "📦 *Información de envíos:* Realizamos envíos en 24-48h hábiles. El costo depende de tu ubicación.",
     "2": "🔁 *Devoluciones:* Tienes 30 días para devolver tu producto. Debe estar sin usar y con su empaque original.",
-    "3": "💳 *Pagos:* Aceptamos tarjetas de crédito/débito y transferencias bancarias.",
-    "4": "🏷️ *Descuentos:* Ofrecemos promociones en compras mayores a $1000 MXN.",
+    "3": "💳 *Pagos:* Aceptamos tarjetas de crédito/débito.",
+    "4": "🏷️ *Descuentos:* Ofrecemos promociones, se notifican en los banners",
     "5": null
   };
 
