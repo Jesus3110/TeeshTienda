@@ -38,7 +38,15 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
   const [sinCambiosVisible, setSinCambiosVisible] = useState(false);
 
   useEffect(() => {
-    setFormData({ ...producto });
+    const precioNeto = parseFloat(producto.precioOriginal || producto.precio);
+  const precioConComision = calcularPrecioConComision(precioNeto);
+
+  setFormData({
+    ...producto,
+    precio: precioConComision.toFixed(2), // este es el que se mostrará en el input
+    precioOriginal: precioNeto.toFixed(2), // se guarda como base del cálculo
+  });
+    
 
     // Mostrar todos o solo válidos
     const ahora = Date.now();
@@ -121,11 +129,10 @@ const ModalEditarProducto = ({ producto, descuentos, onClose }) => {
     if (name === "imagen" && files.length > 0) {
       setNuevaImagen(files[0]);
     } else if (name === "precio") {
-      setFormData((prev) => ({
-        ...prev,
-        precio: value,
-        precioOriginal: value
-      }));
+  setFormData((prev) => ({
+    ...prev,
+    precio: value,
+  }));
       if (aplicarDescuento && descuentoSeleccionado) {
         setPrecioConDescuento(calcularPrecioConDescuento(parseFloat(value), descuentoSeleccionado.porcentaje));
       }

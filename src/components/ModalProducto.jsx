@@ -41,10 +41,8 @@ function ModalProducto({
       })
     : null;
 
-  const precioOriginal = producto.precioOriginal || producto.precio;
-  const precioConDescuento = descuento
-    ? (precioOriginal * (1 - descuento.porcentaje / 100)).toFixed(2)
-    : precioOriginal.toFixed(2);
+const precioOriginal = producto.precioOriginal;
+const precioFinal = parseFloat(producto.precio);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -75,20 +73,21 @@ function ModalProducto({
               <div className="producto-header-modal">
                 <h2 className="producto-nombre-modal">{producto.nombre}</h2>
                 <div className="producto-precio-container-modal">
-                  {descuento ? (
-                    <>
-                      <span className="precio-original-modal">
-                        ${precioOriginal.toFixed(2)}
-                      </span>
-                      <span className="precio-descuento-modal">
-                        ${precioConDescuento}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="precio-normal-modal">
-                      ${precioOriginal.toFixed(2)}
-                    </span>
-                  )}
+                  {descuento && precioOriginal && precioOriginal !== precioFinal ? (
+  <>
+    <span className="precio-original-modal">
+      ${precioOriginal.toFixed(2)}
+    </span>
+    <span className="precio-descuento-modal">
+      ${precioFinal.toFixed(2)}
+    </span>
+  </>
+) : (
+  <span className="precio-normal-modal">
+    ${precioFinal.toFixed(2)}
+  </span>
+)}
+
                 </div>
               </div>
 

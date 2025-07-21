@@ -6,22 +6,24 @@ function ProductosDestacados({
   descuentos,
   verDetalles,
   obtenerDescuentoProducto,
-  productosVendidos = {} // ← Recibes este prop desde Firebase
+  productosVendidos = {}, // ← Recibes este prop desde Firebase
 }) {
   // Normaliza nombres para evitar errores por espacios o mayúsculas
-  const normalizar = (str) => str?.trim().toLowerCase() || '';
+  const normalizar = (str) => str?.trim().toLowerCase() || "";
 
   // Filtra solo productos que están en el ranking de vendidos
-  const productosFiltrados = productos.filter((producto) =>
-    producto?.nombre && Object.keys(productosVendidos).some(
-      (nombre) => nombre && normalizar(nombre) === normalizar(producto.nombre)
-    )
+  const productosFiltrados = productos.filter(
+    (producto) =>
+      producto?.nombre &&
+      Object.keys(productosVendidos).some(
+        (nombre) => nombre && normalizar(nombre) === normalizar(producto.nombre)
+      )
   );
 
   // Ordena por cantidad vendida
   const productosOrdenados = productosFiltrados.sort((a, b) => {
     if (!a?.nombre || !b?.nombre) return 0;
-    
+
     const ventasA =
       productosVendidos[
         Object.keys(productosVendidos).find(
@@ -46,10 +48,8 @@ function ProductosDestacados({
       <div className="grid-productos-destacados">
         {productosOrdenados.map((producto) => {
           const descuento = obtenerDescuentoProducto(producto);
-          const base = producto.precioOriginal || producto.precio;
-          const precioConDescuento = descuento
-            ? base * (1 - descuento.porcentaje / 100)
-            : base;
+          const precioOriginal = producto.precioOriginal;
+          const precioFinal = parseFloat(producto.precio); // ya con descuento y comisión
 
           return (
             <div className="card-producto-destacado" key={producto.idFirebase}>
@@ -68,13 +68,15 @@ function ProductosDestacados({
                 <div className="producto-rating">🔥 Más vendido</div>
 
                 <div className="producto-precios">
-                  {descuento && (
+                  {descuento && precioOriginal && (
                     <span className="precio-original tachado">
-                      ${base.toFixed(2)}
+                      ${Number(precioOriginal).toFixed(2)}
                     </span>
                   )}
-                  <span className={`precio-final ${descuento ? "descuento" : ""}`}>
-                    ${precioConDescuento.toFixed(2)}
+                  <span
+                    className={`precio-final ${descuento ? "descuento" : ""}`}
+                  >
+                    ${precioFinal.toFixed(2)}
                   </span>
                 </div>
 

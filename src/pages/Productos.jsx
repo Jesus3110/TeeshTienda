@@ -15,7 +15,9 @@ const toggleActivo = async (id, estadoActual) => {
 };
 
 const eliminarProducto = async (id) => {
-  const confirmar = window.confirm("¿Estás seguro de que quieres eliminar este producto?");
+  const confirmar = window.confirm(
+    "¿Estás seguro de que quieres eliminar este producto?"
+  );
   if (!confirmar) return;
 
   const db = getDatabase();
@@ -48,9 +50,10 @@ const Productos = () => {
         id,
         ...value,
         nombre: value.nombre || "Sin nombre",
-        validoHasta: typeof value.validoHasta === "number"
-          ? new Date(value.validoHasta)
-          : null,
+        validoHasta:
+          typeof value.validoHasta === "number"
+            ? new Date(value.validoHasta)
+            : null,
       }));
 
       setDescuentos(listaDescuentos);
@@ -64,7 +67,7 @@ const Productos = () => {
           const prod = { idFirebase, ...value };
           const idDescuento = prod.descuentoAplicado;
 
-          const descuento = listaDescuentos.find(d => d.id === idDescuento);
+          const descuento = listaDescuentos.find((d) => d.id === idDescuento);
           console.log("🟨 Producto leído:", prod.nombre);
           console.log("🟩 Descuento encontrado:", descuento);
 
@@ -78,11 +81,17 @@ const Productos = () => {
             vencido = descuento.validoHasta.getTime() <= Date.now();
           }
 
-          console.log("🕒 Fecha del descuento:", descuento?.validoHasta?.toISOString?.());
+          console.log(
+            "🕒 Fecha del descuento:",
+            descuento?.validoHasta?.toISOString?.()
+          );
           console.log("🔴 ¿Está vencido?", vencido);
 
           if (descuento && vencido) {
-            if (prod.precioOriginal && typeof prod.precioOriginal === "number") {
+            if (
+              prod.precioOriginal &&
+              typeof prod.precioOriginal === "number"
+            ) {
               const refProd = ref(db, `productos/${idFirebase}`);
               await update(refProd, {
                 descuentoAplicado: null,
@@ -94,7 +103,10 @@ const Productos = () => {
               prod.precioOriginal = null;
               console.warn("‼️ Se eliminó descuento vencido de:", prod.nombre);
             } else {
-              console.warn("🛑 PrecioOriginal inválido. No se borra descuento de:", prod.nombre);
+              console.warn(
+                "🛑 PrecioOriginal inválido. No se borra descuento de:",
+                prod.nombre
+              );
             }
           }
 
@@ -136,14 +148,23 @@ const Productos = () => {
 
   const obtenerDescuentoProducto = (producto) => {
     if (!producto.descuentoAplicado) return null;
-    return descuentos.find((d) => d.id.trim() === producto.descuentoAplicado.trim());
+    return descuentos.find(
+      (d) => d.id.trim() === producto.descuentoAplicado.trim()
+    );
   };
 
-  const calcularPrecioConDescuento = (precio, descuento, precioOriginal = null) => {
+  const calcularPrecioConDescuento = (
+    precio,
+    descuento,
+    precioOriginal = null
+  ) => {
     if (typeof precio !== "number" || isNaN(precio)) return precio;
     if (!descuento || typeof descuento.porcentaje !== "number") return precio;
 
-    const base = precioOriginal && typeof precioOriginal === "number" ? precioOriginal : precio;
+    const base =
+      precioOriginal && typeof precioOriginal === "number"
+        ? precioOriginal
+        : precio;
     const final = base * (1 - descuento.porcentaje / 100);
     return Math.round(final * 100) / 100;
   };
@@ -151,15 +172,18 @@ const Productos = () => {
   const productosFiltrados = productos
     .filter((p) => p && p.nombre)
     .filter((p) => {
-      const matchNombre = p.nombre.toLowerCase().includes(busqueda.toLowerCase());
-      const matchCategoria = categoriaFiltro === "todos" || p.categoria === categoriaFiltro;
+      const matchNombre = p.nombre
+        .toLowerCase()
+        .includes(busqueda.toLowerCase());
+      const matchCategoria =
+        categoriaFiltro === "todos" || p.categoria === categoriaFiltro;
       const matchActivos = verActivos && p.activo;
       const matchInactivos = verDeshabilitados && !p.activo;
       return matchNombre && matchCategoria && (matchActivos || matchInactivos);
     });
 
   return (
-      <div className="productos-admin">
+    <div className="productos-admin">
       <h2>Gestión de Productos</h2>
 
       <div className="filtros-productos-flex">
@@ -178,7 +202,9 @@ const Productos = () => {
         >
           <option value="todos">Todas las categorías</option>
           {categoriasDisponibles.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
           ))}
         </select>
 
@@ -230,40 +256,56 @@ const Productos = () => {
           <tbody>
             {productosFiltrados.map((prod) => {
               const descuento = obtenerDescuentoProducto(prod);
-              const esDescuentoValido = descuento && descuento.validoHasta instanceof Date && descuento.validoHasta.getTime() > Date.now();
-              const precioConDescuento = descuento && prod.precioOriginal
-                ? prod.precioOriginal * (1 - descuento.porcentaje / 100)
-                : prod.precio;
+              const esDescuentoValido =
+                descuento &&
+                descuento.validoHasta instanceof Date &&
+                descuento.validoHasta.getTime() > Date.now();
+              const precioConDescuento =
+                descuento && prod.precioOriginal
+                  ? prod.precioOriginal * (1 - descuento.porcentaje / 100)
+                  : prod.precio;
               const vendidos = productosVendidos[prod.nombre] || 0;
-              const porcentajeVentas = totalVendidos > 0 ? ((vendidos / totalVendidos) * 100).toFixed(1) : "0.0";
+              const porcentajeVentas =
+                totalVendidos > 0
+                  ? ((vendidos / totalVendidos) * 100).toFixed(1)
+                  : "0.0";
 
               return (
                 <tr key={prod.idFirebase}>
-                  <td><img src={prod.imagen} alt={prod.nombre} /></td>
+                  <td>
+                    <img src={prod.imagen} alt={prod.nombre} />
+                  </td>
                   <td>{prod.nombre}</td>
                   <td>
                     {esDescuentoValido && prod.precioOriginal ? (
                       <>
-                        <span className="price-original">
-                        ${Number(prod.precioOriginal || prod.precio).toFixed(2)}
+                        <span className="price-original tachado">
+                          ${Number(prod.precioOriginal).toFixed(2)}
                         </span>
                         <span className="price-discount">
-                          ${precioConDescuento.toFixed(2)}
+                          ${Number(prod.precio).toFixed(2)}
                         </span>
                       </>
                     ) : (
-                      `$${(prod.precioOriginal ? prod.precioOriginal : prod.precio).toFixed(2)}`
+                      `$${Number(prod.precio).toFixed(2)}`
                     )}
                   </td>
+
                   <td>
                     {esDescuentoValido ? (
-                      <span className="discount-badge">{descuento.porcentaje}% OFF</span>
+                      <span className="discount-badge">
+                        {descuento.porcentaje}% OFF
+                      </span>
                     ) : (
                       "—"
                     )}
                   </td>
                   <td>
-                    <span className={`stock-badge ${prod.stock <= 5 ? 'stock-low' : 'stock-normal'}`}>
+                    <span
+                      className={`stock-badge ${
+                        prod.stock <= 5 ? "stock-low" : "stock-normal"
+                      }`}
+                    >
                       {prod.stock} unidades
                       {prod.activo && prod.stock <= 5 && " ⚠️"}
                     </span>
@@ -272,7 +314,11 @@ const Productos = () => {
                   <td>{prod.categoria}</td>
                   <td>{porcentajeVentas}%</td>
                   <td>
-                    <span className={`status-badge ${prod.activo ? 'status-active' : 'status-inactive'}`}>
+                    <span
+                      className={`status-badge ${
+                        prod.activo ? "status-active" : "status-inactive"
+                      }`}
+                    >
                       {prod.activo ? "Activo" : "Inactivo"}
                     </span>
                   </td>
@@ -288,8 +334,12 @@ const Productos = () => {
                         Modificar
                       </button>
                       <button
-                        className={`btn-table ${prod.activo ? 'btn-delete' : 'btn-toggle'}`}
-                        onClick={() => toggleActivo(prod.idFirebase, prod.activo)}
+                        className={`btn-table ${
+                          prod.activo ? "btn-delete" : "btn-toggle"
+                        }`}
+                        onClick={() =>
+                          toggleActivo(prod.idFirebase, prod.activo)
+                        }
                       >
                         {prod.activo ? "Deshabilitar" : "Habilitar"}
                       </button>

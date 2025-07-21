@@ -159,9 +159,13 @@ const ModalFormularioProducto = ({ onClose }) => {
       }
 
       const precioOriginal = parseFloat(producto.precioOriginal || producto.precio);
-      const precioFinal = aplicarDescuento && descuentoSeleccionado
-        ? calcularPrecioConDescuento(precioOriginal, descuentoSeleccionado.porcentaje)
-        : precioOriginal;
+
+const precioBase = aplicarDescuento && descuentoSeleccionado
+  ? calcularPrecioConDescuento(precioOriginal, descuentoSeleccionado.porcentaje)
+  : precioOriginal;
+
+const precioFinal = calcularPrecioConComision(precioBase); // ✅ Aquí se aplica la comisión
+
 
       const nuevoProducto = {
         id: nuevoID,
@@ -180,6 +184,11 @@ const ModalFormularioProducto = ({ onClose }) => {
         tags: [],
         descuentoAplicado: aplicarDescuento ? descuentoSeleccionado?.id : null,
       };
+
+      console.log("Quiero ganar:", precioOriginal);
+console.log("Precio con descuento (si aplica):", precioBase);
+console.log("Precio final para el cliente (con comisión):", precioFinal);
+
 
       const newRef = ref(db, `productos/${uuidv4()}`);
       await set(newRef, nuevoProducto);

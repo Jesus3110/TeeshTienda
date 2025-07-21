@@ -27,7 +27,7 @@ function ModalCategoria({
               .filter((p) => p.activo)
               .map((producto) => {
                 const descuento = obtenerDescuento(producto);
-                const base = producto.precioOriginal || producto.precio;
+                const base = parseFloat(producto.precio); // 👈 Mostrar precio final real
                 const precioConDescuento = descuento
                   ? (base * (1 - descuento.porcentaje / 100)).toFixed(2)
                   : base.toFixed(2);
