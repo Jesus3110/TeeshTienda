@@ -46,16 +46,16 @@
   margin-bottom: 2rem;
 }
 
+
 .modal-producto-imagen {
   position: relative;
   flex: 1;
   min-width: 300px;
-}
-
-.img-producto-modal {
-  width: 100%;
-  max-height: 500px;
-  object-fit: contain;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
   border-radius: 8px;
 }
 
@@ -173,7 +173,7 @@
 }
 
 .btn-agregar-carrito-modal {
-  background-color: #062828; /* Tu color principal */
+  background-color: #7f1212; /* Tu color principal */
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -186,7 +186,7 @@
 }
 
 .btn-agregar-carrito-modal:hover {
-  background-color: #191919;
+  background-color: #E63946;
 }
 
 /* Opción de recojo en tienda */
@@ -336,6 +336,28 @@
   font-weight: bold;
   font-size: 1.1rem;
 }
+
+.zoom-lupa {
+  position: relative;
+  overflow: hidden;
+  cursor: zoom-in;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.zoom-lupa img {
+  transition: transform 0.4s ease;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.zoom-lupa:hover img {
+  transform: scale(2); /* Puedes ajustar el zoom */
+  cursor: zoom-out;
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {

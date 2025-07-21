@@ -12,7 +12,11 @@ function ModalProducto({
   carrito = [],
 }) {
   const [cantidad, setCantidad] = useState(1);
-  const [alerta, setAlerta] = useState({ visible: false, mensaje: "", tipo: "error" });
+  const [alerta, setAlerta] = useState({
+    visible: false,
+    mensaje: "",
+    tipo: "error",
+  });
 
   const cantidadEnCarrito = carrito
     .filter((p) => p.idFirebase === producto.idFirebase)
@@ -41,8 +45,8 @@ function ModalProducto({
       })
     : null;
 
-const precioOriginal = producto.precioOriginal;
-const precioFinal = parseFloat(producto.precio);
+  const precioOriginal = producto.precioOriginal;
+  const precioFinal = parseFloat(producto.precio);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -56,11 +60,14 @@ const precioFinal = parseFloat(producto.precio);
           <div className="modal-main-section">
             {/* Columna de imagen */}
             <div className="modal-producto-imagen">
-              <img
-                src={producto.imagen}
-                alt={producto.nombre}
-                className="img-producto-modal"
-              />
+              <div className="zoom-lupa">
+                <img
+                  src={producto.imagen}
+                  alt={producto.nombre}
+                  className="img-producto-modal"
+                />
+              </div>
+
               {descuento && (
                 <div className="descuento-badge-modal">
                   -{descuento.porcentaje}%
@@ -73,21 +80,22 @@ const precioFinal = parseFloat(producto.precio);
               <div className="producto-header-modal">
                 <h2 className="producto-nombre-modal">{producto.nombre}</h2>
                 <div className="producto-precio-container-modal">
-                  {descuento && precioOriginal && precioOriginal !== precioFinal ? (
-  <>
-    <span className="precio-original-modal">
-      ${precioOriginal.toFixed(2)}
-    </span>
-    <span className="precio-descuento-modal">
-      ${precioFinal.toFixed(2)}
-    </span>
-  </>
-) : (
-  <span className="precio-normal-modal">
-    ${precioFinal.toFixed(2)}
-  </span>
-)}
-
+                  {descuento &&
+                  precioOriginal &&
+                  precioOriginal !== precioFinal ? (
+                    <>
+                      <span className="precio-original-modal">
+                        ${precioOriginal.toFixed(2)}
+                      </span>
+                      <span className="precio-descuento-modal">
+                        ${precioFinal.toFixed(2)}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="precio-normal-modal">
+                      ${precioFinal.toFixed(2)}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -146,20 +154,20 @@ const precioFinal = parseFloat(producto.precio);
                     Stock disponible: {stockDisponible}
                   </p>
 
-
                   <button
-  className="quantity-btn"
-  onClick={() => {
-    if (cantidad < stockDisponible) {
-      setCantidad(cantidad + 1);
-    }
-  }}
-  disabled={cantidad >= stockDisponible}
-  title={cantidad >= stockDisponible ? "Límite alcanzado" : ""}
->
-  +
-</button>
-
+                    className="quantity-btn"
+                    onClick={() => {
+                      if (cantidad < stockDisponible) {
+                        setCantidad(cantidad + 1);
+                      }
+                    }}
+                    disabled={cantidad >= stockDisponible}
+                    title={
+                      cantidad >= stockDisponible ? "Límite alcanzado" : ""
+                    }
+                  >
+                    +
+                  </button>
                 </div>
               </div>
 
@@ -169,7 +177,11 @@ const precioFinal = parseFloat(producto.precio);
                   className="btn-agregar-carrito-modal"
                   onClick={() => {
                     if (cantidad > stockDisponible) {
-                      setAlerta({ visible: true, mensaje: `❌ Solo quedan ${stockDisponible} disponibles (ya tienes ${cantidadEnCarrito} en tu carrito)`, tipo: "error" });
+                      setAlerta({
+                        visible: true,
+                        mensaje: `❌ Solo quedan ${stockDisponible} disponibles (ya tienes ${cantidadEnCarrito} en tu carrito)`,
+                        tipo: "error",
+                      });
                       return;
                     }
                     onAddToCart(producto, cantidad);

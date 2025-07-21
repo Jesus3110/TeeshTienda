@@ -2,6 +2,7 @@ import React from "react";
 import "../styles/modalCategoria.css";
 
 function ModalCategoria({
+  verDetalles,
   categoria,
   productos,
   onClose,
@@ -15,7 +16,12 @@ function ModalCategoria({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-categoria" onClick={(e) => e.stopPropagation()} tabIndex={0} autoFocus>
+      <div
+        className="modal-categoria"
+        onClick={(e) => e.stopPropagation()}
+        tabIndex={0}
+        autoFocus
+      >
         <button className="modal-close-btn" onClick={onClose}>
           ×
         </button>
@@ -27,7 +33,7 @@ function ModalCategoria({
               .filter((p) => p.activo)
               .map((producto) => {
                 const descuento = obtenerDescuento(producto);
-                const base = parseFloat(producto.precio); // 👈 Mostrar precio final real
+                const base = parseFloat(producto.precio);
                 const precioConDescuento = descuento
                   ? (base * (1 - descuento.porcentaje / 100)).toFixed(2)
                   : base.toFixed(2);
@@ -71,15 +77,21 @@ function ModalCategoria({
                         )}
                       </div>
 
-                      <button
-                        className="btn-agregar-carrito"
-                        onClick={() => {
-                          onAddToCart(producto);
-                          onClose();
-                        }}
-                      >
-                        Agregar al carrito
-                      </button>
+                      <div className="btns-producto">
+                        <button
+                          className="btn-agregar-carrito"
+                          onClick={() => onAddToCart(producto)}
+                        >
+                          Agregar al carrito
+                        </button>
+
+                        <button
+                          className="btn-ver-detalles"
+                          onClick={() => verDetalles(producto)}
+                        >
+                          Ver detalles
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );

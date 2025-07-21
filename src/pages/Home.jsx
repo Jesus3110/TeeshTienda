@@ -337,6 +337,7 @@ const [mostrarModalBusqueda, setMostrarModalBusqueda] = useState(false);
         )}
         onClose={() => setMostrarModalCategoria(false)}
         onAddToCart={añadirAlCarrito}
+        verDetalles={verDetalles}
         descuentos={descuentos}
       />
     )}
