@@ -49,7 +49,7 @@ function ModalProducto({
       })
     : null;
 
-  const precioOriginal = producto.precioOriginal;
+  const precioOriginal = parseFloat(producto.precioOriginal || "0");
   const precioFinal = parseFloat(producto.precio);
 
   return (
