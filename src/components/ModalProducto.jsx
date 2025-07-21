@@ -1,4 +1,4 @@
-import React, { useState } from "react"; // <-- Agrega useState
+import React, { useState, useEffect } from "react";
 import "../styles/modalProducto.css";
 import ModalAlerta from "./ModalAlerta";
 
@@ -21,6 +21,12 @@ function ModalProducto({
     mensaje: "",
     tipo: "error",
   });
+
+  useEffect(() => {
+  setImagenSeleccionada(producto.imagen);
+  setColorSeleccionado(producto.colores?.[0] || null);
+  setCantidad(1);
+}, [producto]);
 
   const cantidadEnCarrito = carrito
     .filter((p) => p.idFirebase === producto.idFirebase)
@@ -51,6 +57,8 @@ function ModalProducto({
 
   const precioOriginal = parseFloat(producto.precioOriginal || "0");
   const precioFinal = parseFloat(producto.precio);
+
+  
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
