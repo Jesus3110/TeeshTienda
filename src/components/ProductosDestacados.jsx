@@ -41,12 +41,48 @@ function ProductosDestacados({
     return ventasB - ventasA;
   });
 
+  const calcularPrecioConComision = (precioNeto) => {
+  const porcentajeStripe = 0.036;
+  const fijoStripe = 3.0;
+  const iva = 0.16;
+
+  const base = (precioNeto + fijoStripe) / (1 - porcentajeStripe);
+  const ivaTotal = (base - precioNeto) * iva;
+
+  return parseFloat((base + ivaTotal).toFixed(2));
+};
+
+let productosAMostrar = [];
+
+if (productosOrdenados.length > 0) {
+  const nombresVendidos = new Set(
+    productosOrdenados.map((p) => normalizar(p.nombre))
+  );
+
+  const productosAleatorios = productos
+    .filter((p) => !nombresVendidos.has(normalizar(p.nombre)))
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 6); // o los que quieras añadir
+
+  productosAMostrar = [...productosOrdenados, ...productosAleatorios];
+} else {
+  productosAMostrar = [...productos].sort(() => 0.5 - Math.random()).slice(0, 6);
+}
+
+
+
+const titulo = productosOrdenados.length > 0
+  ? "Productos Más Vendidos"
+  : "Recomendaciones para Ti";
+
+
   return (
     <div className="seccion-productos">
-      <h2 className="titulo-seccion">Productos Más Vendidos</h2>
+      <h2 className="titulo-seccion">{titulo}</h2>
+
 
       <div className="grid-productos-destacados">
-        {productosOrdenados.map((producto) => {
+       {productosAMostrar.map((producto) => {
           const descuento = obtenerDescuentoProducto(producto);
           const precioOriginal = producto.precioOriginal;
           const precioFinal = parseFloat(producto.precio); // ya con descuento y comisión
@@ -65,20 +101,30 @@ function ProductosDestacados({
 
               <div className="producto-info">
                 <h3 className="producto-nombre">{producto.nombre}</h3>
-                <div className="producto-rating">🔥 Más vendido</div>
+                {productosOrdenados.some(p => p.idFirebase === producto.idFirebase) ? (
+  <div className="producto-rating">🔥 Más vendido</div>
+) : (
+  <div className="producto-rating">⭐ Recomendado</div>
+)}
+
 
                 <div className="producto-precios">
-                  {descuento && precioOriginal && (
-                    <span className="precio-original tachado">
-                      ${Number(precioOriginal).toFixed(2)}
-                    </span>
-                  )}
-                  <span
-                    className={`precio-final ${descuento ? "descuento" : ""}`}
-                  >
-                    ${precioFinal.toFixed(2)}
-                  </span>
-                </div>
+  {descuento ? (
+    <>
+      <span className="precio-original tachado">
+        ${calcularPrecioConComision(precioFinal)}
+      </span>
+      <span className="precio-final descuento">
+        ${precioFinal.toFixed(2)}
+      </span>
+    </>
+  ) : (
+    <span className="precio-final">
+      ${precioFinal.toFixed(2)}
+    </span>
+  )}
+</div>
+
 
                 <button
                   className="btn-ver-detalles"

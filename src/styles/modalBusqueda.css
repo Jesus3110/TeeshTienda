@@ -1,14 +1,14 @@
 .modal-busqueda-overlay {
   position: fixed;
+  z-index: 900; 
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(20, 20, 20, 0.4);
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
 }
 
 .modal-busqueda {
@@ -118,3 +118,31 @@
 .btn-agregar-modal:hover {
   background-color: #e25050;
 }
+
+.descuento-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background-color: #e53935; /* rojo fuerte */
+  color: white;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 6px;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.card-producto-modal {
+  position: relative;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.card-producto-modal .descuento-badge {
+  font-size: 0.7rem;
+  padding: 3px 6px;
+}
+

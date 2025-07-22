@@ -380,17 +380,18 @@ return (
         <ChatBot />
       </> 
     )}
-    <ModalBusqueda
+   <ModalBusqueda
   visible={mostrarModalBusqueda}
   onClose={() => setMostrarModalBusqueda(false)}
   resultados={resultadosBusqueda}
   termino={terminoBusqueda}
   setTermino={setTerminoBusqueda}
   onSeleccionar={(producto) => {
-    setMostrarModalBusqueda(false);
-    verDetalles(producto);
+    verDetalles(producto); // ✅ Esto se queda
   }}
+  obtenerDescuentoProducto={obtenerDescuentoProducto} // ✅ ESTA ES LA FORMA CORRECTA
 />
+
 
   </>
   

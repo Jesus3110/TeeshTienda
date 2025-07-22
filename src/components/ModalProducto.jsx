@@ -23,10 +23,10 @@ function ModalProducto({
   });
 
   useEffect(() => {
-  setImagenSeleccionada(producto.imagen);
-  setColorSeleccionado(producto.colores?.[0] || null);
-  setCantidad(1);
-}, [producto]);
+    setImagenSeleccionada(producto.imagen);
+    setColorSeleccionado(producto.colores?.[0] || null);
+    setCantidad(1);
+  }, [producto]);
 
   const cantidadEnCarrito = carrito
     .filter((p) => p.idFirebase === producto.idFirebase)
@@ -58,7 +58,16 @@ function ModalProducto({
   const precioOriginal = parseFloat(producto.precioOriginal || "0");
   const precioFinal = parseFloat(producto.precio);
 
-  
+  function calcularPrecioConComision(precioNeto) {
+    const porcentajeStripe = 0.036;
+    const fijoStripe = 3.0;
+    const iva = 0.16;
+
+    const base = (precioNeto + fijoStripe) / (1 - porcentajeStripe);
+    const ivaTotal = (base - precioNeto) * iva;
+
+    return parseFloat((base + ivaTotal).toFixed(2));
+  }
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -92,12 +101,10 @@ function ModalProducto({
               <div className="producto-header-modal">
                 <h2 className="producto-nombre-modal">{producto.nombre}</h2>
                 <div className="producto-precio-container-modal">
-                  {descuento &&
-                  precioOriginal &&
-                  precioOriginal !== precioFinal ? (
+                  {descuento ? (
                     <>
                       <span className="precio-original-modal">
-                        ${precioOriginal.toFixed(2)}
+                        ${calcularPrecioConComision(precioFinal)}
                       </span>
                       <span className="precio-descuento-modal">
                         ${precioFinal.toFixed(2)}
@@ -237,8 +244,11 @@ function ModalProducto({
                       });
                       return;
                     }
-                    
-                    console.log("Color seleccionado antes de enviar al carrito:", colorSeleccionado);
+
+                    console.log(
+                      "Color seleccionado antes de enviar al carrito:",
+                      colorSeleccionado
+                    );
                     onAddToCart(
                       { ...producto, color: colorSeleccionado },
                       cantidad
@@ -298,12 +308,9 @@ function ModalProducto({
                         (d) => d.id === productoRel.descuentoAplicado
                       )
                     : null;
-                  const precioRelConDescuento = descuentoRel
-                    ? (
-                        productoRel.precio *
-                        (1 - descuentoRel.porcentaje / 100)
-                      ).toFixed(2)
-                    : productoRel.precio.toFixed(2);
+                  const precioFinalRel = parseFloat(productoRel.precio);
+                  const precioConComisionRel =
+                    calcularPrecioConComision(precioFinalRel);
 
                   return (
                     <div
@@ -335,14 +342,16 @@ function ModalProducto({
                           {descuentoRel ? (
                             <>
                               <span className="precio-original-relacionado">
-                                ${productoRel.precio.toFixed(2)}
+                                ${precioConComisionRel}
                               </span>
                               <span className="precio-descuento-relacionado">
-                                ${precioRelConDescuento}
+                                ${precioFinalRel.toFixed(2)}
                               </span>
                             </>
                           ) : (
-                            <span>${productoRel.precio.toFixed(2)}</span>
+                            <span className="precio-descuento-relacionado">
+                              ${precioFinalRel.toFixed(2)}
+                            </span>
                           )}
                         </div>
                       </div>

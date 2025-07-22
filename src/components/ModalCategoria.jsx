@@ -33,10 +33,21 @@ function ModalCategoria({
               .filter((p) => p.activo)
               .map((producto) => {
                 const descuento = obtenerDescuento(producto);
-                const base = parseFloat(producto.precio);
-                const precioConDescuento = descuento
-                  ? (base * (1 - descuento.porcentaje / 100)).toFixed(2)
-                  : base.toFixed(2);
+                const base = parseFloat(producto.precio); // El precio real que paga el cliente
+                const precioConComision =
+                  calcularPrecioConComision(base).toFixed(2);
+
+                function calcularPrecioConComision(precioNeto) {
+                  const porcentajeStripe = 0.036;
+                  const fijoStripe = 3.0;
+                  const iva = 0.16;
+
+                  const base =
+                    (precioNeto + fijoStripe) / (1 - porcentajeStripe);
+                  const ivaTotal = (base - precioNeto) * iva;
+
+                  return parseFloat((base + ivaTotal).toFixed(2));
+                }
 
                 return (
                   <div
@@ -61,21 +72,20 @@ function ModalCategoria({
                       <div className="producto-rating">★★★★★</div>
 
                       <div className="producto-precios">
-                        {descuento ? (
-                          <>
-                            <span className="precio-original tachado">
-                              ${base.toFixed(2)}
-                            </span>
-                            <span className="precio-final descuento">
-                              ${precioConDescuento}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="precio-final">
-                            ${base.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
+  {descuento ? (
+    <>
+      <span className="precio-original tachado">
+        ${precioConComision}
+      </span>
+      <span className="precio-final descuento">
+        ${base.toFixed(2)}
+      </span>
+    </>
+  ) : (
+    <span className="precio-final">${base.toFixed(2)}</span>
+  )}
+</div>
+
 
                       <div className="btns-producto">
                         <button
