@@ -185,3 +185,31 @@
 .btn-remove-img:hover {
   transform: scale(1.1);
 }
+
+
+.pedido-modal {
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+  border-radius: 12px;
+  background: white;
+  padding: 1rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.modal-content {
+  max-height: 75vh; /* Altura del contenido dentro del modal */
+  overflow-y: auto;
+  padding-right: 0.5rem; /* espacio para scrollbar */
+}
+
+/* Para que el scroll se vea bonito */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+.modal-content::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
