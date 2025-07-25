@@ -192,7 +192,7 @@ const Pedidos = () => {
   };
 
   const calcularMontoDevolucion = (total) => {
-    const porcentajeCancelacion = 15;
+    const porcentajeCancelacion = 45;
     const montoRetenido = (total * porcentajeCancelacion) / 100;
     return total - montoRetenido;
   };
