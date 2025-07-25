@@ -207,8 +207,8 @@ const Pedidos = () => {
     const metodo = (pedido.metodoPago || "").toLowerCase();
     const esTarjeta = metodo.includes("stripe");
     const totalPedido = Number(pedido.total || 0);
-    const porcentajeRetenido = esTarjeta ? 15 : 0;
-    const comision = esTarjeta ? +(totalPedido * 0.15).toFixed(2) : 0;
+    const porcentajeRetenido = esTarjeta ? 45 : 0;
+    const comision = esTarjeta ? +(totalPedido * 0.45).toFixed(2) : 0;
     const montoDevolucion = esTarjeta
       ? +(totalPedido - comision).toFixed(2)
       : totalPedido;
@@ -514,7 +514,7 @@ const Pedidos = () => {
                 </p>
                 <ul>
                   <li>
-                    💰 <strong>Cargo por cancelación:</strong> 15% del valor
+                    💰 <strong>Cargo por cancelación:</strong> 45% del valor
                     total del pedido
                   </li>
                   <li>
@@ -523,7 +523,7 @@ const Pedidos = () => {
                   </li>
                   <li>
                     📊 <strong>Cargo a retener:</strong> $
-                    {(pedidoActivo.total * 0.15).toFixed(2)}
+                    {(pedidoActivo.total * 0.45).toFixed(2)}
                   </li>
                   <li>
                     💵 <strong>Monto a devolver:</strong> $
