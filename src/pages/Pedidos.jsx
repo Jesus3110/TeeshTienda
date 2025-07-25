@@ -206,12 +206,18 @@ const Pedidos = () => {
     // Detectar método de pago
     const metodo = (pedido.metodoPago || "").toLowerCase();
     const esTarjeta = metodo.includes("stripe");
-    const totalPedido = Number(pedido.total || 0);
-    const porcentajeRetenido = esTarjeta ? 45 : 0;
-    const comision = esTarjeta ? +(totalPedido * 0.45).toFixed(2) : 0;
-    const montoDevolucion = esTarjeta
-      ? +(totalPedido - comision).toFixed(2)
-      : totalPedido;
+  // Calcular total original sin comisión
+const totalOriginal = pedido.productos.reduce((acc, prod) => {
+  const precioUnitario = prod.precioOriginal ?? prod.precio; // fallback si no tiene precioOriginal
+  return acc + precioUnitario * prod.cantidad;
+}, 0);
+
+const porcentajeRetenido = esTarjeta ? 15 : 0;
+const comision = esTarjeta ? +(totalOriginal * 0.15).toFixed(2) : 0;
+const montoDevolucion = esTarjeta
+  ? +(totalOriginal - comision).toFixed(2)
+  : totalOriginal;
+
 
     try {
       // Restaurar stock
@@ -275,7 +281,8 @@ const Pedidos = () => {
         const ingresosRef = ref(db, "dashboard/ingresosTotales");
         await runTransaction(ingresosRef, (valorActual) => {
           // Restar el total original y sumar la comisión
-          return (valorActual || 0) - totalPedido + comision;
+          return (valorActual || 0) - totalOriginal + comision;
+
         });
         // Ingresos por mes/año
         const ingresosMesAnioRef = ref(
@@ -283,7 +290,8 @@ const Pedidos = () => {
           `dashboard/ingresosPorMes/${anioActual}/${mesActual}`
         );
         await runTransaction(ingresosMesAnioRef, (valorActual) => {
-          return (valorActual || 0) - totalPedido + comision;
+          return (valorActual || 0) - totalOriginal;
+
         });
       } else {
         // Si es efectivo, restar el total original (si ya estaba sumado)
@@ -322,7 +330,8 @@ const Pedidos = () => {
       setPedidoActivo(null);
       setConfirmandoCancelacion(false);
     } catch (error) {
-      console.error("Error al cancelar el pedido:", error);
+      console.error("Error al cancelar el pedido:", error.message || error);
+
       setAlerta({
         visible: true,
         mensaje:
@@ -514,7 +523,7 @@ const Pedidos = () => {
                 </p>
                 <ul>
                   <li>
-                    💰 <strong>Cargo por cancelación:</strong> 45% del valor
+                    💰 <strong>Cargo por cancelación:</strong> 15% del valor
                     total del pedido
                   </li>
                   <li>
@@ -523,7 +532,7 @@ const Pedidos = () => {
                   </li>
                   <li>
                     📊 <strong>Cargo a retener:</strong> $
-                    {(pedidoActivo.total * 0.45).toFixed(2)}
+                    {(pedidoActivo.total * 0.15).toFixed(2)}
                   </li>
                   <li>
                     💵 <strong>Monto a devolver:</strong> $
