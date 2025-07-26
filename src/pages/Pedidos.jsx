@@ -206,18 +206,17 @@ const Pedidos = () => {
     // Detectar método de pago
     const metodo = (pedido.metodoPago || "").toLowerCase();
     const esTarjeta = metodo.includes("stripe");
-  // Calcular total original sin comisión
-const totalOriginal = pedido.productos.reduce((acc, prod) => {
-  const precioUnitario = prod.precioOriginal ?? prod.precio; // fallback si no tiene precioOriginal
-  return acc + precioUnitario * prod.cantidad;
-}, 0);
+    // Calcular total original sin comisión
+    const totalOriginal = pedido.productos.reduce((acc, prod) => {
+      const precioUnitario = prod.precioOriginal ?? prod.precio; // fallback si no tiene precioOriginal
+      return acc + precioUnitario * prod.cantidad;
+    }, 0);
 
-const porcentajeRetenido = esTarjeta ? 15 : 0;
-const comision = esTarjeta ? +(totalOriginal * 0.15).toFixed(2) : 0;
-const montoDevolucion = esTarjeta
-  ? +(totalOriginal - comision).toFixed(2)
-  : totalOriginal;
-
+    const porcentajeRetenido = esTarjeta ? 15 : 0;
+    const comision = esTarjeta ? +(totalOriginal * 0.15).toFixed(2) : 0;
+    const montoDevolucion = esTarjeta
+      ? +(totalOriginal - comision).toFixed(2)
+      : totalOriginal;
 
     try {
       // Restaurar stock
@@ -282,7 +281,6 @@ const montoDevolucion = esTarjeta
         await runTransaction(ingresosRef, (valorActual) => {
           // Restar el total original y sumar la comisión
           return (valorActual || 0) - totalOriginal + comision;
-
         });
         // Ingresos por mes/año
         const ingresosMesAnioRef = ref(
@@ -291,7 +289,6 @@ const montoDevolucion = esTarjeta
         );
         await runTransaction(ingresosMesAnioRef, (valorActual) => {
           return (valorActual || 0) - totalOriginal;
-
         });
       } else {
         // Si es efectivo, restar el total original (si ya estaba sumado)
@@ -388,8 +385,6 @@ const montoDevolucion = esTarjeta
         return estado;
     }
   };
-
-
 
   const obtenerFechaPedido = (pedido) => {
     if (pedido.creadoEn && !isNaN(new Date(pedido.creadoEn))) {
@@ -739,12 +734,9 @@ const montoDevolucion = esTarjeta
         />
       )}
     </div>
-    
   );
-    
 
   console.log("Productos del pedido activo:", pedidoActivo?.productos);
-
 
   // 👇 Este es el return final:
   return rol === "cliente" ? (
